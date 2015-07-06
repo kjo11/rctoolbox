@@ -375,8 +375,8 @@ end
                         end
                     case 'Laguerred'
                         
-                        a=inphi.par(2);
-                        order=inphi.par(3);
+                        a=inphi.par(1);
+                        order=inphi.par(2);
                         
                         f(1)=-1;
                         f(2:order+1)=-sqrt(1-a^2)/(1-a);
