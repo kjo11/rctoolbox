@@ -1,0 +1,11 @@
+5.7:
+
+Problem with transfer functions with negative gains (from robot competition motor model)
+- with loopshaping: positive and negative models are identical
+- with gain/phase/crossover: positive and negative models are different but both stable
+- with gain/phase (no crossover): controller for negative model is unstable
+
+Hours:
+10-12.20
+13-15.15 
+16.10-
