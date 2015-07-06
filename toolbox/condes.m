@@ -355,13 +355,18 @@ end
                 switch inphi.ConType
                     
                     case {'PID' , 'PIDd', 'PI' , 'PId' }
-                        
-                        f(Ngs+1:2*Ngs) = - sum(theta_bar)./m ; % maximizes ki
-                        
+                        if (real(Gf{1}(1)) >= 0)
+                            f(Ngs+1:2*Ngs) = - sum(theta_bar)./m ; % maximizes ki
+                        else
+                            f(Ngs+1:2*Ngs) = sum(theta_bar)./m ; % minimizes ki
+                        end
                         
                     case {'PD' , 'PDd', 'P' , 'Pd'}
-                        
-                        f(1:Ngs) = - sum(theta_bar)./m ; % maximizes kp
+                        if (real(Gf{1}(1)) >= 0)
+                            f(1:Ngs) = - sum(theta_bar)./m ; % maximizes kp
+                        else
+                            f(1:Ngs) = sum(theta_bar)./m ; % maximizes kp
+                        end
                         
                     case 'Laguerre'
                         
