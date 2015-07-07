@@ -33,6 +33,7 @@ per{1,2}=conper('LS',0.5,Ldfrd2);
 per{1,3}=conper('LS',0.5,Ldfrd2); 
 
 K=condes(G,phi,per)
+figure; step(feedback(K*G{1},1))
 
 
 %% Test 3
@@ -47,6 +48,7 @@ F{3}=frd(3/s,wG);
 opt=condesopt('F',F);
 
 K=condes(G,phi,per,opt)
+figure; step(feedback(K*G{1},1))
 
 
 %% Test 4
@@ -57,4 +59,5 @@ F2=frd(3/s,wG);
 opt=condesopt('F',F2);
 
 K=condes(G,phi,per,opt)
+figure; step(feedback(K*G{1},1))
 
