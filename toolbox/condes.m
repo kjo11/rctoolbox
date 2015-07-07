@@ -355,6 +355,8 @@ end
                 switch inphi.ConType
                     
                     case {'PID' , 'PIDd', 'PI' , 'PId' }
+                        [sgn,flag] = test_PID_ss_gain(Gf,w);
+                        
                         if (real(Gf{1}(1)) >= 0)
                             f(Ngs+1:2*Ngs) = - sum(theta_bar)./m ; % maximizes ki
                         else
@@ -1751,6 +1753,26 @@ function [phi,G,Ld,w]=removeInf(phi,G,Ld,w)
         phi=phi(:,:,index);
     end
            
+end
+
+
+function [sgn,flag] = test_PID_ss_gain(Gf,w)
+    wmin = 0.5;
+    flag = 0;
+    
+    for i=1:length(Gf)
+        ss(i) = Gf{i}(1,1,1);
+        w_ss(i) = w{i}(1);
+    end
+    
+    if sum(real(ss)) == sum(abs(real(ss))) %% low frequency gains are all positive
+        sgn = -1;
+    elseif sum(real(ss)) == -sum(abs(real(ss))) %% low frequency gains are all negative
+        sgn = 1;
+    else
+        sgn = -1;
+        warning('Some models have a positive low-frequency gain and some negative. Assuming stabilizing Ki/Kp is positive.')
+    end
 end
 
         
