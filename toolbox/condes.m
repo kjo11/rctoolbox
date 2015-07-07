@@ -574,7 +574,9 @@ end
             disp(['K{'  int2str(k) '}=']),K{k}
         end
     else
-        K=minreal(rhox' * phi);
+%         K=minreal(rhox' * phi);
+        K = reduced_order(rhox,phi,inphi.ConType);
+        
     end
     
     
@@ -1744,7 +1746,7 @@ function [phi,G,Ld,w]=removeInf(phi,G,Ld,w)
 end
 
 
-function [sgn] = test_PID_ss_gain(Gf,w)
+function sgn = test_PID_ss_gain(Gf,w)
     for i=1:length(Gf)
         ss(i) = Gf{i}(1,1,1);
         w_ss(i) = w{i}(1);
@@ -1760,4 +1762,12 @@ function [sgn] = test_PID_ss_gain(Gf,w)
     end
 end
 
+function K = reduced_order(rhox,phi,ConType)
+    if ~isempty(strfind(ConType,'Laguerre')) || ~isempty(strfind(ConType,'generalized'))
+        lcd = zpk([],phi.p(end),1,phi.Ts);
+        K = minreal(rhox' * minreal(phi/lcd)*lcd);
+    else
+        K = minreal(rhox' * phi);
+    end
+end
         
