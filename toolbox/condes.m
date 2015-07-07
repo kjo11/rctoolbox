@@ -1350,9 +1350,9 @@ if no==1 & ni==1  % SISO system
         for j=1:m
             if strcmp(class(per{j}.Ld),'frd')
                 w1=per{j}.Ld.Frequency;
-                x(:,1)=per{j}.Ld.ResponseData;
-                Ldf{j}(:,1) = interp1(w1,x,w{j},[],'extrap'); % Ldf{j} is a column vector
-                Ldfd{j}(:,1) = interp1(w1,x,wd{j},[],'extrap'); % Ldfd{j} is a column vector
+                x=per{j}.Ld.ResponseData;
+                Ldf{j}(:,1) = interp1(w1,x(:),w{j},[],'extrap'); % Ldf{j} is a column vector
+                Ldfd{j}(:,1) = interp1(w1,x(:),wd{j},[],'extrap'); % Ldfd{j} is a column vector
             else
                 Ldf{j}(:,1) = freqresp(per{j}.Ld,w{j}); % Ldf{j} is a column vector
                 Ldfd{j}(:,1) = freqresp(per{j}.Ld,wd{j}); % Ldfd{j} is a column vector
