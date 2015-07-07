@@ -355,20 +355,12 @@ end
                 switch inphi.ConType
                     
                     case {'PID' , 'PIDd', 'PI' , 'PId' }
-                        [sgn,flag] = test_PID_ss_gain(Gf,w);
-                        
-                        if (real(Gf{1}(1)) >= 0)
-                            f(Ngs+1:2*Ngs) = - sum(theta_bar)./m ; % maximizes ki
-                        else
-                            f(Ngs+1:2*Ngs) = sum(theta_bar)./m ; % minimizes ki
-                        end
+                        sgn = test_PID_ss_gain(Gf,w);
+                        f(Ngs+1:2*Ngs) = sgn * sum(theta_bar)./m ; % maximizes/minimizes ki
                         
                     case {'PD' , 'PDd', 'P' , 'Pd'}
-                        if (real(Gf{1}(1)) >= 0)
-                            f(1:Ngs) = - sum(theta_bar)./m ; % maximizes kp
-                        else
-                            f(1:Ngs) = sum(theta_bar)./m ; % maximizes kp
-                        end
+                        sgn = test_PID_ss_gain(Gf,w);
+                        f(1:Ngs) = sgn * sum(theta_bar)./m ; % maximizes kp
                         
                     case 'Laguerre'
                         
@@ -1756,10 +1748,7 @@ function [phi,G,Ld,w]=removeInf(phi,G,Ld,w)
 end
 
 
-function [sgn,flag] = test_PID_ss_gain(Gf,w)
-    wmin = 0.5;
-    flag = 0;
-    
+function [sgn] = test_PID_ss_gain(Gf,w)
     for i=1:length(Gf)
         ss(i) = Gf{i}(1,1,1);
         w_ss(i) = w{i}(1);
