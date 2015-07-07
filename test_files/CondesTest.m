@@ -18,7 +18,10 @@ per{1,1}=conper('LS',0.5,Ldfrd );
 per{1,2}=conper('LS',0.5,Ld); 
 per{1,3}=conper('LS',0.5,Ld); 
 
-K=condes(G,phi,per)
+
+
+K=condes(G,phi,per);
+figure; step(feedback(K*G{1},1))
 
 
 %% Test 2
