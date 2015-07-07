@@ -55,4 +55,3 @@ opt=condesopt('F',F2);
 
 K=condes(G,phi,per,opt)
 
-
