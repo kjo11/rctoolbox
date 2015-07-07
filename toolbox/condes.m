@@ -1369,8 +1369,8 @@ if no==1 & ni==1  % SISO system
             else
                 if strcmp(class(F{j}),'frd')
                     w1=F{j}.Frequency;
-                    x(:,1)=F{j}.ResponseData;
-                    Ff{j}(:,1)=interp1(w1,x,wd{j},[],'extrap');
+                    x=F{j}.ResponseData;
+                    Ff{j}(:,1)=interp1(w1,x(:),wd{j},[],'extrap');
                 else
                     if strcmp(class(F{j}),'double'), F{j}=tf(F{j}); end
                     Ff{j}(:,1)=freqresp(F{j},wd{j});
