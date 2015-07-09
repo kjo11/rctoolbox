@@ -1,4 +1,4 @@
-addpath('../toolbox');
+addpath('toolbox');
 
 %% Test negative plant model with loopshaping -- this works
 % controllers computed using the negative and positive model are identical
