@@ -1,7 +1,7 @@
 
 s=tf('s');
 
-G{1}=exp(-3*s)*4/(10*s+1); 
+G{1}=exp(-3*s)*4/(10*s-1); 
 G{2}=exp(-5*s)/(s^2+14*s+7.5); 
 G{3}=exp(-s)*2/(20*s+1);
 
@@ -52,7 +52,7 @@ figure; step(feedback(K*G{1},1))
 
 
 %% Test 4
-per=conper('LS',0.5,Ldfrd); 
+per=conper('LS',0.5,Ldfrd2); 
 
 F2=frd(3/s,wG);
 

@@ -40,7 +40,7 @@ K = condes(G,phi,per);
 tf(K)
 
 %% User-defined
-phi=conphi('UD',[1/(z-1);1/(z*(z-1));1/(z^2*(z-1));1/(z^3*(z-1));1/(z^4*(z-1));1/(z^5*(z-1));1/(z^6*(z-1));1/(z^7*(z-1))]);
+phi=conphi('UD',[z/(z-1); 1/(z-1);1/(z*(z-1));1/(z^2*(z-1));1/(z^3*(z-1));1/(z^4*(z-1));1/(z^5*(z-1));1/(z^6*(z-1));1/(z^7*(z-1))]);
 per = conper('LS',[Mm,Ku,wc],Ld);
 
 K = condes(G,phi,per);

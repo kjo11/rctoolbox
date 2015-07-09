@@ -576,7 +576,7 @@ end
     else
 %         K=minreal(rhox' * phi);
         K = reduced_order(rhox,phi,inphi.ConType);
-        
+        stabflag = test_stability(K,inG,w);
     end
     
     
@@ -1768,6 +1768,31 @@ function K = reduced_order(rhox,phi,ConType)
         K = minreal(rhox' * minreal(phi/lcd)*lcd);
     else
         K = minreal(rhox' * phi);
+    end
+end
+
+function stability_flag = test_stability(K,inG,w)
+    % if G is LTI system, test directly
+    if ~iscell(inG)
+        G = {inG};
+    else
+        G = inG;
+    end
+    for i=1:length(G)
+%         if isa(G{i},'lti')
+%             stability_flag = isstable(feedback(K*G{i},1))
+%         end
+        try 
+            stability_flag = isstable(feedback(K*G{i},1))
+        catch
+            warning('Cannot assess stability')
+            stability_flag = 0;
+        end
+    end
+
+    % Use Bode stability criterion
+    for i=1:length(G)
+        x=freqresp(K,w{i})*G{i};
     end
 end
         
