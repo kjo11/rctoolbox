@@ -574,9 +574,8 @@ end
             disp(['K{'  int2str(k) '}=']),K{k}
         end
     else
-%         K=minreal(rhox' * phi);
         K = reduced_order(rhox,phi,inphi.ConType);
-        stabflag = test_stability(K,inG,w);
+        test_stability(K,inG);
     end
     
     
@@ -1525,7 +1524,7 @@ else % if MIMO
             end
         elseif ~iscell(options.F{1})
             for j=1:m
-                F{j}=options.F
+                F{j}=options.F;
             end
         else
             F=options.F;
@@ -1771,28 +1770,30 @@ function K = reduced_order(rhox,phi,ConType)
     end
 end
 
-function stability_flag = test_stability(K,inG,w)
-    % if G is LTI system, test directly
+function [] = test_stability(K,inG)
+% Test stability of SISO systems
+% Uses MATLAB function isstable
+% Can't evaluate stability for FRD plant models, or for continuous-time
+% systems with time delays
     if ~iscell(inG)
         G = {inG};
     else
         G = inG;
     end
+    
     for i=1:length(G)
-%         if isa(G{i},'lti')
-%             stability_flag = isstable(feedback(K*G{i},1))
-%         end
-        try 
-            stability_flag = isstable(feedback(K*G{i},1))
-        catch
-            warning('Cannot assess stability')
-            stability_flag = 0;
+        if isa(G{i},'frd')
+            disp('Cannot assess stability for FRD-type plant models.')
+        else
+            try 
+                stability_flag = isstable(feedback(K*G{i},1));
+                if ~(stability_flag)
+                    warning(['Closed-loop system appears to be unstable for G{',num2str(i),'}. Check that Ld satisfies the Nyquist stability criterion and contains all poles of the system located on the stability boundary.'])
+                end
+            catch
+                disp('Cannot assess closed-loop stability.')
+            end
         end
     end
 
-    % Use Bode stability criterion
-    for i=1:length(G)
-        x=freqresp(K,w{i})*G{i};
-    end
 end
-        
