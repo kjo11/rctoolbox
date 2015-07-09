@@ -575,7 +575,7 @@ end
         end
     else
         K = reduced_order(rhox,phi,inphi.ConType);
-        test_stability(K,inG);
+        test_stability_siso(K,inG);
     end
     
     
@@ -1770,7 +1770,7 @@ function K = reduced_order(rhox,phi,ConType)
     end
 end
 
-function [] = test_stability(K,inG)
+function [] = test_stability_siso(K,inG)
 % Test stability of SISO systems
 % Uses MATLAB function isstable
 % Can't evaluate stability for FRD plant models, or for continuous-time
