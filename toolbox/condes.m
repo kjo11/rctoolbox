@@ -1783,7 +1783,7 @@ function [] = test_stability_siso(K,inG)
     
     for i=1:length(G)
         if isa(G{i},'frd')
-            disp('Cannot assess stability for FRD-type plant models.')
+            disp('Cannot assess closed-loop stability for FRD-type plant models.')
         else
             try 
                 stability_flag = isstable(feedback(K*G{i},1));
