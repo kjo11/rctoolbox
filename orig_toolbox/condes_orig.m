@@ -1585,12 +1585,12 @@ else % if MIMO
         end
     end
     
-%     for j=1:m
-%         
+    for j=1:m
+        
 %         [phif{j},Gf{j},LDf{j},w{j}]=removeInf(phif{j},Gf{j},LDf{j},w{j});
 %         [phifd{j},FGf{j},FLDf{j}]=removeInf(phifd{j},FGf{j},FLDf{j},[]);
-%         N(j)=length(w{j}); % lengths of frequency vectors
-%     end
+        N(j)=length(w{j}); % lengths of frequency vectors
+    end
     
     
     
