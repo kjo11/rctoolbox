@@ -245,14 +245,14 @@ switch ConType(1:3)
             C = [1, zeros(1,ns-1)];
         end
         a = a(2:end);
-        A = spdiags(ones(ns,1),1,[a(:),zeros(ns,ns-1)]);
+        A = full(spdiags(ones(ns,1),1,[a(:),zeros(ns,ns-1)]));
         
         
         if strcmp(CorD,'s')
-            phi.phi = C/(s*eye(ns)-A);
+            phi.phi = transpose(C/(s*eye(ns)-A));
             phi.ConType = 'ss';
         else
-            phi.phi = C/(z*eye(ns)-A);
+            phi.phi = transpose(C/(z*eye(ns)-A));
             phi.ConType = 'ssd';
         end
         
