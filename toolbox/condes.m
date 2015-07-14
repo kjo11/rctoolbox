@@ -161,6 +161,16 @@ else
         error('The tolerance of gamma should be greater than zero');
     end
     
+    if length(options.gamma) > 3
+        bisection_iterations = options.gamma(4);
+        if bisection_iterations < 1 || bisection_iterations~=round(bisection_iterations)
+            error('The number of bisection iterations should be an integer greater than 0')
+        end
+    else
+        disp('Number of bisection iterations not specified. Assuming 5 iterations.')
+        bisection_iterations = 5;
+    end
+    
     gamma=g_max;
 end
 

@@ -38,9 +38,11 @@ function options = condesopt (varargin)
 %               gamma is defined as an upper bound for all weighted sensitivity functions 
 %               and will be minimized. For multimodel case the
 %               maximum of gamma{i} is minimized for all models.'gamma' is a 
-%               vector containing [g_min, g_max, tol] where g_min and g_max 
-%               are the minimum and maximum value of gamma and tol is a small positive
-%               number that indicates the tolerance of optimal gamma.
+%               vector containing [g_min, g_max, tol, n_it] where g_min and g_max 
+%               are the minimum and maximum value of gamma, tol is a small positive
+%               number that indicates the tolerance of optimal gamma and
+%               n_it is the number of times the bisection algorithm should
+%               be performed with an updated Ld.
 % 
 %   'np':       This option is used if a gain-scheduled controller should
 %               be designed. 'np' is a vector that indicates the degree of 
@@ -92,7 +94,7 @@ if (nargin == 0) && (nargout == 0)
     fprintf('                 w: []         (A cell object. w{i} is a vector of frequecy points of model G{i}) \n');
     fprintf('                 F: []         (A weighting filter for L-L_d) \n');
     fprintf('                nq: 8          (Number of vertices of a polygon that approximates the uncertainty circles) \n');      
-    fprintf('             gamma: []         (a vector containing [g_min, g_max, tol] for bisection algorith in H infinity control) \n');
+    fprintf('             gamma: []         (a vector containing [g_min, g_max, tol, n_it] for bisection algorith in H infinity control) \n');
     fprintf('            lambda: [0 0 0 0]  ([1 1 0 0] means that the infinity norm of |W1S|+|W2T|  will be minimized in H infinity control) \n');
     fprintf('                np: []         (degree of polynomials describing the gain-scheduled controller parameters)\n');
     fprintf('                gs: []         (A vector (or matrix for more than one scheduling parameter) of the scheduling parameter values) \n');
