@@ -11,6 +11,7 @@ function phi = conphi(ConType,ConPar,CorD,F)
 %       'Laguerre':     For Laguerre basis function
 %       'Generalized':  For Generalized basis function
 %       'UD':           For user defined structure
+%       'SS':           For state space
 %
 % ConPar : is a scalar or a vector of parameters for the chosen controller type
 %
@@ -30,12 +31,19 @@ function phi = conphi(ConType,ConPar,CorD,F)
 %
 %       For user defined structure, ConPar is a column vector of stable
 %       transfer functions.
+%       
+%       For state space, ConPar is a vector containing the eigenvalues of 
+%       the controller A matrix. ConPar can also be given as a cell where
+%       ConPar{1} gives the eigenvalues of the A matrix and ConPar{2} gives
+%       the C matrix of the controller. (By default the C matrix is 
+%       [1 0 0 ...])
 %
 % CorD : is a string that can be 's' or 'z' to define continuous-time or
 %       discrete-time controller. If it is not assigned a continuous-time 
-%       controller will be aconsidered as default.
+%       controller will be considered as default.
 %
 % F: is a transfer function that is fixed in the controller (e.g. an integrator)
+%
 %
 % Examples:
 %   phi=conphi('PID');  % defines a continuous-time PID controller
@@ -219,6 +227,38 @@ switch ConType(1:3)
         phi.ConType='ud';
         
         
+    case 'ss '
+        if nargin > 3
+            warning('Cannot define fixed part of the controller in state space')
+        end
+
+        if iscell(ConPar)
+            ns = length(ConPar{1});
+            a = poly(ConPar{1});
+            C = ConPar{2};
+            if size(C,2) ~= ns
+                error('C must have the same number of columns as A')
+            end
+        else
+            ns = length(ConPar);
+            a = poly(ConPar);
+            C = [1, zeros(1,ns-1)];
+        end
+        a = a(2:end);
+        A = spdiags(ones(ns,1),1,[a(:),zeros(ns,ns-1)]);
+        
+        
+        if strcmp(CorD,'s')
+            phi.phi = C/(s*eye(ns)-A);
+            phi.ConType = 'ss';
+        else
+            phi.phi = C/(z*eye(ns)-A);
+            phi.ConType = 'ssd';
+        end
+        
+        phi.par.A = A;
+        phi.par.C = C;
+        
     otherwise
         
         error('This is not a supported controller type!')
@@ -226,7 +266,7 @@ switch ConType(1:3)
 end
 
 
-if nargin > 3
+if nargin > 3 && isempty(strfind(phi.ConType,'ss'))
     phi.phi=minreal(F*phi.phi);
     phi.ConType =['Ftimes' phi.ConType];
 end
