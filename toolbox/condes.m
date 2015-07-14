@@ -49,6 +49,7 @@ function [K,sol_info] = condes (inG , inphi , inper , options)
 if nargin < 4
     options = condesopt;
 end
+bisection_iterations = 10;
 
 [Gf,Gdim,phi,n,phif,phifd,per,w,N,performance,Ldf,LDf,FGf,FLdf,FLDf,CovGf] = condesdata (inG,inphi,inper,options);
 
@@ -489,65 +490,79 @@ end
 %------------ Bisection algorithm to minimize gamma------------------------
 
                 gamma_opt=0;
+                
+                
+                for nit=1:bisection_iterations
                     
-                while g_max-g_min > g_tol
-                    
-                    A=[];
-                    b=[];
-                   
-                    HinfConstraint=[];
-                    
-                    for j=1:m
-                        
-                        if sum(lambda)==0
-                            Wfgamma{j}=inv(gamma)*Wf{j};
+                    if nit ~= 1
+                        if gamma_opt~=0
+                            g_min=options.gamma(1);
+                            g_max=gamma_opt;
+                            for j=1:m, 
+                                Ldf{j}=transpose(phiGfreq{j})*x; 
+                            end
                         else
-                            
-                            for k=1:4,
-                                if lambda(k)~=0
-                                    Wfgamma{j}(:,k)=inv(gamma)*Wf{j}(:,k);
-                                else
-                                    Wfgamma{j}(:,k)=Wf{j}(:,k);
+                            break;
+                        end
+                    end
+
+                    while g_max-g_min > g_tol
+
+                        A=[];
+                        b=[];
+
+                        HinfConstraint=[];
+
+                        for j=1:m
+
+                            if sum(lambda)==0
+                                Wfgamma{j}=inv(gamma)*Wf{j};
+                            else
+
+                                for k=1:4,
+                                    if lambda(k)~=0
+                                        Wfgamma{j}(:,k)=inv(gamma)*Wf{j}(:,k);
+                                    else
+                                        Wfgamma{j}(:,k)=Wf{j}(:,k);
+                                    end
                                 end
                             end
-                        end
-                        
-                        
-                        for k=1:nqq
-                            if ~isempty(nq)
-                                [A1 b1 HinfConstraint1]=Ab_HinfCons(phiCov{j}{k},Wfgamma{j},Ldf{j},nq,lambda);
-                            else
-                                [A1 b1 HinfConstraint1]=Ab_HinfCons(phiCov{j}{k},Wfgamma{j},Ldf{j},nq,lambda,rho);
+
+
+                            for k=1:nqq
+                                if ~isempty(nq)
+                                    [A1 b1 HinfConstraint1]=Ab_HinfCons(phiCov{j}{k},Wfgamma{j},Ldf{j},nq,lambda);
+                                else
+                                    [A1 b1 HinfConstraint1]=Ab_HinfCons(phiCov{j}{k},Wfgamma{j},Ldf{j},nq,lambda,rho);
+                                end
+                                A=[A ; A1];
+                                b=[b ; b1];
+                                HinfConstraint=[HinfConstraint HinfConstraint1];
                             end
-                            A=[A ; A1];
-                            b=[b ; b1];
-                            HinfConstraint=[HinfConstraint HinfConstraint1];
+
                         end
- 
-                    end
-                    
-                    [x,optval,xflag] = solveopt(H,f,A,b,HinfConstraint,YesYalmip,rho,ops);
-                     
-                    if xflag==1,
-                        
-                        x_opt=x;gamma_opt=gamma;optval_opt=optval;xflag_opt=xflag;
-                        
-                        g_max=gamma;
-                        disp(['gamma=', num2str(g_max)])
-                        gamma=mean([g_min,gamma]);
-                        %gamma=mean([options.gamma(1),gamma]);
-                    
-                        for j=1:m, 
-                            Ldf{j}=transpose(phiGfreq{j})*x; 
+
+                        [x,optval,xflag] = solveopt(H,f,A,b,HinfConstraint,YesYalmip,rho,ops);
+
+                        if xflag==1,
+
+                            x_opt=x;gamma_opt=gamma;optval_opt=optval;xflag_opt=xflag;
+
+                            g_max=gamma;
+                            disp(['gamma=', num2str(g_max)])
+                            gamma=mean([g_min,gamma]);
+                            %gamma=mean([options.gamma(1),gamma]);
+
+                            
+                        else
+                            g_min=gamma;
+                            gamma=mean([g_max,gamma]);
                         end
-                        
-                    else
-                        g_min=gamma;
-                        gamma=mean([g_max,gamma]);
+
                     end
                     
                 end
-                
+
                 if gamma_opt~=0
                     x=x_opt;gamma=gamma_opt;optval=optval_opt;xflag=xflag_opt;
                 end
@@ -908,62 +923,76 @@ else % if MIMO
                
                gamma_opt=0;
                
-               while g_max-g_min > g_tol
+               for nit=1:bisection_iterations
+                   if nit ~= 1
+                        if gamma_opt~=0
+                            g_min=options.gamma(1);
+                            g_max=gamma_opt;
+                            for j=1:m,
+                               for q=1:no                              
+                                   Ldf_mat{j}(:,q)=transpose(Gphif{j,q})*x;
+                               end
+                           end
+                        else
+                            break;
+                        end
+                    end
                    
-                   Ag=[];
-                   bg=[];
                    
-                   for j=1:m
-                       
-                       if sum(lambda)==0
-                           Wfgamma{j}=inv(gamma)*Wf{j};
-                       else
-                           
-                           for k=1:4,
-                               if lambda(k)~=0
-                                   Wfgamma{j}(:,k)=inv(gamma)*Wf{j}(:,k);
-                               else
-                                   Wfgamma{j}(:,k)=Wf{j}(:,k);
+               
+                   while g_max-g_min > g_tol
+
+                       Ag=[];
+                       bg=[];
+
+                       for j=1:m
+
+                           if sum(lambda)==0
+                               Wfgamma{j}=inv(gamma)*Wf{j};
+                           else
+
+                               for k=1:4,
+                                   if lambda(k)~=0
+                                       Wfgamma{j}(:,k)=inv(gamma)*Wf{j}(:,k);
+                                   else
+                                       Wfgamma{j}(:,k)=Wf{j}(:,k);
+                                   end
                                end
                            end
                        end
-                   end
-                   
-                   for j=1:m
-                       
-                       for q=1:no
-                           [A1 b1]=Ab_HinfCons(Gphif{j,q},Wfgamma{j},Ldf_mat{j}(:,q),nq,lambda);
-                           Ag=[Ag ; A1];
-                           bg=[bg ; b1];
-                       end
-                       
-                   end
-                   Ag=[A;Ag];
-                   bg=[b;bg];
-                   [x,optval,xflag] = solveopt(H,f,Ag,bg,[],YesYalmip,rho,ops);
-                   
-                   if xflag==1,
-                       
-                       x_opt=x;gamma_opt=gamma;optval_opt=optval;xflag_opt=xflag;
-                       A_opt=Ag;b_opt=bg;
 
-                       g_max=gamma;
+                       for j=1:m
 
-                       disp(['gamma=', num2str(g_max)])
-                       gamma=mean([g_min,gamma]);
-                       %gamma=mean([options.gamma(1),gamma]);
-                       
-                       for j=1:m,
-                           for q=1:no                              
-                               Ldf_mat{j}(:,q)=transpose(Gphif{j,q})*x;
+                           for q=1:no
+                               [A1 b1]=Ab_HinfCons(Gphif{j,q},Wfgamma{j},Ldf_mat{j}(:,q),nq,lambda);
+                               Ag=[Ag ; A1];
+                               bg=[bg ; b1];
                            end
+
                        end
-                       
-                   else
-                       g_min=gamma;
-                       gamma=mean([g_max,gamma]);
+                       Ag=[A;Ag];
+                       bg=[b;bg];
+                       [x,optval,xflag] = solveopt(H,f,Ag,bg,[],YesYalmip,rho,ops);
+
+                       if xflag==1,
+
+                           x_opt=x;gamma_opt=gamma;optval_opt=optval;xflag_opt=xflag;
+                           A_opt=Ag;b_opt=bg;
+
+                           g_max=gamma;
+
+                           disp(['gamma=', num2str(g_max)])
+                           gamma=mean([g_min,gamma]);
+                           %gamma=mean([options.gamma(1),gamma]);
+
+                           
+
+                       else
+                           g_min=gamma;
+                           gamma=mean([g_max,gamma]);
+                       end
+
                    end
-                   
                end
                
                if gamma_opt~=0
@@ -1581,12 +1610,12 @@ else % if MIMO
         end
     end
     
-%     for j=1:m
-%         
+    for j=1:m
+        
 %         [phif{j},Gf{j},LDf{j},w{j}]=removeInf(phif{j},Gf{j},LDf{j},w{j});
 %         [phifd{j},FGf{j},FLDf{j}]=removeInf(phifd{j},FGf{j},FLDf{j},[]);
-%         N(j)=length(w{j}); % lengths of frequency vectors
-%     end
+        N(j)=length(w{j}); % lengths of frequency vectors
+    end
     
     
     
