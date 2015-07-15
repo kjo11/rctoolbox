@@ -54,6 +54,9 @@ end
 
 m=Gdim(1); no=Gdim(2); ni=Gdim(3);
 
+if isStateSpace==1
+    [A_ss,C_ss,D_ss] = ss_data(inphi,no,ni);
+end
 
 
 %------- Gain scheduled vector construction -------------------------------
@@ -1043,13 +1046,6 @@ else % if MIMO
             end
         end
         
-        if iscell(inphi)
-            A_ss = inphi{1,1}.par.A;
-            C_ss = inphi{1,1}.par.C;
-        else
-            A_ss = inphi.par.A;
-            C_ss = repmat(inphi.par.C,ni,1);
-        end
         
         for k=1:Ngs
             K1{k} = ss(A_ss,B{k},C_ss,0);
@@ -1893,4 +1889,35 @@ function [H, A, f] = reshape_HAf_ss(H,A,f,ntot,ni)
     A = sum(reshape(A,size(A,1),nss,ni),3);
     f = sum(reshape(f,nss,1,ni),3);
     H = sum(reshape(sum(reshape(H,ntot,nss,ni),3)',nss,nss,ni),3)';
+end
+
+function [A,C,D] = ss_data(inphi,ni,no)
+    if iscell(inphi)
+        A = inphi{1,1}.par.A;
+        C = inphi{1,1}.par.C;
+        D = inphi{1,1}.par.D;
+    else
+        A = inphi.par.A;
+        C = inphi.par.C;
+        D = inphi.par.D;
+    end
+    
+    if size(C,1)~=ni
+        if size(C,1)==1
+            C = repmat(C,ni,1);
+        else
+            error('C must be a row vector or a matrix with the same number of rows as inputs in G')
+        end
+    end
+    
+    if size(D,1) == 1
+        D = repmat(D,ni,1);
+    end
+    if size(D,2) == 1
+        D = repmat(D,1,no);
+    end
+    
+    if sum(size(D) ~= [ni, no])
+        error('If D is given as a matrix it must be ni x no, where ni is the number of inputs in G and no the number of outputs.')
+    end
 end
