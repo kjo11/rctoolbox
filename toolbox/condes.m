@@ -49,10 +49,8 @@ function [K,sol_info] = condes (inG , inphi , inper , options)
 if nargin < 4
     options = condesopt;
 end
-bisection_iterations = 10;
 
-[Gf,Gdim,phi,n,phif,phifd,per,w,N,performance,Ldf,LDf,FGf,FLdf,FLDf,CovGf] = condesdata (inG,inphi,inper,options);
-
+[Gf,Gdim,phi,n,phif,phifd,per,w,N,performance,Ldf,LDf,FGf,FLdf,FLDf,CovGf,isStateSpace] = condesdata (inG,inphi,inper,options);
 
 m=Gdim(1); no=Gdim(2); ni=Gdim(3);
 
@@ -599,7 +597,11 @@ end
             disp(['K{'  int2str(k) '}=']),K{k}
         end
     else
-        K = reduced_order(rhox,phi,inphi.ConType);
+        if isempty(strfind(inphi.ConType,'ss'))
+            K = reduced_order(rhox,phi,inphi.ConType);
+        else
+            K = ss(inphi.par.A,rhox,inphi.par.C,0);
+        end
         test_stability_siso(K,inG);
     end
     
@@ -822,7 +824,13 @@ else % if MIMO
                 A= [A ; A_b];
                 b= [b ; b_b];
             end           
-                                    
+            if isStateSpace==1
+                % sum A, f and H matrices for each input for state space
+                nss = ntot/ni;
+                A = sum(reshape(A,size(A,1),nss,ni),3);
+                f = sum(reshape(f,nss,1,ni),3);
+                H = sum(reshape(sum(reshape(H,ntot,nss,ni),3)',nss,nss,ni),3)';
+            end
             [x,optval,xflag]=solveopt(H,f,A,b,StabCons,YesYalmip,rho,ops);
                         
             
@@ -858,14 +866,20 @@ else % if MIMO
                 Ku=per{1}{1}.par(2);
                 wh=per{1}{1}.par(3);
                 
-                [A_b,b_b]=gain_bound_MIMO(phif,w,Ku,wh,theta_bar,Gdim,ntot)
+                [A_b,b_b]=gain_bound_MIMO(phif,w,Ku,wh,theta_bar,Gdim,ntot);
                 
                 
                 A= [A ; A_b];
                 b= [b ; b_b];                
                 
             end
-            
+            if isStateSpace==1
+                % sum A, f and H matrices for each input for state space
+                nss = ntot/ni;
+                A = sum(reshape(A,size(A,1),nss,ni),3);
+                f = sum(reshape(f,nss,1,ni),3);
+                H = sum(reshape(sum(reshape(H,ntot,nss,ni),3)',nss,nss,ni),3)';
+            end
             [x,optval,xflag]=solveopt(H,f,A,b,StabCons,YesYalmip,rho,ops);
     
 
@@ -920,7 +934,13 @@ else % if MIMO
             
             if isempty(gamma),
                 Convcons = [HinfConstraint, StabCons ];
-
+                if isStateSpace==1
+                    % sum A, f and H matrices for each input for state space
+                    nss = ntot/ni;
+                    A = sum(reshape(A,size(A,1),nss,ni),3);
+                    f = sum(reshape(f,nss,1,ni),3);
+                    H = sum(reshape(sum(reshape(H,ntot,nss,ni),3)',nss,nss,ni),3)';
+                end
                 [x,optval,xflag]=solveopt(H,f,A,b,Convcons,YesYalmip,rho,ops);
             else
                % gamma iteration using bisection algorithm
@@ -982,6 +1002,13 @@ else % if MIMO
                        end
                        Ag=[A;Ag];
                        bg=[b;bg];
+                       if isStateSpace==1
+                            % sum A, f and H matrices for each input for state space
+                            nss = ntot/ni;
+                            Ag = sum(reshape(Ag,size(A,1),nss,ni),3);
+                            f = sum(reshape(f,nss,1,ni),3);
+                            H = sum(reshape(sum(reshape(H,ntot,nss,ni),3)',nss,nss,ni),3)';
+                        end
                        [x,optval,xflag] = solveopt(H,f,Ag,bg,[],YesYalmip,rho,ops);
 
                        if xflag==1,
@@ -1022,15 +1049,40 @@ else % if MIMO
     %----------------------------------------------------------------------
             
     K1=cell(1,Ngs);
-    for p=1:ni
+    if isStateSpace == 1
+        B = cell(1,Ngs);
         for q=1:no
-            
-            nn=Ngs*(sum(sum(n(1:p-1,:)))+sum(n(p,1:q-1)));
+            nn=Ngs*(sum(n(1,1:q-1)));
             for k=1:Ngs
-                K1{k}(p,q) = minreal(transpose(x(nn+k:Ngs:nn+Ngs*n(p,q))) * phi{p,q});
+                B{k}(:,q) = x(nn+k:Ngs:nn+Ngs*n(1,q));
+            end
+        end
+        
+        if iscell(inphi)
+            A_ss = inphi{1,1}.par.A;
+            C_ss = inphi{1,1}.par.C;
+        else
+            A_ss = inphi.par.A;
+            C_ss = repmat(inphi.par.C,ni,1);
+        end
+        
+        for k=1:Ngs
+            K1{k} = ss(A_ss,B{k},C_ss,0);
+        end
+    else
+
+        for p=1:ni
+            for q=1:no
+
+                nn=Ngs*(sum(sum(n(1:p-1,:)))+sum(n(p,1:q-1)));
+                for k=1:Ngs
+                    K1{k}(p,q) = minreal(transpose(x(nn+k:Ngs:nn+Ngs*n(p,q))) * phi{p,q});
+                end
             end
         end
     end
+       
+    
     if Ngs==1,
         K=K1{1};
     else
@@ -1283,7 +1335,7 @@ end
 %=============================================================================================
 %=============================================================================================
 
-function [Gf,Gdim,phi,n,phif,phifd,per,w,N,performance,Ldf,LDf,FGf,FLdf,FLDf,CovGf] = condesdata(inG,inphi,inper,options)
+function [Gf,Gdim,phi,n,phif,phifd,per,w,N,performance,Ldf,LDf,FGf,FLdf,FLDf,CovGf,isStateSpace] = condesdata(inG,inphi,inper,options)
 
 
 % Determining number of models
@@ -1338,6 +1390,8 @@ per=cell(1,m);
 
 if no==1 & ni==1  % SISO system
     
+    isStateSpace = ~isempty(strfind(inphi.ConType,'ss'));
+    
     if ~isempty(options.F)
         if ~iscell(options.F)
             for j=1:m
@@ -1367,6 +1421,7 @@ if no==1 & ni==1  % SISO system
     
     phi=inphi.phi;
     [n , ntoto]=size(phi);
+
         
     
     if ~iscell(inper)
@@ -1455,6 +1510,7 @@ else % if MIMO
     
     phi=cell(ni,no);
     if ~iscell(inphi)
+        isStateSpace = ~isempty(strfind(inphi.ConType,'ss'));
         
         if strcmp(inphi.ConType,'PID') 
             [num,den]=tfdata(inphi.phi(3),'v');
@@ -1475,6 +1531,15 @@ else % if MIMO
         
         phi(:,:)={inphi.phi};
     else
+        isStateSpace = ~isempty(strfind(inphi{1,1}.ConType,'ss'));
+        
+        if isStateSpace == 1
+            if size(inphi,1)~=ni
+                error('Phi must have the same number of elements as the number of inputs to the system.')
+            end
+            inphi = repmat(inphi,1,no); % repeat same phi for each output
+        end
+        
         for p=1:ni
             for q=1:no
                 if strcmp(inphi{p,q}.ConType,'PID') 
@@ -1836,3 +1901,4 @@ function [] = test_stability_siso(K,inG)
     end
 
 end
+

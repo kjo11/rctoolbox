@@ -1,4 +1,5 @@
-
+addpath('../toolbox')
+%%
 s=tf('s');
 
 G{1}=exp(-3*s)*4/(10*s+1); 
