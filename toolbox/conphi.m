@@ -237,16 +237,18 @@ switch ConType(1:3)
             ns = length(ConPar{1});
             a = poly(ConPar{1});
             C = ConPar{2};
-            if size(C,2) ~= ns
-                error('C must have the same number of columns as A')
-            end
+
             if length(ConPar) > 2
                 D = ConPar{3};
+                if isempty(C)
+                    C = [1, zeros(1,ns-1)];
+                end
             else
                 D = 0;
             end
-            if size(C,1) ~= size(D,1)
-                error('C must have the same number of rows as D')
+            
+            if size(C,2) ~= ns
+                error('C must have the same number of columns as A')
             end
         else
             ns = length(ConPar);
@@ -254,8 +256,8 @@ switch ConType(1:3)
             C = [1, zeros(1,ns-1)];
             D = 0;
         end
-        a = -a(2:end);
-        A = full(spdiags(ones(ns,1),1,[a(:),zeros(ns,ns-1)]));
+        a = a(2:end); % remove 1 at beginning of a 
+        A = full(spdiags(ones(ns,1),1,[-a(:),zeros(ns,ns-1)]));
         
         
         if strcmp(CorD,'s')
@@ -270,11 +272,11 @@ switch ConType(1:3)
             phi = cell(size(C,1),1);
             for i=1:size(C,1)
                 phi{i,1}.phi = transpose(C(i,:)/(var*eye(ns)-A));
-                phi{i,1}.par.A = A;
-                phi{i,1}.par.C = C;
-                phi{i,1}.par.D = D;
                 phi{i,1}.ConType = ConType;
             end
+            phi{1,1}.par.A = A;
+            phi{1,1}.par.C = C;
+            phi{1,1}.par.D = D;
         
         else
             phi.phi = transpose(C/(var*eye(ns)-A));
