@@ -55,6 +55,7 @@ end
 m=Gdim(1); no=Gdim(2); ni=Gdim(3);
 
 
+
 %------- Gain scheduled vector construction -------------------------------
 theta=options.gs;
 delta=options.np;
@@ -825,11 +826,7 @@ else % if MIMO
                 b= [b ; b_b];
             end           
             if isStateSpace==1
-                % sum A, f and H matrices for each input for state space
-                nss = ntot/ni;
-                A = sum(reshape(A,size(A,1),nss,ni),3);
-                f = sum(reshape(f,nss,1,ni),3);
-                H = sum(reshape(sum(reshape(H,ntot,nss,ni),3)',nss,nss,ni),3)';
+                [H,A,f] = reshape_HAf_ss(H,A,f,ntot,ni);
             end
             [x,optval,xflag]=solveopt(H,f,A,b,StabCons,YesYalmip,rho,ops);
                         
@@ -874,11 +871,7 @@ else % if MIMO
                 
             end
             if isStateSpace==1
-                % sum A, f and H matrices for each input for state space
-                nss = ntot/ni;
-                A = sum(reshape(A,size(A,1),nss,ni),3);
-                f = sum(reshape(f,nss,1,ni),3);
-                H = sum(reshape(sum(reshape(H,ntot,nss,ni),3)',nss,nss,ni),3)';
+                [H,A,f] = reshape_HAf_ss(H,A,f,ntot,ni);
             end
             [x,optval,xflag]=solveopt(H,f,A,b,StabCons,YesYalmip,rho,ops);
     
@@ -935,11 +928,7 @@ else % if MIMO
             if isempty(gamma),
                 Convcons = [HinfConstraint, StabCons ];
                 if isStateSpace==1
-                    % sum A, f and H matrices for each input for state space
-                    nss = ntot/ni;
-                    A = sum(reshape(A,size(A,1),nss,ni),3);
-                    f = sum(reshape(f,nss,1,ni),3);
-                    H = sum(reshape(sum(reshape(H,ntot,nss,ni),3)',nss,nss,ni),3)';
+                    [H,A,f] = reshape_HAf_ss(H,A,f,ntot,ni);
                 end
                 [x,optval,xflag]=solveopt(H,f,A,b,Convcons,YesYalmip,rho,ops);
             else
@@ -1003,11 +992,7 @@ else % if MIMO
                        Ag=[A;Ag];
                        bg=[b;bg];
                        if isStateSpace==1
-                            % sum A, f and H matrices for each input for state space
-                            nss = ntot/ni;
-                            Ag = sum(reshape(Ag,size(A,1),nss,ni),3);
-                            f = sum(reshape(f,nss,1,ni),3);
-                            H = sum(reshape(sum(reshape(H,ntot,nss,ni),3)',nss,nss,ni),3)';
+                            [H,Ag,f] = reshape_HAf_ss(H,Ag,f,ntot,ni);
                         end
                        [x,optval,xflag] = solveopt(H,f,Ag,bg,[],YesYalmip,rho,ops);
 
@@ -1902,3 +1887,10 @@ function [] = test_stability_siso(K,inG)
 
 end
 
+function [H, A, f] = reshape_HAf_ss(H,A,f,ntot,ni)
+% sum A, f and H matrices for each input for state space
+    nss = ntot/ni;
+    A = sum(reshape(A,size(A,1),nss,ni),3);
+    f = sum(reshape(f,nss,1,ni),3);
+    H = sum(reshape(sum(reshape(H,ntot,nss,ni),3)',nss,nss,ni),3)';
+end
