@@ -52,7 +52,7 @@ for j=1:m,
     NK{j}(:,1)=freqresp(K,w{j});
     X=real(NK{j}.*NG{j});
     Y=imag(NK{j}.*NG{j});
-    plot(X,Y,linestyles{j})
+    plot(X,Y,linestyles{mod(j,length(linestyles))})
     if ~isempty(CovG)
         for k=1:1:length(w{j})
             KDelta=[];
