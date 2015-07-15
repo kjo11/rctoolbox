@@ -34,9 +34,10 @@ function phi = conphi(ConType,ConPar,CorD,F)
 %       
 %       For state space, ConPar is a vector containing the eigenvalues of 
 %       the controller A matrix. ConPar can also be given as a cell where
-%       ConPar{1} gives the eigenvalues of the A matrix and ConPar{2} gives
-%       the C matrix of the controller. (By default the C matrix is 
-%       [1 0 0 ...])
+%       ConPar{1} gives the eigenvalues of the A matrix, ConPar{2} gives
+%       the C matrix of the controller and (optionally) ConPar{3} gives the
+%       D matrix of the controller. (By default the C matrix is [1 0 0 ...])
+%       and the D matrix is 0.
 %
 % CorD : is a string that can be 's' or 'z' to define continuous-time or
 %       discrete-time controller. If it is not assigned a continuous-time 
@@ -239,10 +240,19 @@ switch ConType(1:3)
             if size(C,2) ~= ns
                 error('C must have the same number of columns as A')
             end
+            if length(ConPar) > 2
+                D = ConPar{3};
+            else
+                D = 0;
+            end
+            if size(C,1) ~= size(D,1)
+                error('C must have the same number of rows as D')
+            end
         else
             ns = length(ConPar);
             a = poly(ConPar);
             C = [1, zeros(1,ns-1)];
+            D = 0;
         end
         a = -a(2:end);
         A = full(spdiags(ones(ns,1),1,[a(:),zeros(ns,ns-1)]));
@@ -262,6 +272,7 @@ switch ConType(1:3)
                 phi{i,1}.phi = transpose(C(i,:)/(var*eye(ns)-A));
                 phi{i,1}.par.A = A;
                 phi{i,1}.par.C = C;
+                phi{i,1}.par.D = D;
                 phi{i,1}.ConType = ConType;
             end
         
@@ -269,6 +280,7 @@ switch ConType(1:3)
             phi.phi = transpose(C/(var*eye(ns)-A));
             phi.par.A = A;
             phi.par.C = C;
+            phi.par.D = D;
             phi.ConType = ConType;
         end
             
