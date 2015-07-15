@@ -244,20 +244,36 @@ switch ConType(1:3)
             a = poly(ConPar);
             C = [1, zeros(1,ns-1)];
         end
-        a = a(2:end);
+        a = -a(2:end);
         A = full(spdiags(ones(ns,1),1,[a(:),zeros(ns,ns-1)]));
         
         
         if strcmp(CorD,'s')
-            phi.phi = transpose(C/(s*eye(ns)-A));
-            phi.ConType = 'ss';
+            var = s;
+            ConType = 'ss';
         else
-            phi.phi = transpose(C/(z*eye(ns)-A));
-            phi.ConType = 'ssd';
+            var = z;
+            ConType = 'ssd';
         end
         
-        phi.par.A = A;
-        phi.par.C = C;
+        if size(C,1) > 1
+            phi = cell(size(C,1),1);
+            for i=1:size(C,1)
+                phi{i,1}.phi = transpose(C(i,:)/(var*eye(ns)-A));
+                phi{i,1}.par.A = A;
+                phi{i,1}.par.C = C;
+                phi{i,1}.ConType = ConType;
+            end
+        
+        else
+            phi.phi = transpose(C/(var*eye(ns)-A));
+            phi.par.A = A;
+            phi.par.C = C;
+            phi.ConType = ConType;
+        end
+            
+        
+        
         
     otherwise
         
