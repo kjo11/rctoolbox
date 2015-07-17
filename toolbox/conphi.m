@@ -52,6 +52,7 @@ function phi = conphi(ConType,ConPar,CorD,F)
 %   phi=conphi('Generalized',[0.1 0.2 0.3],'s',1/s)
 %   z=zpk('z',0.1);
 %   phi=conphi('UD',[1/(z-1);1/(z*(z-1));1/(z^2*(z-1))])
+%   phi=conphi('SS',{[0 -0.5 -0.5],[1 0 0],0.1},'s');
 %
 
 
@@ -234,6 +235,9 @@ switch ConType(1:3)
         end
 
         if iscell(ConPar)
+            if ~isvector(ConPar{1})
+                error('The eigenvalues of A must be given as a vector.')
+            end
             ns = length(ConPar{1});
             a = poly(ConPar{1});
             C = ConPar{2};
@@ -251,13 +255,21 @@ switch ConType(1:3)
                 error('C must have the same number of columns as A')
             end
         else
+            if ~isvector(ConPar)
+                error('The eigenvalues of A must be given as a vector.')
+            end
             ns = length(ConPar);
             a = poly(ConPar);
             C = [1, zeros(1,ns-1)];
             D = 0;
         end
         a = a(2:end); % remove 1 at beginning of a 
-        A = full(spdiags(ones(ns,1),1,[-a(:),zeros(ns,ns-1)]));
+        
+        if length(a)==1 % error with spdiags when A is 1x1
+            A = -a;
+        else
+            A = full(spdiags(ones(ns,1),1,[-a(:),zeros(ns,ns-1)]));
+        end
         
         
         if strcmp(CorD,'s')

@@ -50,13 +50,22 @@ if nargin < 4
     options = condesopt;
 end
 
-[Gf,Gdim,phi,n,phif,phifd,per,w,N,performance,Ldf,LDf,FGf,FLdf,FLDf,CovGf,isStateSpace] = condesdata (inG,inphi,inper,options);
+if iscell(inphi)
+    isStateSpace = strncmp(inphi{1,1}.ConType,'ss',2);
+else
+    isStateSpace = strncmp(inphi.ConType,'ss',2);
+end
+
+if isStateSpace==1
+    [A_ss,C_ss,D_ss,inphi] = ss_data(inphi,inG);
+end
+
+
+[Gf,Gdim,phi,n,phif,phifd,per,w,N,performance,Ldf,LDf,FGf,FLdf,FLDf,CovGf] = condesdata (inG,inphi,inper,options);
 
 m=Gdim(1); no=Gdim(2); ni=Gdim(3);
 
-if isStateSpace==1
-    [A_ss,C_ss,D_ss] = ss_data(inphi,no,ni);
-end
+
 
 
 %------- Gain scheduled vector construction -------------------------------
@@ -163,15 +172,6 @@ else
         error('The tolerance of gamma should be greater than zero');
     end
     
-    if length(options.gamma) > 3
-        bisection_iterations = options.gamma(4);
-        if bisection_iterations < 1 || bisection_iterations~=round(bisection_iterations)
-            error('The number of bisection iterations should be an integer greater than 0')
-        end
-    else
-        disp('Number of bisection iterations not specified. Assuming 5 iterations.')
-        bisection_iterations = 5;
-    end
     
     gamma=g_max;
 end
@@ -502,10 +502,12 @@ end
 %------------ Bisection algorithm to minimize gamma------------------------
 
                 gamma_opt=0;
-                
-                
-                for nit=1:bisection_iterations
-                    
+                gamma_opt_old = g_tol + 1;
+                nit = 0;
+
+                while gamma_opt_old - gamma_opt > g_tol
+                    gamma_opt_old = gamma_opt;
+                    nit = nit+1;
                     if nit ~= 1
                         if gamma_opt~=0
                             g_min=options.gamma(1);
@@ -573,6 +575,7 @@ end
 
                     end
                     
+                    
                 end
 
                 if gamma_opt~=0
@@ -596,15 +599,22 @@ end
         fprintf('\n');
         disp('K{1}+theta_1 K{2}+theta_2 K{3} + ... +theta_1^2 k{n}+theta_2^2k{n+1}+...')
         fprintf('\n');
-        for k=1:Ngs
-            K{k}=minreal(rhox(:,k)' * phi);
-            disp(['K{'  int2str(k) '}=']),K{k}
+        if isStateSpace==0
+            for k=1:Ngs
+                K{k} = reduced_order(rhox(:,k),phi,inphi.ConType);
+                disp(['K{'  int2str(k) '}=']),K{k}
+            end
+        else
+            K{1} = ss(A_ss,rhox(:,1),C_ss,D_ss);
+            for k=1:Ngs
+                K{k} = ss(A_ss,rhox(:,k),C_ss,0);
+            end
         end
     else
-        if isempty(strfind(inphi.ConType,'ss'))
+        if isStateSpace==0
             K = reduced_order(rhox,phi,inphi.ConType);
         else
-            K = ss(inphi.par.A,rhox,inphi.par.C,0);
+            K = ss(A_ss,rhox,C_ss,D_ss);
         end
         test_stability_siso(K,inG);
     end
@@ -829,7 +839,7 @@ else % if MIMO
                 b= [b ; b_b];
             end           
             if isStateSpace==1
-                [H,A,f] = reshape_HAf_ss(H,A,f,ntot,ni);
+                [H,A,f,b] = reshape_HAfb_ss(H,A,f,b,D_ss,ntot,ni);
             end
             [x,optval,xflag]=solveopt(H,f,A,b,StabCons,YesYalmip,rho,ops);
                         
@@ -874,7 +884,7 @@ else % if MIMO
                 
             end
             if isStateSpace==1
-                [H,A,f] = reshape_HAf_ss(H,A,f,ntot,ni);
+                [H,A,f,b] = reshape_HAfb_ss(H,A,f,b,D_ss,ntot,ni);
             end
             [x,optval,xflag]=solveopt(H,f,A,b,StabCons,YesYalmip,rho,ops);
     
@@ -931,7 +941,7 @@ else % if MIMO
             if isempty(gamma),
                 Convcons = [HinfConstraint, StabCons ];
                 if isStateSpace==1
-                    [H,A,f] = reshape_HAf_ss(H,A,f,ntot,ni);
+                    [H,A,f,b] = reshape_HAfb_ss(H,A,f,b,D_ss,ntot,ni);
                 end
                 [x,optval,xflag]=solveopt(H,f,A,b,Convcons,YesYalmip,rho,ops);
             else
@@ -943,9 +953,13 @@ else % if MIMO
                
                Wfgamma=cell(1,m);
                
-               gamma_opt=0;
-               
-               for nit=1:bisection_iterations
+                gamma_opt=0;
+                gamma_opt_old = g_tol + 1;
+                nit = 0;
+                
+                while gamma_opt_old - gamma_opt > g_tol
+                    gamma_opt_old = gamma_opt;
+                    nit = nit+1;
                    if nit ~= 1
                         if gamma_opt~=0
                             g_min=options.gamma(1);
@@ -995,7 +1009,7 @@ else % if MIMO
                        Ag=[A;Ag];
                        bg=[b;bg];
                        if isStateSpace==1
-                            [H,Ag,f] = reshape_HAf_ss(H,Ag,f,ntot,ni);
+                            [H,Ag,f,bg] = reshape_HAfb_ss(H,Ag,f,bg,D_ss,ntot,ni);
                         end
                        [x,optval,xflag] = solveopt(H,f,Ag,bg,[],YesYalmip,rho,ops);
 
@@ -1046,9 +1060,9 @@ else % if MIMO
             end
         end
         
-        
-        for k=1:Ngs
-            K1{k} = ss(A_ss,B{k},C_ss,0);
+        K1{1} = ss(A_ss,B{1},C_ss,D_ss);
+        for k=2:Ngs
+            K1{k} = ss(A_ss,B{k},C_ss,0); % have zero D matrix for systems multiplied by scheduling parameter
         end
     else
 
@@ -1316,7 +1330,7 @@ end
 %=============================================================================================
 %=============================================================================================
 
-function [Gf,Gdim,phi,n,phif,phifd,per,w,N,performance,Ldf,LDf,FGf,FLdf,FLDf,CovGf,isStateSpace] = condesdata(inG,inphi,inper,options)
+function [Gf,Gdim,phi,n,phif,phifd,per,w,N,performance,Ldf,LDf,FGf,FLdf,FLDf,CovGf] = condesdata(inG,inphi,inper,options)
 
 
 % Determining number of models
@@ -1370,9 +1384,7 @@ per=cell(1,m);
 [no ni]=size(G{1});
 
 if no==1 & ni==1  % SISO system
-    
-    isStateSpace = ~isempty(strfind(inphi.ConType,'ss'));
-    
+        
     if ~isempty(options.F)
         if ~iscell(options.F)
             for j=1:m
@@ -1491,8 +1503,6 @@ else % if MIMO
     
     phi=cell(ni,no);
     if ~iscell(inphi)
-        isStateSpace = ~isempty(strfind(inphi.ConType,'ss'));
-        
         if strcmp(inphi.ConType,'PID') 
             [num,den]=tfdata(inphi.phi(3),'v');
             if den(1)==0,
@@ -1512,14 +1522,6 @@ else % if MIMO
         
         phi(:,:)={inphi.phi};
     else
-        isStateSpace = ~isempty(strfind(inphi{1,1}.ConType,'ss'));
-        
-        if isStateSpace == 1
-            if size(inphi,1)~=ni
-                error('Phi must have the same number of elements as the number of inputs to the system.')
-            end
-            inphi = repmat(inphi,1,no); % repeat same phi for each output
-        end
         
         for p=1:ni
             for q=1:no
@@ -1883,15 +1885,24 @@ function [] = test_stability_siso(K,inG)
 
 end
 
-function [H, A, f] = reshape_HAf_ss(H,A,f,ntot,ni)
+function [H, A, f, b] = reshape_HAfb_ss(H,A,f,b,D,ntot,ni)
 % sum A, f and H matrices for each input for state space
     nss = ntot/ni;
     A = sum(reshape(A,size(A,1),nss,ni),3);
     f = sum(reshape(f,nss,1,ni),3);
     H = sum(reshape(sum(reshape(H,ntot,nss,ni),3)',nss,nss,ni),3)';
+    b = b - sum(sum(D));
 end
 
-function [A,C,D] = ss_data(inphi,ni,no)
+function [A,C,D,inphi] = ss_data(inphi,inG)
+    if ~iscell(inG)
+        G{1}=inG;
+    else
+        G=inG;
+    end
+    
+    [no, ni]=size(G{1});
+    
     if iscell(inphi)
         A = inphi{1,1}.par.A;
         C = inphi{1,1}.par.C;
@@ -1908,6 +1919,10 @@ function [A,C,D] = ss_data(inphi,ni,no)
         else
             error('C must be a row vector or a matrix with the same number of rows as inputs in G')
         end
+    end
+    
+    if iscell(inphi)
+        inphi = repmat(inphi,1,no); % repeat same phi for each output
     end
     
     if size(D,1) == 1

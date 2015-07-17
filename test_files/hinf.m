@@ -1,8 +1,9 @@
-load flex_trans.mat
 addpath('../toolbox');
 addpath('../orig_toolbox');
 
 %% SISO
+load flex_trans.mat
+
 wc = 0.74;
 Mm = 0.7;
 Ku = 6.5;
@@ -36,8 +37,8 @@ K2 = condes(G,phi,per,opt2);
 Korig1 = condes_orig(G,phi,per,opt1);
 Korig2 = condes_orig(G,phi,per,opt2);
 
-% figure; bode(K1,K2,Korig1,Korig2)
-
+figure; bode(K1*G{1},K2*G{1},Korig1*G{1},Korig2*G{1},Ld)
+legend('K1','K2','Korig1','Korig2')
 
 %% MIMO
 clear G
