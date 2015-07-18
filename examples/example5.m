@@ -1,6 +1,6 @@
 clear all
 addpath('../toolbox/');
-addpath('../FDRC_v1p3/');
+addpath('../orig_toolbox/');
 
 s=tf('s');
 
@@ -17,7 +17,7 @@ phi=conphi('PID',0.01);
 hinfper=conper('Hinf',W,Ld);
 
 
-opt=condesopt('gamma',[0.2 1.8 0.001],'lambda',[1 1 0 0],'nq',8);
+opt=condesopt('gamma',[0.2 1.8 0.001],'lambda',[1 1 0 0],'nq',30);
 
 
 
