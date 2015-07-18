@@ -1878,31 +1878,49 @@ function K = reduced_order(rhox,phi,ConType)
     end
 end
 
-function [] = test_stability_siso(K,inG)
-% Test stability of SISO systems
-% Uses MATLAB function isstable
-% Can't evaluate stability for FRD plant models, or for continuous-time
-% systems with time delays
-    if ~iscell(inG)
-        G = {inG};
-    else
-        G = inG;
-    end
-    
-    for i=1:length(G)
-        if isa(G{i},'frd')
-            disp('Cannot assess closed-loop stability for FRD-type plant models.')
-        else
-            try 
-                stability_flag = isstable(feedback(K*G{i},1));
-                if ~(stability_flag)
-                    warning(['Closed-loop system appears to be unstable for G{',num2str(i),'}. Check that Ld satisfies the Nyquist stability criterion and contains all poles of the system located on the stability boundary.'])
-                end
-            catch
-                disp('Cannot assess closed-loop stability.')
-            end
-        end
-    end
+% function [wno] = wno_L(Ld)
+%     if isa(Ld,'lti')
+%         Lzpk = zpk(Ld);
+%         wno = sum(real(Lzpk.p) > 0);
+%     elseif isa(Ld,'frd')
+%         x = 1+squeeze(Ld.ResponseData);
+%         w = squeeze(Ld.Frequency);
+%         
+%     end
+% end
+
+function [] = test_stability_siso(inper,inG)
+% % Test stability of SISO systems
+% % Uses MATLAB function isstable
+% % Can't evaluate stability for FRD plant models, or for continuous-time
+% % systems with time delays
+%     if ~iscell(inG)
+%         G = {inG};
+%     else
+%         G = inG;
+%     end
+%     
+%     per = cell(length(G),1);
+%     if ~iscell(inper)
+%         per(1,:)={inper};
+%     else
+%         per=inper;
+%     end
+%     
+%     for i=1:length(G)
+%         N = wno_L(per{i}.Ld);
+%         if isa(G{i},'lti')
+%             Gzpk = zpk(G{i});
+%             P = sum(real(Gzpk.p{1}) > 0);
+%             
+%             
+%         else
+%             
+%             
+%             
+%             
+%         end
+%     end
 
 end
 
