@@ -1,5 +1,6 @@
 clear all
-
+addpath('../toolbox/');
+addpath('../orig_toolbox/');
 
 % Multimodel, MIMO, continuous, PI, 'LS', Gain-scheduled
 
@@ -19,7 +20,12 @@ per=conper('LS',0.5,1/(30*s));
 w=0:0.01:pi;
 
 options = condesopt ('Gbands','on', 'np',1,'gs',[-1;1],'yalmip','off');
-K=condes(G,phi,per,options)
+K=condes(G,phi,per,options);
+K2 = condes(G,phi,per,options);
+tf(K{1})
+tf(K2{1})
+tf(K{2})
+tf(K2{2})
 
 % No problems detected 
 % 

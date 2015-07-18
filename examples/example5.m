@@ -1,4 +1,6 @@
 clear all
+addpath('../toolbox/');
+addpath('../FDRC_v1p3/');
 
 s=tf('s');
 
@@ -15,12 +17,18 @@ phi=conphi('PID',0.01);
 hinfper=conper('Hinf',W,Ld);
 
 
-opt=condesopt('gamma',[0.2 1.8 0.001],'lambda',[1 1 0 0],'nq',30);
+opt=condesopt('gamma',[0.2 1.8 0.001],'lambda',[1 1 0 0],'nq',8);
 
 
 
 tic
-[K sol]=condes(G,phi,hinfper,opt)
+[K sol]=condes(G,phi,hinfper,opt);
+toc
+
+pause
+
+tic
+[K2 sol2] = condes_orig(G,phi,hinfper,opt);
 toc
 % 
 % Optimization terminated.
@@ -50,10 +58,14 @@ opt.nq=[];
 opt.yalmip='on';
 
 
-tic
-[K sol]=condes(G,phi,hinfper,opt)
-toc
+% tic
+% [K3 sol3]=condes(G,phi,hinfper,opt)
+% toc
 
+
+% tic
+% [K4 sol4]=condes_orig(G,phi,hinfper,opt)
+% toc
 
 % No problems detected 
 % gamma=0.72578

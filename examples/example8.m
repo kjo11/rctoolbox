@@ -1,4 +1,4 @@
-clear all
+% clear all
 addpath('../toolbox')
 addpath('../orig_toolbox')
 
@@ -55,7 +55,8 @@ per=conper('Hinf',W,Ld);
 %      gamma: []
 %      xflag: 1
 
-options=condesopt('gamma',[0.1,2,.01]);
+options=condesopt('gamma',[0.1,2,.1]);
+% options = condesopt;
 
 [K2 sol2]=condes_orig(G,phi,per,options)
 

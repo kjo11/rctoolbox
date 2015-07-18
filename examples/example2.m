@@ -1,6 +1,5 @@
-
-clear all
-
+addpath('../toolbox');
+addpath('../orig_toolbox');
 
 % Single model, SISO, continuous, PID, 'GPhC', Quadprog
 
@@ -11,7 +10,10 @@ phi=conphi('PID');
 per=conper('GPhC',[2,60,.09],.1/s^2);
 
 
-K=condes(G,phi,per)
+K=condes(G,phi,per);
+K2 = condes_orig(G,phi,per);
+tf(K)
+tf(K2)
 
 % Optimization terminated.
 % 

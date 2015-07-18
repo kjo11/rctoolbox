@@ -1,7 +1,7 @@
+addpath('../toolbox');
+addpath('../orig_toolbox/');
 
-
-clear all
-
+clear G per phi
 
 % Three models, SISO, continuous, PID, 'GPhC', Linprog
 
@@ -19,7 +19,11 @@ per{3}=conper('GPhC',[3,60,.071]);
 freq = logspace(-3,2,400);
 
 options = condesopt ('w',freq);
-K=condes(G,phi,per,options)
+K=condes(G,phi,per,options);
+K2 = condes(G,phi,per,options);
+
+tf(K)
+tf(K2)
 
 
 % Optimization terminated.
