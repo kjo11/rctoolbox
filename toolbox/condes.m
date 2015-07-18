@@ -700,7 +700,7 @@ else % if MIMO
                     end
                 end
                 
-                if no==2 & ~isempty(nq)
+                if no==2 && ni==2 && ~isempty(nq)
                     
                     for q=1:no
                         
