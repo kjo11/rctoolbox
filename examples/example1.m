@@ -1,3 +1,4 @@
+clc
 addpath('../toolbox');
 addpath('../orig_toolbox');
 

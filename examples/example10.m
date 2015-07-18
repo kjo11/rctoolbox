@@ -65,4 +65,4 @@ W{1}=tf(0.5);
 per=conper('Hinf',W,Ld);
 K2=condes(M2,phi,per)
 T2=feedback(G*K2,1);
-step(T2)
+figure; step(T2)

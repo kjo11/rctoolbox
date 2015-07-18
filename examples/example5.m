@@ -1,6 +1,11 @@
 clear all
-addpath('../toolbox/');
-addpath('../orig_toolbox/');
+% addpath('../toolbox/');
+% addpath('../orig_toolbox/');
+% addpath('../../cplex');
+% addpath('../../qpc');
+% addpath(genpath('../../SDPT3/'));
+% addpath('../../tbxmanager');
+% tbxmanager restorepath
 
 s=tf('s');
 
@@ -21,15 +26,18 @@ opt=condesopt('gamma',[0.2 1.8 0.001],'lambda',[1 1 0 0],'nq',30);
 
 
 
-tic
-[K sol]=condes(G,phi,hinfper,opt);
-toc
+% tic
+% [K sol]=condes(G,phi,hinfper,opt);
+% toc
+% 
+% 
+% 
+% tic
+% [K2 sol2] = condes_orig(G,phi,hinfper,opt);
+% toc
 
-pause
 
-tic
-[K2 sol2] = condes_orig(G,phi,hinfper,opt);
-toc
+
 % 
 % Optimization terminated.
 % gamma=0.72891
@@ -58,9 +66,9 @@ opt.nq=[];
 opt.yalmip='on';
 
 
-% tic
-% [K3 sol3]=condes(G,phi,hinfper,opt)
-% toc
+tic
+[K3 sol3]=condes(G,phi,hinfper,opt)
+toc
 
 
 % tic

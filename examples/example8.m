@@ -23,9 +23,8 @@ phi=conphi('PID',0.05,'s');
 per=conper('Hinf',W,Ld); 
 
 [K1, sol1]=condes_orig(G,phi,per);
-pause
 [K3, sol3] = condes(G,phi,per);
-pause
+
 % Optimization terminated.
 %  
 % Transfer function from input 1 to output...
@@ -57,11 +56,11 @@ pause
 %      gamma: []
 %      xflag: 1
 
-options=condesopt('gamma',[0.1,2,.1]);
+options=condesopt('gamma',[0.1,2,.01],'lambda',[1 0 0 0]);
 % options = condesopt;
 
 [K2, sol2]=condes_orig(G,phi,per,options);
-pause
+
 [K4, sol4]=condes(G,phi,per,options);
 
 % K2 =
