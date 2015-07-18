@@ -1,0 +1,60 @@
+Examples
+
+Example 1
+Single model, SISO, continuous, PID, 'GPhC', Linprog
+Model with time delay
+
+Example 2
+Single model, SISO, continuous, PID, 'GPhC', Quadprog
+Model with time delay
+
+Example 3
+Three models, SISO, continuous, PID, 'GPhC', Linprog
+Varying time delay
+
+Example 4
+Multimodel, 2x2 MIMO, continuous, PI, 'LS', Gain-scheduled
+with Gbands, no yalmip
+
+Example 5
+Unstable single model, SISO, continuous, PID, Hinf
+with and without yalmip
+
+Example 7
+Multimodel, 2x2 MIMO, continuous, PI, 'Hinf'
+
+Example 8
+Multimodel, 2x2 MIMO, continuous, PI, 'Hinf'
+With and without gamma optimisation
+
+Example 9
+G{1}...G{6} are six first order identified models concerning a domestic condensing boiler in different water flow rates theta=[8;7;6;5;4;3] lit./min. The objective is to compute a gain-scheduled PI controller.
+File model_ex9 missing
+
+Example 10
+Single model, SISO, discrete, Laguerre w/ integrator, LS
+Get linearised and convex solutions
+
+Example 11
+Multimodel, SISO, continuous plant/discrete controller, Laguerre, LS
+Use uncertain parameters and usample to generate multimodel
+
+Example 12
+Multimodel, SISO, continuous, Laguerre w/ integrator, Hinf
+Compare order of Laguerre from 1 to 10, also compare to MATLAB solution using dksyn
+
+Example 13
+NASA HiMAT model in state space
+% This example could not be solved straightforwardly. Because our approach
+% for multivariable controller design covers only decoupling controller and
+% the specification are defined for the diagonal elements.
+
+Example 14
+Multimodel with varying parameters, discrete, Laguerre w/ integrator, Hinf
+
+Example 15
+Multimodel using parametric uncertainty and usample, continuous, Generalized w/ integrator, Hinf
+Use W{3} to limit gain in high frequency
+
+Example 16
+Multimodel, MISO, continuous, PID, 'GPhC'
