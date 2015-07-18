@@ -746,7 +746,11 @@ else % if MIMO
                                     r=[ r  abs(rhod{q}'*Gphi{p,q}(:,k))];
                                 end
                             end
-                            StabCons= StabCons+ set(sum(r)*abs(1+Ldf_mat{j}(k,q))-real((1+conj(Ldf_mat{j}(k,q)))*(1+rhod{q}'*Gphi{q,q}(:,k))) < 0);
+                            try
+                                StabCons= [StabCons, (sum(r)*abs(1+Ldf_mat{j}(k,q))-real((1+conj(Ldf_mat{j}(k,q)))*(1+rhod{q}'*Gphi{q,q}(:,k))) <= 0)];
+                            catch
+                                StabCons= StabCons+ set(sum(r)*abs(1+Ldf_mat{j}(k,q))-real((1+conj(Ldf_mat{j}(k,q)))*(1+rhod{q}'*Gphi{q,q}(:,k))) < 0);
+                            end
                         end
                     end
                 end
@@ -1245,8 +1249,13 @@ if max(lambda)>0
     else
         L=transpose(phiGfreq)*rho;
         for j=1:m
-            HinfConstraint=HinfConstraint+set((abs(lambda(1)*Wf(j,1))+abs(lambda(4)*Wf(j,4))+abs(lambda(2)*Wf(j,2)*L(j))...
+            try
+                HinfConstraint=[HinfConstraint,(abs(lambda(1)*Wf(j,1))+abs(lambda(4)*Wf(j,4))+abs(lambda(2)*Wf(j,2)*L(j))...
+                +abs(lambda(3)*Wf(j,3)*L(j)))*abs(1+Ldf(j))-real((1+conj(Ldf(j)))*(1+L(j)))<=0];
+            catch
+                HinfConstraint=HinfConstraint+set((abs(lambda(1)*Wf(j,1))+abs(lambda(4)*Wf(j,4))+abs(lambda(2)*Wf(j,2)*L(j))...
                 +abs(lambda(3)*Wf(j,3)*L(j)))*abs(1+Ldf(j))-real((1+conj(Ldf(j)))*(1+L(j)))<0);
+            end
         end
     end
     
@@ -1279,7 +1288,11 @@ if max(abs(Wf(:,2)))~=0  & lambda(2)==0
     else
         L=transpose(phiGfreq)*rho;
         for j=1:m,
-            HinfConstraint=HinfConstraint+set(abs(Wf(j,2)*L(j)*(1+Ldf(j)))-real((1+conj(Ldf(j)))*(1+L(j)))<0);
+            try
+                HinfConstraint=[HinfConstraint,(abs(Wf(j,2)*L(j)*(1+Ldf(j)))-real((1+conj(Ldf(j)))*(1+L(j)))<=0)];
+            catch
+                HinfConstraint=HinfConstraint+set(abs(Wf(j,2)*L(j)*(1+Ldf(j)))-real((1+conj(Ldf(j)))*(1+L(j)))<0);
+            end
         end
     end
 end
@@ -1300,7 +1313,11 @@ if max(abs(Wf(:,3)))~=0 & lambda(3)==0
     else
         L=transpose(phiGfreq)*rho;
         for j=1:m
-            HinfConstraint=HinfConstraint+set(abs(Wf(j,3)*L(j)*(1+Ldf(j)))-real((1+conj(Ldf(j)))*(1+L(j)))<0);
+            try
+                HinfConstraint=[HinfConstraint, abs(Wf(j,3)*L(j)*(1+Ldf(j)))-real((1+conj(Ldf(j)))*(1+L(j)))<=0];
+            catch
+                HinfConstraint=HinfConstraint+set(abs(Wf(j,3)*L(j)*(1+Ldf(j)))-real((1+conj(Ldf(j)))*(1+L(j)))<0);
+            end
         end
     end
     
@@ -1698,7 +1715,11 @@ if YesYalmip==1,
     end
     
     if ~isempty(A)
-        Constraint=[ConvCons set(A*rho < b)];
+        try
+            Constraint=[ConvCons, (A*rho < b)];
+        catch
+            Constraint=[ConvCons set(A*rho < b)];
+        end
     else
         Constraint=ConvCons;
     end
