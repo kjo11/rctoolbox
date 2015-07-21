@@ -2,8 +2,6 @@ clc
 addpath('../../toolbox');
 addpath('../../orig_toolbox');
 
-% Single model, SISO, continuous, PID, 'GPhC', Linprog
-
 s=tf('s');
 G=[exp(-s)/(s+1)^3; exp(-s)/(s+1)^3];
 
