@@ -7,13 +7,15 @@ G=[exp(-s)/(s+1)^3; exp(-s)/(s+1)^3];
 
 [~,~,w] = bode(G);
 
-Ld = 5/s;
+Ld = 1/s;
+
+opts = condesopt('Gbands','off');
 
 phi=conphi('PID');
 per{1}{1}=conper('LS',0.4,frd(Ld,w));
 per{1}{2}=conper('LS',0.4,Ld);
 
-K=condes(G,phi,per);
+K=condes(G,phi,per,opts);
 
 % Optimization terminated.
 % 

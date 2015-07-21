@@ -1601,20 +1601,18 @@ else % if MIMO
     LDf=cell(1,m);
     if isempty(per{1}{1}.Ld)
         error ('You must specify Ld for MIMO models.');
-    elseif strcmp(class(per{1}{1}.Ld),'frd')
-        for j=1:m
-            for q=1:no
-                w1=per{j}{q}.Ld.Frequency;
-                x(:,1)=per{j}{q}.Ld.ResponseData;
-                LDf{j}(q,q,:) = interp1(w1,x,w{j},[],'extrap'); % LDf{j} is a 3-D array
-                LDfd{j}(q,q,:) = interp1(w1,x,wd{j},[],'extrap'); % LDfd{j} is a 3-D array
-            end
-        end
     else
         for j=1:m
             for q=1:no
-                LDf{j}(q,q,:)=freqresp(per{j}{q}.Ld,w{j});  % LDf{j} is a 3-D array
-                LDfd{j}(q,q,:)=freqresp(per{j}{q}.Ld,wd{j});  % LDfd{j} is a 3-D array
+                if strcmp(class(per{j}{q}.Ld),'frd')
+                    w1=per{j}{q}.Ld.Frequency;
+                    x=per{j}{q}.Ld.ResponseData;
+                    LDf{j}(q,q,:) = interp1(w1,x(:),w{j},[],'extrap'); % LDf{j} is a 3-D array
+                    LDfd{j}(q,q,:) = interp1(w1,x(:),wd{j},[],'extrap'); % LDfd{j} is a 3-D array
+                else
+                    LDf{j}(q,q,:)=freqresp(per{j}{q}.Ld,w{j});  % LDf{j} is a 3-D array
+                    LDfd{j}(q,q,:)=freqresp(per{j}{q}.Ld,wd{j});  % LDfd{j} is a 3-D array
+                end
             end
         end
     
@@ -1671,8 +1669,8 @@ else % if MIMO
                 end
                 if strcmp(class(F{j}{q}),'frd')
                     w1=F{j}{q}.Frequency;
-                    x(:,1)=F{j}{q}.ResponseData;
-                    Ff{j}(q,q,:)=interp1(w1,x,wd{j},[],'extrap');
+                    x=F{j}{q}.ResponseData;
+                    Ff{j}(q,q,:)=interp1(w1,x(:),wd{j},[],'extrap');
                 else
                     Ff{j}(q,q,:)=freqresp(F{j}{q},wd{j});
                 end
