@@ -221,7 +221,11 @@ for j=1:m
     
     if ~isempty(Ldf)
         H = H + real( FphiGf{j}*FphiGf{j}');
-        f = f + transpose( -real(FLdf{j}.' * FphiGf{j}') );
+        if isStateSpace
+            f = f + transpose( -real((FLdf{j} - D_ss*FGf{j}).' * FphiGf{j}') );
+        else
+            f = f + transpose( -real(FLdf{j}.' * FphiGf{j}') );
+        end
     end
     
 end

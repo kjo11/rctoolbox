@@ -20,7 +20,7 @@ per = conper('LS',0.4,5/s);
 
 %% condes
 Ksiso = condes(Gsiso,phiSISO,per,opts);
-Kmimo = condes(Gmimo,phiMIMO,per,opts);
+% Kmimo = condes(Gmimo,phiMIMO,per,opts);
 
 %% 
 Aeigs = [1, 0];

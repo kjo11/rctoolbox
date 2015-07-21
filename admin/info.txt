@@ -126,4 +126,31 @@ Total: 7h30 (55h10)
 
 19.7:
 
-- Smith predictor
+- winding number Ld
+
+Hours:
+10-12.25
+Total: 2h25 (57h35)
+
+
+
+20.7:
+
+- winding number Ld
+
+Hours:
+10.15-12.40
+13.20-15.15
+Total: 4h20 (61h55)
+
+
+21.7:
+
+- Smith Predictor
+- read through code
+
+Hours:
+9.15-12.15
+13.15-14.30
+15-19.05
+Total: 8h5 (70h)
