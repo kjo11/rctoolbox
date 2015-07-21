@@ -502,14 +502,15 @@ end
 %------------ Bisection algorithm to minimize gamma------------------------
 
                 gamma_opt=0;
-                gamma_opt_old = g_tol + 1;
+                gamma_opt_old = g_max + g_tol + 1;
                 nit = 0;
 
                 while gamma_opt_old - gamma_opt > g_tol
-                    gamma_opt_old = gamma_opt;
+                    
                     nit = nit+1;
                     if nit ~= 1
                         if gamma_opt~=0
+                            gamma_opt_old = gamma_opt;
                             g_min=options.gamma(1);
                             g_max=gamma_opt;
                             for j=1:m, 
@@ -958,14 +959,15 @@ else % if MIMO
                Wfgamma=cell(1,m);
                
                 gamma_opt=0;
-                gamma_opt_old = g_tol + 1;
+                gamma_opt_old = g_max + g_tol + 1;
                 nit = 0;
                 
                 while gamma_opt_old - gamma_opt > g_tol
-                    gamma_opt_old = gamma_opt;
+                    
                     nit = nit+1;
                    if nit ~= 1
                         if gamma_opt~=0
+                            gamma_opt_old = gamma_opt;
                             g_min=options.gamma(1);
                             g_max=gamma_opt;
                             for j=1:m,
