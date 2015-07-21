@@ -458,8 +458,8 @@ end
                         Wf{j}(:,k)=zeros(N(j),1);
                     elseif strcmp(class(W{j}{k}),'frd')
                         w1=W{j}{k}.Frequency;
-                        x1(:,1)=W{j}{k}.ResponseData;
-                        Wf{j}(:,k)=interp1(w1,x1,w{j},[],'extrap');
+                        x1=W{j}{k}.ResponseData;
+                        Wf{j}(:,k)=interp1(w1,x1(:),w{j},[],'extrap');
                     else
                         Wf{j}(:,k)=freqresp(W{j}{k},w{j});
                     end
@@ -913,8 +913,8 @@ else % if MIMO
                             Wf{j}(:,k)=zeros(N(j),1);
                         elseif strcmp(class(W{j}{k}),'frd')
                             w1=W{j}{k}.Frequency;
-                            x1(:,1)=W{j}{k}.ResponseData;
-                            Wf{j}(:,k)=interp1(w1,x1,w{j},[],'extrap');
+                            x1=W{j}{k}.ResponseData;
+                            Wf{j}(:,k)=interp1(w1,x1(:),w{j},[],'extrap');
                         else
                             Wf{j}(:,k)=freqresp(W{j}{k},w{j});
                             if k==3, Wf{j}(:,3)=Wf{j}(:,3)./squeeze(Gf{j}(q,q,:)); end
