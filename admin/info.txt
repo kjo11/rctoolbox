@@ -171,7 +171,9 @@ Total: 6h (76h)
 - Stability test Ld
 - meeting with Karimi
 - branching versions of code
+- branch with only bug fixing/stability test
 
 Hours:
 9-12.15
-18.30-
+18.30-22
+Total: 6h45 (82h45)
