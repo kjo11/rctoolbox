@@ -65,7 +65,9 @@ end
 
 m=Gdim(1); no=Gdim(2); ni=Gdim(3);
 
-
+if no==1 && ni==1
+    check_Ld_stability(per,inG,phi);
+end
 
 
 %------- Gain scheduled vector construction -------------------------------
@@ -621,7 +623,6 @@ end
         else
             K = ss(A_ss,rhox,C_ss,D_ss);
         end
-        test_stability_siso(K,inG);
     end
     
     
@@ -1873,6 +1874,8 @@ function sgn = test_PID_ss_gain(Gf,w)
     end
 end
 
+
+
 function K = reduced_order(rhox,phi,ConType)
     if ~isempty(strfind(ConType,'Laguerre')) || ~isempty(strfind(ConType,'generalized'))
         lcd = zpk([],phi.p(end),1,phi.Ts);
@@ -1880,52 +1883,6 @@ function K = reduced_order(rhox,phi,ConType)
     else
         K = minreal(rhox' * phi);
     end
-end
-
-% function [wno] = wno_L(Ld)
-%     if isa(Ld,'lti')
-%         Lzpk = zpk(Ld);
-%         wno = sum(real(Lzpk.p) > 0);
-%     elseif isa(Ld,'frd')
-%         x = 1+squeeze(Ld.ResponseData);
-%         w = squeeze(Ld.Frequency);
-%         
-%     end
-% end
-
-function [] = test_stability_siso(inper,inG)
-% % Test stability of SISO systems
-% % Uses MATLAB function isstable
-% % Can't evaluate stability for FRD plant models, or for continuous-time
-% % systems with time delays
-%     if ~iscell(inG)
-%         G = {inG};
-%     else
-%         G = inG;
-%     end
-%     
-%     per = cell(length(G),1);
-%     if ~iscell(inper)
-%         per(1,:)={inper};
-%     else
-%         per=inper;
-%     end
-%     
-%     for i=1:length(G)
-%         N = wno_L(per{i}.Ld);
-%         if isa(G{i},'lti')
-%             Gzpk = zpk(G{i});
-%             P = sum(real(Gzpk.p{1}) > 0);
-%             
-%             
-%         else
-%             
-%             
-%             
-%             
-%         end
-%     end
-
 end
 
 function [H, A, f, b] = reshape_HAfb_ss(H,A,f,b,D,ntot,ni)
@@ -1979,3 +1936,5 @@ function [A,C,D,inphi] = ss_data(inphi,inG)
         error('If D is given as a matrix it must be ni x no, where ni is the number of inputs in G and no the number of outputs.')
     end
 end
+
+
