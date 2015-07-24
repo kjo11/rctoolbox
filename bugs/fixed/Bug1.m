@@ -1,4 +1,7 @@
-addpath('../toolbox')
+% Bug 1: Various bugs giving FRD models with different number of frequency
+% points
+
+addpath('../../toolbox')
 %%
 s=tf('s');
 

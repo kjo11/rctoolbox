@@ -1,4 +1,6 @@
-clc
+% Bug 3: Error for MIMO models giving Ld{1,1} as FRD and any other Ld as
+% non-FRD.
+
 addpath('../../toolbox');
 addpath('../../orig_toolbox');
 

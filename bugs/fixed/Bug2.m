@@ -1,4 +1,8 @@
-addpath('toolbox');
+% Bug 2: Unstable controller for negative plant models for PID with GPhC 
+% performance and no crossover frequency given. Stable but non-optimal 
+% controller if crossover frequency given.
+
+addpath('../../toolbox');
 
 %% Test negative plant model with loopshaping -- this works
 % controllers computed using the negative and positive model are identical
