@@ -1847,10 +1847,21 @@ for m=1:length(inG)
         continue;
     end
     
+    % Check that Ld is strictly proper
+    if isdt(Ld)
+        var = tf('z');
+    else
+        var = tf('s');
+    end
+    if ~isproper(Ld*var)
+        warning('Ld does not appear to be strictly proper.');
+        return;
+    end
+    
     % Check closed-loop stability of Ld
     CLd = feedback(1,Ld);
     if isdt(CLd)
-        x = isstable(absorbDelay(Cld));
+        x = isstable(absorbDelay(CLd));
     elseif isa(CLd,'ss') && ~isempty(CLd.InternalDelay) && CLd.InternalDelay ~= 0
         x = isstable(pade(CLd,10));
     else
