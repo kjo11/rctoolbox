@@ -59,6 +59,10 @@ if no==1 && ni==1 % check stability of SISO systems
     check_Ld_stability(per,inG,phi);
 end
 
+K = [];
+sol_info = [];
+return;
+
 %------- Gain scheduled vector construction -------------------------------
 theta=options.gs;
 delta=options.np;
@@ -1900,9 +1904,11 @@ for m=1:length(inG)
     [nL_uns,pL_bd] = getpoles(Ld);
     pL_bd = sort(pL_bd);
     
-    if length(p_bd)~=length(pL_bd) || sum(p_bd~=pL_bd)~=0
-        warning('Ld and G*K should have the same poles on the stability boundary. This choice of Ld may generate an unstable controller.')
-    elseif n_uns~=nL_uns
+    delta = 1e-6;
+    if length(p_bd)~=length(pL_bd) || sum(abs(p_bd-pL_bd)>delta)~=0
+        warning('Ld does not appear to contain the poles of G*K on the stability boundary. This choice of Ld may generate an unstable controller.')
+    end
+    if n_uns~=nL_uns
         warning('Ld and G*K should have the same number of unstable poles, but it appears that Ld has %i and G{%i}*K has %i. This choice of Ld may generate an unstable controller.',nL_uns,m,n_uns)
     end
 end
@@ -1914,10 +1920,11 @@ function [n_uns,p_bd] = getpoles(G)
 % Function to return the number of unstable poles of sys G and the location
 % of poles on the stability boundary. If model has internal delays, use
 % 10th order Pade approximation to check stability.
+delta = 1e-6;
 if isdt(G)
     p = pole(absorbDelay(G));
-    n_uns = sum(abs(p)-1>eps);
-    p_bd = p(abs(abs(p)-1)<eps);
+    n_uns = sum(abs(p)-1>delta);
+    p_bd = p(abs(abs(p)-1)<delta);
 else
     if isa(G,'ss') && ~isempty(G.InternalDelay) && G.InternalDelay ~= 0
 %         disp('Model has internal delays. Using a 10th order Pade approximation to check stability.');
@@ -1925,8 +1932,8 @@ else
     else
         p = pole(G);
     end
-    n_uns = sum(real(p)>eps);
-    p_bd = p(abs(real(p))< eps);
+    n_uns = sum(real(p)>delta);
+    p_bd = p(abs(real(p))< delta);
 end
 end
 
