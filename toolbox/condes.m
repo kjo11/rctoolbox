@@ -1886,7 +1886,17 @@ for m=1:length(inG)
     % combine poles of G and phi and sort
     p_bd = sort([p_bd; pphi_bd]);
 
-    % get poles of L
+    % Make sure Ld and G are both continuous/discrete before computing
+    % poles
+    if isdt(G)
+        if isdt(Ld)
+            Ld = d2d(Ld,G.Ts);
+        else
+            Ld = c2d(Ld,G.Ts);
+        end
+    elseif isdt(Ld)
+        Ld = d2c(Ld);
+    end
     [nL_uns,pL_bd] = getpoles(Ld);
     pL_bd = sort(pL_bd);
     
