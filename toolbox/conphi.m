@@ -45,6 +45,9 @@ function phi = conphi(ConType,ConPar,CorD,F)
 %
 % F: is a transfer function that is fixed in the controller (e.g. an integrator)
 %
+% ConStruc: is a string that can be 'LP' for linearly parameterized
+%       controllers (default) or 'SS' for a state space representation
+%
 %
 % Examples:
 %   phi=conphi('PID');  % defines a continuous-time PID controller
@@ -52,7 +55,6 @@ function phi = conphi(ConType,ConPar,CorD,F)
 %   phi=conphi('Generalized',[0.1 0.2 0.3],'s',1/s)
 %   z=zpk('z',0.1);
 %   phi=conphi('UD',[1/(z-1);1/(z*(z-1));1/(z^2*(z-1))])
-%   phi=conphi('SS',{[0 -0.5 -0.5],[1 0 0],0.1},'s');
 %
 
 
@@ -229,78 +231,6 @@ switch ConType(1:3)
         phi.ConType='ud';
         
         
-    case 'ss '
-        if nargin > 3
-            warning('Cannot define fixed part of the controller in state space')
-        end
-
-        if iscell(ConPar)
-            if ~isvector(ConPar{1})
-                error('The eigenvalues of A must be given as a vector.')
-            end
-            ns = length(ConPar{1});
-            a = poly(ConPar{1});
-            C = ConPar{2};
-
-            if length(ConPar) > 2
-                D = ConPar{3};
-                if isempty(C)
-                    C = [1, zeros(1,ns-1)];
-                end
-            else
-                D = 0;
-            end
-            
-            if size(C,2) ~= ns
-                error('C must have the same number of columns as A')
-            end
-        else
-            if ~isvector(ConPar)
-                error('The eigenvalues of A must be given as a vector.')
-            end
-            ns = length(ConPar);
-            a = poly(ConPar);
-            C = [1, zeros(1,ns-1)];
-            D = 0;
-        end
-        a = a(2:end); % remove 1 at beginning of a 
-        
-        if length(a)==1 % error with spdiags when A is 1x1
-            A = -a;
-        else
-            A = full(spdiags(ones(ns,1),1,[-a(:),zeros(ns,ns-1)]));
-        end
-        
-        
-        if strcmp(CorD,'s')
-            var = s;
-            ConType = 'ss';
-        else
-            var = z;
-            ConType = 'ssd';
-        end
-        
-        if size(C,1) > 1
-            phi = cell(size(C,1),1);
-            for i=1:size(C,1)
-                phi{i,1}.phi = transpose(C(i,:)/(var*eye(ns)-A));
-                phi{i,1}.ConType = ConType;
-            end
-            phi{1,1}.par.A = A;
-            phi{1,1}.par.C = C;
-            phi{1,1}.par.D = D;
-        
-        else
-            phi.phi = transpose(C/(var*eye(ns)-A));
-            phi.par.A = A;
-            phi.par.C = C;
-            phi.par.D = D;
-            phi.ConType = ConType;
-        end
-            
-        
-        
-        
     otherwise
         
         error('This is not a supported controller type!')
@@ -308,7 +238,7 @@ switch ConType(1:3)
 end
 
 
-if nargin > 3 && isempty(strfind(phi.ConType,'ss'))
+if nargin > 3
     phi.phi=minreal(F*phi.phi);
     phi.ConType =['Ftimes' phi.ConType];
 end

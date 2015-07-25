@@ -50,25 +50,18 @@ if nargin < 4
     options = condesopt;
 end
 
-if iscell(inphi)
-    isStateSpace = strncmp(inphi{1,1}.ConType,'ss',2);
-else
-    isStateSpace = strncmp(inphi.ConType,'ss',2);
-end
-
-if isStateSpace==1
-    [A_ss,C_ss,D_ss,inphi] = ss_data(inphi,inG);
-end
-
-
 [Gf,Gdim,phi,n,phif,phifd,per,w,N,performance,Ldf,LDf,FGf,FLdf,FLDf,CovGf] = condesdata (inG,inphi,inper,options);
+
 
 m=Gdim(1); no=Gdim(2); ni=Gdim(3);
 
-if no==1 && ni==1
+if no==1 && ni==1 % check stability of SISO systems
     check_Ld_stability(per,inG,phi);
 end
 
+K = [];
+sol_info = [];
+return;
 
 %------- Gain scheduled vector construction -------------------------------
 theta=options.gs;
@@ -223,11 +216,7 @@ for j=1:m
     
     if ~isempty(Ldf)
         H = H + real( FphiGf{j}*FphiGf{j}');
-        if isStateSpace
-            f = f + transpose( -real((FLdf{j} - D_ss*FGf{j}).' * FphiGf{j}') );
-        else
-            f = f + transpose( -real(FLdf{j}.' * FphiGf{j}') );
-        end
+        f = f + transpose( -real(FLdf{j}.' * FphiGf{j}') );
     end
     
 end
@@ -606,23 +595,12 @@ end
         fprintf('\n');
         disp('K{1}+theta_1 K{2}+theta_2 K{3} + ... +theta_1^2 k{n}+theta_2^2k{n+1}+...')
         fprintf('\n');
-        if isStateSpace==0
-            for k=1:Ngs
-                K{k} = reduced_order(rhox(:,k),phi,inphi.ConType);
-                disp(['K{'  int2str(k) '}=']),K{k}
-            end
-        else
-            K{1} = ss(A_ss,rhox(:,1),C_ss,D_ss);
-            for k=1:Ngs
-                K{k} = ss(A_ss,rhox(:,k),C_ss,0);
-            end
+        for k=1:Ngs
+            K{k} = reduced_order(rhox(:,k),phi,inphi.ConType);
+            disp(['K{'  int2str(k) '}=']),K{k}
         end
     else
-        if isStateSpace==0
-            K = reduced_order(rhox,phi,inphi.ConType);
-        else
-            K = ss(A_ss,rhox,C_ss,D_ss);
-        end
+        K = reduced_order(rhox,phi,inphi.ConType);
     end
     
     
@@ -848,9 +826,7 @@ else % if MIMO
                 A= [A ; A_b];
                 b= [b ; b_b];
             end           
-            if isStateSpace==1
-                [H,A,f,b] = reshape_HAfb_ss(H,A,f,b,D_ss,ntot,ni);
-            end
+                                    
             [x,optval,xflag]=solveopt(H,f,A,b,StabCons,YesYalmip,rho,ops);
                         
             
@@ -893,9 +869,7 @@ else % if MIMO
                 b= [b ; b_b];                
                 
             end
-            if isStateSpace==1
-                [H,A,f,b] = reshape_HAfb_ss(H,A,f,b,D_ss,ntot,ni);
-            end
+            
             [x,optval,xflag]=solveopt(H,f,A,b,StabCons,YesYalmip,rho,ops);
     
 
@@ -950,9 +924,7 @@ else % if MIMO
             
             if isempty(gamma),
                 Convcons = [HinfConstraint, StabCons ];
-                if isStateSpace==1
-                    [H,A,f,b] = reshape_HAfb_ss(H,A,f,b,D_ss,ntot,ni);
-                end
+
                 [x,optval,xflag]=solveopt(H,f,A,b,Convcons,YesYalmip,rho,ops);
             else
                % gamma iteration using bisection algorithm
@@ -1019,9 +991,6 @@ else % if MIMO
                        end
                        Ag=[A;Ag];
                        bg=[b;bg];
-                       if isStateSpace==1
-                            [H,Ag,f,bg] = reshape_HAfb_ss(H,Ag,f,bg,D_ss,ntot,ni);
-                        end
                        [x,optval,xflag] = solveopt(H,f,Ag,bg,[],YesYalmip,rho,ops);
 
                        if xflag==1,
@@ -1062,33 +1031,15 @@ else % if MIMO
     %----------------------------------------------------------------------
             
     K1=cell(1,Ngs);
-    if isStateSpace == 1
-        B = cell(1,Ngs);
+    for p=1:ni
         for q=1:no
-            nn=Ngs*(sum(n(1,1:q-1)));
+            
+            nn=Ngs*(sum(sum(n(1:p-1,:)))+sum(n(p,1:q-1)));
             for k=1:Ngs
-                B{k}(:,q) = x(nn+k:Ngs:nn+Ngs*n(1,q));
-            end
-        end
-        
-        K1{1} = ss(A_ss,B{1},C_ss,D_ss);
-        for k=2:Ngs
-            K1{k} = ss(A_ss,B{k},C_ss,0); % have zero D matrix for systems multiplied by scheduling parameter
-        end
-    else
-
-        for p=1:ni
-            for q=1:no
-
-                nn=Ngs*(sum(sum(n(1:p-1,:)))+sum(n(p,1:q-1)));
-                for k=1:Ngs
-                    K1{k}(p,q) = minreal(transpose(x(nn+k:Ngs:nn+Ngs*n(p,q))) * phi{p,q});
-                end
+                K1{k}(p,q) = minreal(transpose(x(nn+k:Ngs:nn+Ngs*n(p,q))) * phi{p,q});
             end
         end
     end
-       
-    
     if Ngs==1,
         K=K1{1};
     else
@@ -1885,56 +1836,104 @@ function K = reduced_order(rhox,phi,ConType)
     end
 end
 
-function [H, A, f, b] = reshape_HAfb_ss(H,A,f,b,D,ntot,ni)
-% sum A, f and H matrices for each input for state space
-    nss = ntot/ni;
-    A = sum(reshape(A,size(A,1),nss,ni),3);
-    f = sum(reshape(f,nss,1,ni),3);
-    H = sum(reshape(sum(reshape(H,ntot,nss,ni),3)',nss,nss,ni),3)';
-    b = b - sum(sum(D));
+
+function [] = check_Ld_stability(per,inG,phi)
+if ~iscell(inG)
+    inG = {inG};
 end
 
-function [A,C,D,inphi] = ss_data(inphi,inG)
-    if ~iscell(inG)
-        G{1}=inG;
-    else
-        G=inG;
+for m=1:length(inG)
+    G = inG{m};
+    Ld = per{m}.Ld;
+    
+    if isa(G,'frd') || isa(Ld,'frd')
+        continue;
     end
     
-    [no, ni]=size(G{1});
-    
-    if iscell(inphi)
-        A = inphi{1,1}.par.A;
-        C = inphi{1,1}.par.C;
-        D = inphi{1,1}.par.D;
+    % Check that Ld is strictly proper
+    if isdt(Ld)
+        var = tf('z');
     else
-        A = inphi.par.A;
-        C = inphi.par.C;
-        D = inphi.par.D;
+        var = tf('s');
+    end
+    if ~isproper(Ld*var)
+        warning('Ld does not appear to be strictly proper.');
+        return;
     end
     
-    if size(C,1)~=ni
-        if size(C,1)==1
-            C = repmat(C,ni,1);
+    % Check closed-loop stability of Ld
+    CLd = feedback(1,Ld);
+    if isdt(CLd)
+        x = isstable(absorbDelay(CLd));
+    elseif isa(CLd,'ss') && ~isempty(CLd.InternalDelay) && CLd.InternalDelay ~= 0
+        x = isstable(pade(CLd,10));
+    else
+        x = isstable(CLd);
+    end
+    if x==0
+        warning('Ld appears to be closed-loop unstable.')
+    end
+    
+    
+    % get poles on stability boundary of Phi
+    Phi = zpk([],[],0,phi.Ts);
+    for i=1:size(phi,1)
+        Phi = Phi + zpk([],pole(phi(i)),1,phi.Ts);
+    end
+    Phi = minreal(Phi); % lowest common denominator of phi
+    [~,pphi_bd] = getpoles(Phi);
+
+    % get poles of G
+    [n_uns,p_bd] = getpoles(G);
+    
+    % combine poles of G and phi and sort
+    p_bd = sort([p_bd; pphi_bd]);
+
+    % Make sure Ld and G are both continuous/discrete before computing
+    % poles
+    if isdt(G)
+        if isdt(Ld)
+            Ld = d2d(Ld,G.Ts);
         else
-            error('C must be a row vector or a matrix with the same number of rows as inputs in G')
+            Ld = c2d(Ld,G.Ts);
         end
+    elseif isdt(Ld)
+        Ld = d2c(Ld);
     end
+    [nL_uns,pL_bd] = getpoles(Ld);
+    pL_bd = sort(pL_bd);
     
-    if iscell(inphi)
-        inphi = repmat(inphi,1,no); % repeat same phi for each output
+    delta = 1e-6;
+    if length(p_bd)~=length(pL_bd) || sum(abs(p_bd-pL_bd)>delta)~=0
+        warning('Ld does not appear to contain the poles of G*K on the stability boundary. This choice of Ld may generate an unstable controller.')
     end
-    
-    if size(D,1) == 1
-        D = repmat(D,ni,1);
+    if n_uns~=nL_uns
+        warning('Ld and G*K should have the same number of unstable poles, but it appears that Ld has %i and G{%i}*K has %i. This choice of Ld may generate an unstable controller.',nL_uns,m,n_uns)
     end
-    if size(D,2) == 1
-        D = repmat(D,1,no);
+end
+
+end
+
+
+function [n_uns,p_bd] = getpoles(G)
+% Function to return the number of unstable poles of sys G and the location
+% of poles on the stability boundary. If model has internal delays, use
+% 10th order Pade approximation to check stability.
+delta = 1e-6;
+if isdt(G)
+    p = pole(absorbDelay(G));
+    n_uns = sum(abs(p)-1>delta);
+    p_bd = p(abs(abs(p)-1)<delta);
+else
+    if isa(G,'ss') && ~isempty(G.InternalDelay) && G.InternalDelay ~= 0
+%         disp('Model has internal delays. Using a 10th order Pade approximation to check stability.');
+        p = pole(pade(G,10));
+    else
+        p = pole(G);
     end
-    
-    if sum(size(D) ~= [ni, no])
-        error('If D is given as a matrix it must be ni x no, where ni is the number of inputs in G and no the number of outputs.')
-    end
+    n_uns = sum(real(p)>delta);
+    p_bd = p(abs(real(p))< delta);
+end
 end
 
 
