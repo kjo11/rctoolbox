@@ -12,6 +12,18 @@ for m=1:length(inG)
         continue;
     end
     
+    % Check that Ld is strictly proper
+    if isdt(Ld)
+        var = tf('z');
+    else
+        var = tf('s');
+    end
+    if ~isproper(Ld*var)
+        warning('Ld does not appear to be strictly proper');
+    end
+
+        
+    
     % Check closed-loop stability of Ld
     CLd = feedback(1,Ld);
     if isdt(CLd)

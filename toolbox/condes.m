@@ -1847,7 +1847,6 @@ for m=1:length(inG)
     Ld = per{m}.Ld;
     
     if isa(G,'frd') || isa(Ld,'frd')
-        % if G or Ld are FRD models, skip
         continue;
     end
     
