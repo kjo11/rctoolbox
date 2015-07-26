@@ -60,7 +60,8 @@ else
 end
 
 if isStateSpace
-    
+    [A_ss,B_ss,C_ss,inphi] = ss_data(inphi,inG);
+end
     
 [Gf,Gdim,phi,n,phif,phifd,per,w,N,performance,Ldf,LDf,FGf,FLdf,FLDf,CovGf] = condesdata (inG,inphi,inper,options);
 
@@ -1071,7 +1072,7 @@ sol_info.gamma=gamma;
 sol_info.xflag=xflag;
 
 end
-end
+
 
 %=============================================================================================
 %=============================================================================================
@@ -2009,7 +2010,7 @@ if iscell(phi)
     for i=1:length(phi)
         phi{i}.phi(end+1) = zpk([],[],1);
         phi{i}.ConStruc = 'ss';
-        phi{i}.ConType = inphi.ConType;
+        phi{i}.ConType = 'ss';
     end
 else
     phi.par.A = A;
@@ -2017,8 +2018,58 @@ else
     phi.par.C = C;
     phi.phi(end+1) = zpk([],[],1);
     phi.ConStruc = 'ss';
-    phi.ConType = inphi.ConType;
+    phi.ConType = 'ss';
 end
 
+end
+
+
+function [A,B,C,inphi] = ss_data(inphi,inG)
+% Function to get A, B, C matrices for state space and to make inphi the
+% right size for the given model
+
+if ~iscell(inG)
+    G{1}=inG;
+else
+    G=inG;
+end
+
+[no, ni]=size(G{1});
+
+if iscell(inphi)
+    A = inphi{1,1}.par.A;
+    C = inphi{1,1}.par.C;
+    B = inphi{1,1}.par.B;
+else
+    A = inphi.par.A;
+    C = inphi.par.C;
+    B = inphi.par.B;
+end
+
+if isempty(B)
+    if size(C,1)~=ni
+        if size(C,1)==1
+            C = repmat(C,ni,1); % repeat same rows for C
+        else
+            error('C must have the same number of rows as inputs in G')
+        end
+    end
+
+    if iscell(inphi)
+        inphi = repmat(inphi,1,no); % repeat same phi for each output
+    end
+else
+    if size(B,2)~=no
+        if size(B,2)==1
+            B = repmat(B,1,no); % repeat same columns for B
+        else
+            error('B must have the same number of columns as outputs in G')
+        end
+    end
+    
+    if iscell(inphi)
+        inphi = repmat(inphi,ni,1); % repeat same phi for each input
+    end
+end
 
 end
