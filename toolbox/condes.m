@@ -605,12 +605,32 @@ end
         fprintf('\n');
         disp('K{1}+theta_1 K{2}+theta_2 K{3} + ... +theta_1^2 k{n}+theta_2^2k{n+1}+...')
         fprintf('\n');
-        for k=1:Ngs
-            K{k} = reduced_order(rhox(:,k),phi,inphi.ConType);
-            disp(['K{'  int2str(k) '}=']),K{k}
+        if isStateSpace
+            if isempty(B_ss)
+                for k=1:Ngs
+                    K{k} = ss(A_ss,rhox(1:end-1,k),C_ss,rhox(end,k));
+                end
+            else
+                for k=1:Ngs
+                    K{k} = ss(A_ss,B_ss,rhox(1:end-1,k)',rhox(end,k));
+                end
+            end
+        else
+            for k=1:Ngs
+                K{k} = reduced_order(rhox(:,k),phi,inphi.ConType);
+                disp(['K{'  int2str(k) '}=']),K{k}
+            end
         end
     else
-        K = reduced_order(rhox,phi,inphi.ConType);
+        if isStateSpace
+            if isempty(B_ss)
+                K = ss(A_ss,rhox(1:end-1),C_ss,rhox(end));
+            else
+                K = ss(A_ss,B_ss,rhox(1:end-1)',rhox(end));
+            end
+        else
+            K = reduced_order(rhox,phi,inphi.ConType);
+        end
     end
     
     
