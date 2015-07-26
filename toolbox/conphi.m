@@ -245,6 +245,8 @@ switch ConType(1:3)
             if strcmp(CorD,'z')
                 Ts = ConPar(1);
                 ConPar = ConPar(2:end);
+            else
+                Ts = 0;
             end
             ns = length(ConPar);
             a = poly(ConPar);
