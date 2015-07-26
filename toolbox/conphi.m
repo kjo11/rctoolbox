@@ -263,9 +263,8 @@ end
 
 
 
-if strcmp(ConStruc,'ss')
+if strcmp(ConStruc,'ss') && ~strncmp(ConType,'p  ',3)
     phi.par.flag = 0;
-    phi.ConType = 'ss';
     % Determine eigenvalues
     if ~isempty(phi.phi)
         Ts = phi.phi.Ts;
@@ -273,21 +272,16 @@ if strcmp(ConStruc,'ss')
             a = []; % can't determine eigenvalues without derivative time constant
             ns = size(phi.phi,1)-1;
             phi.par.flag = 1;
+            phi.ConStruc = 'ss';
         else
-            if strncmp(ConType,'p  ',3)
-                phi.ConType = 'p  ';
-                phi.par = [];
-                return; % don't change anything for just proportional control
-            else
-                Phi = zpk([],[],0,Ts);
-                if isa(phi.phi,'tf')
-                    phi.phi = zpk(phi.phi);
-                end
-                for i=1:size(phi.phi,1)
-                    Phi = Phi + zpk([],phi.phi(i).p,1,Ts);
-                end
-                Aeigs = pole(minreal(Phi));
+            Phi = zpk([],[],0,Ts);
+            if isa(phi.phi,'tf')
+                phi.phi = zpk(phi.phi);
             end
+            for i=1:size(phi.phi,1)
+                Phi = Phi + zpk([],phi.phi(i).p,1,Ts);
+            end
+            Aeigs = pole(minreal(Phi));
             ns = length(Aeigs); % number of states
             a = poly(Aeigs);
             a = a(2:end);
@@ -360,19 +354,21 @@ if strcmp(ConStruc,'ss')
             phi{1,1}.par.C = C;
             for i=1:length(phi)
                 phi{i}.phi(end+1) = zpk([],[],1,Ts);
-                phi{i}.ConType = 'ss';
+                phi{i}.ConStruc = 'ss';
             end
         else
             phi.par.A = A;
             phi.par.B = B;
             phi.par.C = C;
             phi.phi(end+1) = zpk([],[],1,Ts);
-            phi.ConType = 'ss';
+            phi.ConStruc = 'ss';
         end
     else
         phi.par.B = B;
         phi.par.C = C;
     end
+else
+    phi.ConStruc = 'lp';
 end
 
 
