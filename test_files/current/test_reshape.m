@@ -134,10 +134,10 @@ Aout = [Ab, Ad];
 
 %% f reshape
 
-f2 = reshape(f,nl,no,ni);
+f2 = reshape(f,1,nl,no,ni);
 
-fb = f2(1:nbc,:,:);
-fd = f2(nbc+1:end,:,:);
+fb = f2(1,1:nbc,:,:);
+fd = f2(1,nbc+1:end,:,:);
 
 fd = reshape(fd,Ngs*no*ni,1);
 
@@ -149,9 +149,9 @@ else
     n = ni;
 end
 
-fb = sum(fb,ndim-1);
+fb = sum(fb,ndim);
 fb = reshape(fb,nbc*n,1);
 
-fout = [fb; fd];
+fout = [fb; fd]
 
 

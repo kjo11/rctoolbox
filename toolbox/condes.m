@@ -856,7 +856,9 @@ else % if MIMO
                 A= [A ; A_b];
                 b= [b ; b_b];
             end           
-                                    
+            if isStateSpace
+                [H,f,A] = ss_reshape_HfA(H,f,A,B_ss,Ngs,ntot,no,ni);
+            end
             [x,optval,xflag]=solveopt(H,f,A,b,StabCons,YesYalmip,rho,ops);
                         
             
@@ -899,7 +901,9 @@ else % if MIMO
                 b= [b ; b_b];                
                 
             end
-            
+            if isStateSpace
+                [H,f,A] = ss_reshape_HfA(H,f,A,B_ss,Ngs,ntot,no,ni);
+            end
             [x,optval,xflag]=solveopt(H,f,A,b,StabCons,YesYalmip,rho,ops);
     
 
@@ -954,7 +958,9 @@ else % if MIMO
             
             if isempty(gamma),
                 Convcons = [HinfConstraint, StabCons ];
-
+                if isStateSpace
+                    [H,f,A] = ss_reshape_HfA(H,f,A,B_ss,Ngs,ntot,no,ni);
+                end
                 [x,optval,xflag]=solveopt(H,f,A,b,Convcons,YesYalmip,rho,ops);
             else
                % gamma iteration using bisection algorithm
@@ -1021,6 +1027,9 @@ else % if MIMO
                        end
                        Ag=[A;Ag];
                        bg=[b;bg];
+                       if isStateSpace
+                            [H,f,Ag] = ss_reshape_HfA(H,f,Ag,B_ss,Ngs,ntot,no,ni);
+                        end
                        [x,optval,xflag] = solveopt(H,f,Ag,bg,[],YesYalmip,rho,ops);
 
                        if xflag==1,
@@ -2093,3 +2102,77 @@ else
 end
 
 end
+
+
+function [Hout,fout,Aout] = ss_reshape_HfA(H,f,A,B_ss,Ngs,ntot,no,ni)
+% function to reshape H, f, A matrices for MIMO state space
+nl = ntot/no/ni; % number of total parameters per input/output
+nbc = nl - Ngs; % number of B/C parameters per input/output
+
+alpha = size(A,1);
+
+if isempty(B_ss)
+    ndim = 4;
+    n = no;
+else
+    ndim = 3;
+    n = ni;
+end
+
+% reshape H
+H2 = reshape(H,ntot,nl,no,ni);
+Hb = H2(:,1:nbc,:,:);
+Hd = H2(:,nbc+1:end,:,:);
+
+Hd = reshape(Hd,ntot,Ngs*no*ni)';
+Hd = reshape(Hd,Ngs*no*ni,nl,no,ni);
+
+Hdd = Hd(:,nbc+1:end,:,:);
+Hdd = reshape(Hdd,Ngs*no*ni,Ngs*no*ni)';
+
+
+Hb = sum(Hb,ndim);
+Hb = reshape(Hb,ntot,nbc*n)';
+Hb = reshape(Hb,nbc*n,nl,no,ni);
+
+Hbb = Hb(:,1:nbc,:,:);
+Hbb = sum(Hbb,ndim);
+Hbb = reshape(Hbb,nbc*n,nbc*n)';
+
+Hbd = Hb(:,nbc+1:end,:,:);
+Hbd = reshape(Hbd,nbc*n,Ngs*no*ni)';
+
+Hdb = Hd(:,1:nbc,:,:);
+Hdb = sum(Hdb,ndim);
+Hdb = reshape(Hdb,Ngs*no*ni,nbc*n)';
+
+Hout = [Hbb, Hdb; Hbd, Hdd];
+
+
+% reshape A
+A2 = reshape(A,alpha,nl,no,ni);
+
+Ab = A2(:,1:nbc,:,:);
+Ab = sum(Ab,ndim);
+Ab = reshape(Ab,alpha,nbc*n);
+
+Ad = A2(:,nbc+1:end,:,:);
+Ad = reshape(Ad,alpha,Ngs*no*ni);
+
+Aout = [Ab, Ad];
+
+
+% reshape f
+f2 = reshape(f,1,nl,no,ni);
+
+fb = f2(1,1:nbc,:,:);
+fb = sum(fb,ndim);
+fb = reshape(fb,nbc*n,1);
+
+fd = f2(1,nbc+1:end,:,:);
+fd = reshape(fd,Ngs*no*ni,1);
+
+fout = [fb; fd];
+
+end
+
