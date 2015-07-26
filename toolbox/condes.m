@@ -50,6 +50,18 @@ if nargin < 4
     options = condesopt;
 end
 
+if iscell(inphi)
+    isStateSpace = strncmp(inphi{1,1}.ConStruc,'ss',2);
+else
+    isStateSpace = strncmp(inphi.ConStruc,'ss',2);
+    if isStateSpace && inphi.par.flag
+        inphi = ss_add_tau(inphi,inG);
+    end
+end
+
+if isStateSpace
+    
+    
 [Gf,Gdim,phi,n,phif,phifd,per,w,N,performance,Ldf,LDf,FGf,FLdf,FLDf,CovGf] = condesdata (inG,inphi,inper,options);
 
 
@@ -59,9 +71,6 @@ if no==1 && ni==1 % check stability of SISO systems
     check_Ld_stability(per,inG,phi);
 end
 
-K = [];
-sol_info = [];
-return;
 
 %------- Gain scheduled vector construction -------------------------------
 theta=options.gs;
@@ -1062,6 +1071,7 @@ sol_info.gamma=gamma;
 sol_info.xflag=xflag;
 
 end
+end
 
 %=============================================================================================
 %=============================================================================================
@@ -1385,6 +1395,9 @@ if no==1 & ni==1  % SISO system
             inphi.phi(2)=tf(num,den);
         end
     end
+    
+    
+    
       
     
     phi=inphi.phi;
@@ -1937,3 +1950,75 @@ end
 end
 
 
+
+function phi = ss_add_tau(inphi,inG)
+% Function to compute the time constant for the derivative part of a PID/PD
+% controller and create the correct phi and A matrix for state space
+C = inphi.par.C;
+B = inphi.par.B;
+if ~iscell(inG)
+    G = {inG};
+else
+    G = inG;
+end
+wmax = 0;
+for i=1:length(G)
+    [~,~,w] = bode(G{i});
+    wmax = max([wmax; w(:)]);
+end
+
+tau = 1.2/wmax; % default value for tau
+
+if strncmpi(inphi.ConType,'pid',3)
+    a = poly([0 -1/tau]);
+    a = a(2:end);
+    ns = 2;
+    A = full(spdiags(ones(2,1),1,[zeros(1,2); -flipud(a(:))']));
+else
+    A = -1/tau;
+    ns = 1;
+end
+
+var = zpk('s');
+
+if ~isempty(C) % If C matrix given
+    if size(C,1) > 1 % If multiple outputs given
+        phi = cell(size(C,1),1);
+        for i=1:size(C,1)
+            phi{i,1}.phi = minreal(transpose(C(i,:)/(var*eye(ns)-A)));
+        end
+    else
+        phi.phi = minreal(transpose(C/(var*eye(ns)-A)));
+    end
+else % If B matrix given
+    A = A';
+    if size(B,2) > 1 % if multiple inputs given
+        phi = cell(1,size(B,2));
+        for i=1:size(B,2)
+            phi{1,i}.phi = minreal((var*eye(ns)-A)\B(:,i));
+        end
+    else
+        phi.phi = minreal((var*eye(ns)-A)\B);
+    end
+end
+
+if iscell(phi)
+    phi{1,1}.par.A = A;
+    phi{1,1}.par.B = B;
+    phi{1,1}.par.C = C;
+    for i=1:length(phi)
+        phi{i}.phi(end+1) = zpk([],[],1);
+        phi{i}.ConStruc = 'ss';
+        phi{i}.ConType = inphi.ConType;
+    end
+else
+    phi.par.A = A;
+    phi.par.B = B;
+    phi.par.C = C;
+    phi.phi(end+1) = zpk([],[],1);
+    phi.ConStruc = 'ss';
+    phi.ConType = inphi.ConType;
+end
+
+
+end
