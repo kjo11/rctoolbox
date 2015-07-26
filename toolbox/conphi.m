@@ -139,7 +139,11 @@ switch ConType(1:3)
                 tau=default.tau;
             end
             if nargin > 1
-               tau=ConPar;
+                if ~isempty(ConPar)
+                    tau=ConPar;
+                else
+                    tau=default.tau;
+                end
             end
             phi.phi=[1 ; s/(1+tau*s)];
             phi.ConType = 'PD';
