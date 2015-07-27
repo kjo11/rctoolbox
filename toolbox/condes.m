@@ -1074,15 +1074,37 @@ else % if MIMO
     %----------------------------------------------------------------------
             
     K1=cell(1,Ngs);
-    for p=1:ni
-        for q=1:no
-            
-            nn=Ngs*(sum(sum(n(1:p-1,:)))+sum(n(p,1:q-1)));
-            for k=1:Ngs
-                K1{k}(p,q) = minreal(transpose(x(nn+k:Ngs:nn+Ngs*n(p,q))) * phi{p,q});
+    
+    if isStateSpace
+        nss = length(A_ss);
+        for k=1:Ngs
+            if isempty(B_ss)
+                Bvec = x(1:nss*no*Ngs);
+                Dvec = x(nss*no*Ngs+1:end);
+                B_ss = reshape(Bvec(k:Ngs:end),nss,no);
+                D_ss = reshape(Dvec(k:Ngs:end),no,ni)';
+            else
+                Cvec = x(1:nss*ni*Ngs);
+                Dvec = x(nss*ni*Ngs+1:end);
+                C_ss = reshape(Cvec(k:Ngs:end),nss,ni)';
+                D_ss = reshape(Dvec(k:Ngs:end),no,ni)';
+            end
+        
+            K1{k} = ss(A_ss,B_ss,C_ss,D_ss);
+        end
+    else
+
+        for p=1:ni
+            for q=1:no
+
+                nn=Ngs*(sum(sum(n(1:p-1,:)))+sum(n(p,1:q-1)));
+                for k=1:Ngs
+                    K1{k}(p,q) = minreal(transpose(x(nn+k:Ngs:nn+Ngs*n(p,q))) * phi{p,q});
+                end
             end
         end
     end
+    
     if Ngs==1,
         K=K1{1};
     else
