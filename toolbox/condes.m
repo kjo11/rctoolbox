@@ -687,10 +687,17 @@ else % if MIMO
     end
     
     if isStateSpace
-        [H,f] = ss_reshape_Hf(H,f,B_ss,Ngs,ntot,no,ni);
+        if YesYalmip
+            SSCons=ss_yalmip_cons(rho,rhoIndex,no,ni,Ngs,nss,B_ss);
+        else
+            [H,f] = ss_reshape_Hf(H,f,B_ss,Ngs,ntot,no,ni);
+            SSCons = [];
+        end
+    else
+        SSCons=[];
     end
     
-    StabCons=[];    
+    StabCons=SSCons;    % Include state space constraints in stability constraints
     
     if strcmp(options.Gbands,'on')
         
@@ -778,6 +785,7 @@ else % if MIMO
         
     end
     
+    
     switch performance
         
         
@@ -859,7 +867,7 @@ else % if MIMO
                 A= [A ; A_b];
                 b= [b ; b_b];
             end           
-            if isStateSpace
+            if isStateSpace && ~YesYalmip
                 A = ss_reshape_A(A,B_ss,Ngs,ntot,no,ni);
             end
             [x,optval,xflag]=solveopt(H,f,A,b,StabCons,YesYalmip,rho,ops);
@@ -905,7 +913,7 @@ else % if MIMO
                 
             end
             
-            if isStateSpace
+            if isStateSpace && ~YesYalmip
                 A = ss_reshape_A(A,B_ss,Ngs,ntot,no,ni);
             end
             [x,optval,xflag]=solveopt(H,f,A,b,StabCons,YesYalmip,rho,ops);
@@ -962,7 +970,7 @@ else % if MIMO
             
             if isempty(gamma),
                 Convcons = [HinfConstraint, StabCons ];
-                if isStateSpace
+                if isStateSpace && ~YesYalmip
                     A = ss_reshape_A(A,B_ss,Ngs,ntot,no,ni);
                 end
                 [x,optval,xflag]=solveopt(H,f,A,b,Convcons,YesYalmip,rho,ops);
@@ -989,8 +997,7 @@ else % if MIMO
                             g_max=gamma_opt;
                             for j=1:m,
                                for q=1:no
-                                   if isStateSpace
-                                       nss = length(A_ss);
+                                   if isStateSpace && ~YesYalmip
                                        xnew = ss_reshape_x(x,B_ss,Ngs,nss,no,ni);
                                    else
                                        xnew = x;
@@ -1037,7 +1044,7 @@ else % if MIMO
                        end
                        Ag=[A;Ag];
                        bg=[b;bg];
-                       if isStateSpace
+                       if isStateSpace && ~YesYalmip
                             Ag = ss_reshape_A(Ag,B_ss,Ngs,ntot,no,ni);
                         end
                        [x,optval,xflag] = solveopt(H,f,Ag,bg,[],YesYalmip,rho,ops);
@@ -2254,3 +2261,69 @@ else
 end
 
 end
+
+
+function SSCons = ss_yalmip_cons(rho,rhoIndex,no,ni,Ngs,nss,B_ss)
+% Function to compute the equality constraints for state space controllers
+% when using Yalmip
+nbc = Ngs*nss;
+SSCons = [];
+if isempty(B_ss)
+    for p=2:ni
+        for q=1:no
+            SSCons = [SSCons, rho(rhoIndex{p,q}(1:nbc))==rho(rhoIndex{1,q}(1:nbc))];
+        end
+    end
+else
+    for p=1:ni
+        for q=2:no
+            SSCons = [SSCons, rho(rhoIndex{p,q}(1:nbc))==rho(rhoIndex{p,1}(1:nbc))];
+        end
+    end
+end
+
+
+end
+
+
+function K = ss_compute_controller(x,A_ss,B_ss,C_ss,nss,Ngs,no,ni,YesYalmip)
+
+nl = Ngs*(nss+1);
+K=cell(1,Ngs);
+
+if YesYalmip
+    x2 = reshape(x,1,nl,no,ni);
+
+    xbc = x2(1,1:nss*Ngs,:,:);
+    xd = x2(1,nss*Ngs+1:end,:,:);
+
+    xd = reshape(xd,Ngs*no*ni,1);
+    
+    if isempty(B_ss)
+        xb = xbc(1,:,:,1);
+        xb = reshape(xb,Ngs*nss*no,1);
+        x = [xb; xd];
+    else
+        xc = xbc(1,:,1,:);
+        xc = reshape(xc,Ngs*nss*ni,1);
+        x = [xc; xd];
+    end
+end
+    
+for k=1:Ngs
+    if isempty(B_ss)
+        Bvec = x(1:nss*no*Ngs);
+        Dvec = x(nss*no*Ngs+1:end);
+        B_ss = reshape(Bvec(k:Ngs:end),nss,no);
+        D_ss = reshape(Dvec(k:Ngs:end),no,ni)';
+    else
+        Cvec = x(1:nss*ni*Ngs);
+        Dvec = x(nss*ni*Ngs+1:end);
+        C_ss = reshape(Cvec(k:Ngs:end),nss,ni)';
+        D_ss = reshape(Dvec(k:Ngs:end),no,ni)';
+    end
+
+    K{k} = ss(A_ss,B_ss,C_ss,D_ss);
+end
+end
+        
