@@ -1089,22 +1089,7 @@ else % if MIMO
     K1=cell(1,Ngs);
     
     if isStateSpace
-        nss = length(A_ss);
-        for k=1:Ngs
-            if isempty(B_ss)
-                Bvec = x(1:nss*no*Ngs);
-                Dvec = x(nss*no*Ngs+1:end);
-                B_ss = reshape(Bvec(k:Ngs:end),nss,no);
-                D_ss = reshape(Dvec(k:Ngs:end),no,ni)';
-            else
-                Cvec = x(1:nss*ni*Ngs);
-                Dvec = x(nss*ni*Ngs+1:end);
-                C_ss = reshape(Cvec(k:Ngs:end),nss,ni)';
-                D_ss = reshape(Dvec(k:Ngs:end),no,ni)';
-            end
-        
-            K1{k} = ss(A_ss,B_ss,C_ss,D_ss);
-        end
+        K1 = ss_compute_controller(x,A_ss,B_ss,C_ss,nss,Ngs,no,ni,YesYalmip);
     else
 
         for p=1:ni
