@@ -60,7 +60,7 @@ else
 end
 
 if isStateSpace
-    [A_ss,B_ss,C_ss,inphi] = ss_data(inphi,inG);
+    [A_ss,B_ss,C_ss,nss,inphi] = ss_data(inphi,inG);
 end
     
 [Gf,Gdim,phi,n,phif,phifd,per,w,N,performance,Ldf,LDf,FGf,FLdf,FLDf,CovGf] = condesdata (inG,inphi,inper,options);
@@ -2085,7 +2085,7 @@ end
 end
 
 
-function [A,B,C,inphi] = ss_data(inphi,inG)
+function [A,B,C,nss,inphi] = ss_data(inphi,inG)
 % Function to get A, B, C matrices for state space and to make inphi the
 % right size for the given model
 
@@ -2106,6 +2106,8 @@ else
     C = inphi.par.C;
     B = inphi.par.B;
 end
+
+nss = length(A);
 
 if isempty(B)
     if size(C,1)~=ni
