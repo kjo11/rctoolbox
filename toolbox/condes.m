@@ -988,8 +988,14 @@ else % if MIMO
                             g_min=options.gamma(1);
                             g_max=gamma_opt;
                             for j=1:m,
-                               for q=1:no                              
-                                   Ldf_mat{j}(:,q)=transpose(Gphif{j,q})*x;
+                               for q=1:no
+                                   if isStateSpace
+                                       nss = length(A_ss);
+                                       xnew = ss_reshape_x(x,B_ss,Ngs,nss,no,ni);
+                                   else
+                                       xnew = x;
+                                   end
+                                   Ldf_mat{j}(:,q)=transpose(Gphif{j,q})*xnew;
                                end
                            end
                         else
@@ -2216,3 +2222,33 @@ fout = [fb; fd];
 
 end
 
+
+function xnew = ss_reshape_x(x,B_ss,Ngs,nss,no,ni)
+xnew = [];
+
+
+if isempty(B_ss)
+    Bvec = x(1:nss*no*Ngs);
+    Dvec = x(nss*no*Ngs+1:end);
+    B = reshape(Bvec(:),nss*Ngs,no);
+    D = reshape(Dvec(:),no*Ngs,ni)';
+    
+    for i=1:ni
+        for j=1:no
+            xnew = [xnew; B(:,j); D(i,j)];
+        end
+    end
+else
+    Cvec = x(1:nss*ni*Ngs);
+    Dvec = x(nss*ni*Ngs+1:end);
+    C = reshape(Cvec(:),nss*Ngs,ni)';
+    D = reshape(Dvec(:),no*Ngs,ni)';
+    
+    for i=1:ni
+        for j=1:no
+            xnew = [xnew; C(i,:)'; D(i,j)];
+        end
+    end
+end
+
+end
