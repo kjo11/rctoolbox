@@ -686,6 +686,9 @@ else % if MIMO
         f=f+f2;
     end
     
+    if isStateSpace
+        [H,f] = ss_reshape_Hf(H,f,B_ss,Ngs,ntot,no,ni);
+    end
     
     StabCons=[];    
     
@@ -857,7 +860,7 @@ else % if MIMO
                 b= [b ; b_b];
             end           
             if isStateSpace
-                [H,f,A] = ss_reshape_HfA(H,f,A,B_ss,Ngs,ntot,no,ni);
+                A = ss_reshape_A(A,B_ss,Ngs,ntot,no,ni);
             end
             [x,optval,xflag]=solveopt(H,f,A,b,StabCons,YesYalmip,rho,ops);
                         
@@ -901,8 +904,9 @@ else % if MIMO
                 b= [b ; b_b];                
                 
             end
+            
             if isStateSpace
-                [H,f,A] = ss_reshape_HfA(H,f,A,B_ss,Ngs,ntot,no,ni);
+                A = ss_reshape_A(A,B_ss,Ngs,ntot,no,ni);
             end
             [x,optval,xflag]=solveopt(H,f,A,b,StabCons,YesYalmip,rho,ops);
     
@@ -959,7 +963,7 @@ else % if MIMO
             if isempty(gamma),
                 Convcons = [HinfConstraint, StabCons ];
                 if isStateSpace
-                    [H,f,A] = ss_reshape_HfA(H,f,A,B_ss,Ngs,ntot,no,ni);
+                    A = ss_reshape_A(A,B_ss,Ngs,ntot,no,ni);
                 end
                 [x,optval,xflag]=solveopt(H,f,A,b,Convcons,YesYalmip,rho,ops);
             else
@@ -1028,7 +1032,7 @@ else % if MIMO
                        Ag=[A;Ag];
                        bg=[b;bg];
                        if isStateSpace
-                            [H,f,Ag] = ss_reshape_HfA(H,f,Ag,B_ss,Ngs,ntot,no,ni);
+                            Ag = ss_reshape_A(Ag,B_ss,Ngs,ntot,no,ni);
                         end
                        [x,optval,xflag] = solveopt(H,f,Ag,bg,[],YesYalmip,rho,ops);
 
@@ -2103,13 +2107,38 @@ end
 
 end
 
-
-function [Hout,fout,Aout] = ss_reshape_HfA(H,f,A,B_ss,Ngs,ntot,no,ni)
-% function to reshape H, f, A matrices for MIMO state space
+function [Aout] = ss_reshape_A(A,B_ss,Ngs,ntot,no,ni)
 nl = ntot/no/ni; % number of total parameters per input/output
 nbc = nl - Ngs; % number of B/C parameters per input/output
 
 alpha = size(A,1);
+
+if isempty(B_ss)
+    ndim = 4;
+    n = no;
+else
+    ndim = 3;
+    n = ni;
+end
+
+% reshape A
+A2 = reshape(A,alpha,nl,no,ni);
+
+Ab = A2(:,1:nbc,:,:);
+Ab = sum(Ab,ndim);
+Ab = reshape(Ab,alpha,nbc*n);
+
+Ad = A2(:,nbc+1:end,:,:);
+Ad = reshape(Ad,alpha,Ngs*no*ni);
+
+Aout = [Ab, Ad];
+end
+
+function [Hout,fout] = ss_reshape_Hf(H,f,B_ss,Ngs,ntot,no,ni)
+% function to reshape H, f matrices for MIMO state space
+nl = ntot/no/ni; % number of total parameters per input/output
+nbc = nl - Ngs; % number of B/C parameters per input/output
+
 
 if isempty(B_ss)
     ndim = 4;
@@ -2148,18 +2177,7 @@ Hdb = reshape(Hdb,Ngs*no*ni,nbc*n)';
 
 Hout = [Hbb, Hdb; Hbd, Hdd];
 
-
-% reshape A
-A2 = reshape(A,alpha,nl,no,ni);
-
-Ab = A2(:,1:nbc,:,:);
-Ab = sum(Ab,ndim);
-Ab = reshape(Ab,alpha,nbc*n);
-
-Ad = A2(:,nbc+1:end,:,:);
-Ad = reshape(Ad,alpha,Ngs*no*ni);
-
-Aout = [Ab, Ad];
+Hout = (Hout + Hout')/2; % to remove numerical errors
 
 
 % reshape f
