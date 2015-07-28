@@ -698,24 +698,13 @@ else % if MIMO
         f=f+f2;
     end
     
-%     if isStateSpace
-%         if YesYalmip
-%             SSCons=ss_yalmip_cons(rho,rhoIndex,no,ni,Ngs,nss,B_ss);
-%         else
-%             [H,f] = ss_reshape_Hf(H,f,B_ss,Ngs,ntot,no,ni);
-%             SSCons = [];
-%         end
-%     else
-%         SSCons=[];
-%     end
-%     
-%     StabCons=SSCons;    % Include state space constraints in stability constraints
-%     
 
     if isStateSpace
         [H,f] = ss_reshape_Hf(H,f,B_ss,Ngs,ntot,no,ni);
     end
+    
     StabCons = [];
+    
     if strcmp(options.Gbands,'on')
         
         %-------------------------  Gershgorin stability conditions  -------------
@@ -2159,6 +2148,7 @@ end
 end
 
 function [Aout] = ss_reshape_A(A,B_ss,Ngs,ntot,no,ni)
+% Reshape A matrix for MIMO state space
 nl = ntot/no/ni; % number of total parameters per input/output
 nbc = nl - Ngs; % number of B/C parameters per input/output
 
@@ -2187,6 +2177,7 @@ end
 
 function [Hout,fout] = ss_reshape_Hf(H,f,B_ss,Ngs,ntot,no,ni)
 % function to reshape H, f matrices for MIMO state space
+
 nl = ntot/no/ni; % number of total parameters per input/output
 nbc = nl - Ngs; % number of B/C parameters per input/output
 
@@ -2278,29 +2269,10 @@ end
 end
 
 
-function K = ss_compute_controller(x,A_ss,B_ss,C_ss,nss,Ngs,no,ni,YesYalmip)
+function K = ss_compute_controller(x,A_ss,B_ss,C_ss,nss,Ngs,no,ni)
+% Compute output controller for state space
 
-nl = Ngs*(nss+1);
 K=cell(1,Ngs);
-
-% if YesYalmip
-%     x2 = reshape(x,1,nl,no,ni);
-% 
-%     xbc = x2(1,1:nss*Ngs,:,:);
-%     xd = x2(1,nss*Ngs+1:end,:,:);
-% 
-%     xd = reshape(xd,Ngs*no*ni,1);
-%     
-%     if isempty(B_ss)
-%         xb = xbc(1,:,:,1);
-%         xb = reshape(xb,Ngs*nss*no,1);
-%         x = [xb; xd];
-%     else
-%         xc = xbc(1,:,1,:);
-%         xc = reshape(xc,Ngs*nss*ni,1);
-%         x = [xc; xd];
-%     end
-% end
     
 for k=1:Ngs
     if isempty(B_ss)
