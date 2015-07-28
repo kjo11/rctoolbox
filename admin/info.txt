@@ -204,3 +204,23 @@ Hours:
 14.15-17
 19-21.15
 Total: 8h (94h45)
+
+
+27.7:
+
+- MIMO state space reshaping output
+- Yalmip state space constraints
+
+Hours:
+10-12.30
+13.30-15
+Total: 4h (98h45)
+
+
+28.7:
+
+- bug in Yalmip state space constraints for high order controllers
+
+Hours:
+10.20-12.45
+13.45-
