@@ -23,7 +23,7 @@ opts2 = condesopt('gbands','off','yalmip','off','lambda',[1 0 0 0],'gamma',[0.01
 phi1 = conphi('pid',0.1,'s',[],'ss');
 phi2 = conphi('pid',0.1,'s');
 
-K1 = condes(G,phi,per,opts);
+K1 = condes(G,phi1,per,opts);
 K2 = condes(G,phi1,per,opts2);
 
 figure; bode(K1,K2);
@@ -47,11 +47,11 @@ K2 = condes(G,phi1,per,opts2);
 figure; bode(K1,K2);
 
 %% Laguerre, default C
-phi1 = conphi('Laguerre',[0.1 7],'s',[],'ss');
-phi2 = conphi('Laguerre',[0.1 7],'s');
+phi1 = conphi('Laguerre',[0.1 6],'s',[],'ss');
+phi2 = conphi('Laguerre',[0.1 6],'s');
 
 K1 = condes(G,phi1,per,opts);
-K2 = condes(G,phi1,per,opts2);
+K2 = condes(G,phi2,per,opts);
 
 figure; bode(K1,K2);
 
@@ -65,13 +65,12 @@ K2 = condes(G,phi1,per,opts2);
 figure; bode(K1,K2);
 
 %% Laguerre, given B
-phi1 = conphi('Laguerre',[0.1 5],'s',[],'ss',{'b',[1 2 3 4 5]'});
-phi2 = conphi('Laguerre',[0.1 5],'s');
+phi1 = conphi('Laguerre',[0.1 5],'s',[],'ss',{'b',[1 2 3 4 5 ]'});
+phi2 = conphi('Laguerre',[0.1 12],'s');
 
-K1 = condes(G,phi1,per,opts);
-K2 = condes(G,phi1,per,opts2);
+K1 = condes(G,phi2,per,opts);
+K2 = condes(G,phi2,per,opts2);
 
 figure; bode(K1,K2);
-
 
 

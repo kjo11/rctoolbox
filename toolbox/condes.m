@@ -109,8 +109,17 @@ end
 %-----------------------Solver choice- ------------------------------------
 
 if (strcmp(options.yalmip,'on') | isempty(options.nq)| (no > 2 & strcmp(options.Gbands,'on'))) & exist('yalmip')>1 % Use YALMIP interface
+    if isStateSpace
+        if isempty(B_ss)
+            rho_ss = sdpvar(nss*Ngs*no+Ngs*no*ni,1);
+        else
+            rho_ss = sdpvar(nss*Ngs*ni+Ngs*no*ni,1);
+        end
+        rho = ss_reshape_x(rho_ss,B_ss,Ngs,nss,no,ni);
+    else
+        rho=sdpvar(ntot,1);
+    end
         
-    rho=sdpvar(ntot,1);
     YesYalmip=1;
                    
                 % Here we put the controller parameters of q-th column of
@@ -137,6 +146,9 @@ else  % Use optimization toolbox
     
     YesYalmip=0;
     rho=zeros(ntot,1);
+    if isStateSpace
+        rho_ss = zeros(nss*Ngs*no+Ngs*no*ni,1);
+    end
     
     ops = optimset ('Largescale', 'off');
     if ~isempty (options.solveroptions)
@@ -686,19 +698,24 @@ else % if MIMO
         f=f+f2;
     end
     
+%     if isStateSpace
+%         if YesYalmip
+%             SSCons=ss_yalmip_cons(rho,rhoIndex,no,ni,Ngs,nss,B_ss);
+%         else
+%             [H,f] = ss_reshape_Hf(H,f,B_ss,Ngs,ntot,no,ni);
+%             SSCons = [];
+%         end
+%     else
+%         SSCons=[];
+%     end
+%     
+%     StabCons=SSCons;    % Include state space constraints in stability constraints
+%     
+
     if isStateSpace
-        if YesYalmip
-            SSCons=ss_yalmip_cons(rho,rhoIndex,no,ni,Ngs,nss,B_ss);
-        else
-            [H,f] = ss_reshape_Hf(H,f,B_ss,Ngs,ntot,no,ni);
-            SSCons = [];
-        end
-    else
-        SSCons=[];
+        [H,f] = ss_reshape_Hf(H,f,B_ss,Ngs,ntot,no,ni);
     end
-    
-    StabCons=SSCons;    % Include state space constraints in stability constraints
-    
+    StabCons = [];
     if strcmp(options.Gbands,'on')
         
         %-------------------------  Gershgorin stability conditions  -------------
@@ -913,10 +930,13 @@ else % if MIMO
                 
             end
             
-            if isStateSpace && ~YesYalmip
+            if isStateSpace 
                 A = ss_reshape_A(A,B_ss,Ngs,ntot,no,ni);
+                rho2 = rho_ss;
+            else
+                rho2 = rho;
             end
-            [x,optval,xflag]=solveopt(H,f,A,b,StabCons,YesYalmip,rho,ops);
+            [x,optval,xflag]=solveopt(H,f,A,b,StabCons,YesYalmip,rho2,ops);
     
 
           
@@ -1765,7 +1785,6 @@ else
     else
         [x,optval,xflag] = quadprog(H,f,A,b,[],[],[],[],[],ops);
     end
-
 end
 
 
@@ -2219,6 +2238,7 @@ end
 
 
 function xnew = ss_reshape_x(x,B_ss,Ngs,nss,no,ni)
+% Reshape x vector from state space to original configuration
 xnew = [];
 
 
@@ -2284,24 +2304,24 @@ function K = ss_compute_controller(x,A_ss,B_ss,C_ss,nss,Ngs,no,ni,YesYalmip)
 nl = Ngs*(nss+1);
 K=cell(1,Ngs);
 
-if YesYalmip
-    x2 = reshape(x,1,nl,no,ni);
-
-    xbc = x2(1,1:nss*Ngs,:,:);
-    xd = x2(1,nss*Ngs+1:end,:,:);
-
-    xd = reshape(xd,Ngs*no*ni,1);
-    
-    if isempty(B_ss)
-        xb = xbc(1,:,:,1);
-        xb = reshape(xb,Ngs*nss*no,1);
-        x = [xb; xd];
-    else
-        xc = xbc(1,:,1,:);
-        xc = reshape(xc,Ngs*nss*ni,1);
-        x = [xc; xd];
-    end
-end
+% if YesYalmip
+%     x2 = reshape(x,1,nl,no,ni);
+% 
+%     xbc = x2(1,1:nss*Ngs,:,:);
+%     xd = x2(1,nss*Ngs+1:end,:,:);
+% 
+%     xd = reshape(xd,Ngs*no*ni,1);
+%     
+%     if isempty(B_ss)
+%         xb = xbc(1,:,:,1);
+%         xb = reshape(xb,Ngs*nss*no,1);
+%         x = [xb; xd];
+%     else
+%         xc = xbc(1,:,1,:);
+%         xc = reshape(xc,Ngs*nss*ni,1);
+%         x = [xc; xd];
+%     end
+% end
     
 for k=1:Ngs
     if isempty(B_ss)
