@@ -166,12 +166,63 @@ Hours:
 14.15-17
 Total: 6h (76h)
 
+
 24.7:
 
 - Stability test Ld
 - meeting with Karimi
 - branching versions of code
+- branch with only bug fixing/stability test
 
 Hours:
 9-12.15
-18.30-
+18.30-22
+Total: 6h45 (82h45)
+
+
+25.7:
+
+- branch with only bug fixing and changes to gamma iterations and reduced order (bugfix)
+- branch with stability test added (stability)
+- adding state space to conphi
+
+Hours:
+9.45-12.15
+15.30-17
+Total: 4h (86h45)
+
+
+26.7:
+
+- adding state space to conphi
+- SISO state space in condes
+- MIMO state space linear constraints
+
+Hours:
+9.15-10.15
+11-13
+14.15-17
+19-21.15
+Total: 8h (94h45)
+
+
+27.7:
+
+- MIMO state space reshaping output
+- Yalmip state space constraints
+
+Hours:
+10-12.30
+13.30-15
+Total: 4h (98h45)
+
+
+28.7:
+
+- bug in Yalmip state space constraints for high order controllers
+- test MIMO yalmip state space
+
+Hours:
+10.20-12.45
+13.45-15.35
+Total: 4h (102h45)
