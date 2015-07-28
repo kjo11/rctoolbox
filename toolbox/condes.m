@@ -1765,6 +1765,7 @@ else
     else
         [x,optval,xflag] = quadprog(H,f,A,b,[],[],[],[],[],ops);
     end
+
 end
 
 
@@ -2256,13 +2257,20 @@ SSCons = [];
 if isempty(B_ss)
     for p=2:ni
         for q=1:no
-            SSCons = [SSCons, rho(rhoIndex{p,q}(1:nbc))==rho(rhoIndex{1,q}(1:nbc))];
+%             SSCons = [SSCons, rho(rhoIndex{p,q}(1:nbc))==rho(rhoIndex{1,q}(1:nbc))];
+            for i=1:nbc
+                SSCons = [SSCons, abs(rho(rhoIndex{p,q}(i))-rho(rhoIndex{1,q}(i))) <= 1e-7];
+%                 SSCons = [SSCons, rho(rhoIndex{p,q}(i)) == rho(rhoIndex{1,q}(i))];
+            end
         end
     end
 else
     for p=1:ni
         for q=2:no
-            SSCons = [SSCons, rho(rhoIndex{p,q}(1:nbc))==rho(rhoIndex{p,1}(1:nbc))];
+%             SSCons = [SSCons, rho(rhoIndex{p,q}(1:nbc))==rho(rhoIndex{p,1}(1:nbc))];
+            for i=1:nbc
+                SSCons = [SSCons, abs(rho(rhoIndex{p,q}(i))-rho(rhoIndex{p,1}(i))) <= 1e-5];
+            end
         end
     end
 end
