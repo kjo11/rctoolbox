@@ -884,10 +884,13 @@ else % if MIMO
                 A= [A ; A_b];
                 b= [b ; b_b];
             end           
-            if isStateSpace && ~YesYalmip
+            if isStateSpace 
                 A = ss_reshape_A(A,B_ss,Ngs,ntot,no,ni);
+                rho2 = rho_ss;
+            else
+                rho2 = rho;
             end
-            [x,optval,xflag]=solveopt(H,f,A,b,StabCons,YesYalmip,rho,ops);
+            [x,optval,xflag]=solveopt(H,f,A,b,StabCons,YesYalmip,rho2,ops);
                         
             
         case 'LS'
@@ -990,10 +993,13 @@ else % if MIMO
             
             if isempty(gamma),
                 Convcons = [HinfConstraint, StabCons ];
-                if isStateSpace && ~YesYalmip
+                if isStateSpace 
                     A = ss_reshape_A(A,B_ss,Ngs,ntot,no,ni);
+                    rho2 = rho_ss;
+                else
+                    rho2 = rho;
                 end
-                [x,optval,xflag]=solveopt(H,f,A,b,Convcons,YesYalmip,rho,ops);
+                [x,optval,xflag]=solveopt(H,f,A,b,Convcons,YesYalmip,rho2,ops);
             else
                % gamma iteration using bisection algorithm
                
@@ -1017,7 +1023,7 @@ else % if MIMO
                             g_max=gamma_opt;
                             for j=1:m,
                                for q=1:no
-                                   if isStateSpace && ~YesYalmip
+                                   if isStateSpace 
                                        xnew = ss_reshape_x(x,B_ss,Ngs,nss,no,ni);
                                    else
                                        xnew = x;
@@ -1064,10 +1070,13 @@ else % if MIMO
                        end
                        Ag=[A;Ag];
                        bg=[b;bg];
-                       if isStateSpace && ~YesYalmip
+                       if isStateSpace 
                             Ag = ss_reshape_A(Ag,B_ss,Ngs,ntot,no,ni);
+                            rho2 = rho_ss;
+                       else
+                           rho2 = rho;
                         end
-                       [x,optval,xflag] = solveopt(H,f,Ag,bg,[],YesYalmip,rho,ops);
+                       [x,optval,xflag] = solveopt(H,f,Ag,bg,[],YesYalmip,rho2,ops);
 
                        if xflag==1,
 
