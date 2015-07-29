@@ -1,8 +1,8 @@
-function phi = conphi(ConType,ConPar,CorD,F)
+function phi = conphi(ConType,ConPar,CorD,F,ConStruc)
 
 % In this command the controller structure is determined.
 %
-%  phi=conphi( ConType, ConPar, CorD, F)
+%  phi=conphi( ConType, ConPar, CorD, F, ConStruc)
 %
 % ConType : is a string defining the controller type. it can be:
 %       'PID':          For PID controller
@@ -36,6 +36,10 @@ function phi = conphi(ConType,ConPar,CorD,F)
 %       controller will be aconsidered as default.
 %
 % F: is a transfer function that is fixed in the controller (e.g. an integrator)
+%
+% ConStruc: is a string that can be 'LP' for a linearly parameterized
+%       controller (default) or 'TF' for a rational controller expressed as
+%       a transfer function (only for ConType 'Laguerre' or 'Generalized').
 %
 % Examples:
 %   phi=conphi('PID');  % defines a continuous-time PID controller
@@ -76,6 +80,19 @@ end
 %-------------------------
 ConType = lower ([ConType,'  ']); % removes sensitivity to cases.
 %-------------------------
+
+if nargin < 5
+    ConStruc = 'lp';
+end
+
+if strcmpi(ConStruc,'tf')
+    phi.ConStruc = 'tf';
+    if ~ (strncmp(ConType,'lag',3) || strncmp(ConType,'gen',3))
+        error('ConStruc ''TF'' can only be used with ConType ''Laguerre'' or ''Generalized''')
+    end
+elseif strcmpi(ConStruc,'lp')
+    phi.ConStruc = 'lp';
+end
 
 switch ConType(1:3)
     
@@ -226,9 +243,13 @@ switch ConType(1:3)
 end
 
 
-if nargin > 3
-    phi.phi=minreal(F*phi.phi);
-    phi.ConType =['Ftimes' phi.ConType];
+if nargin > 3 && ~isempty(F)
+    if ~strcmpi(ConStruc,'tf')
+        phi.phi=minreal(F*phi.phi);
+        phi.ConType =['Ftimes' phi.ConType];
+    else
+        phi.fs = F;
+    end
 end
 
 
