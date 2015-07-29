@@ -50,18 +50,53 @@ if nargin < 4
     options = condesopt;
 end
 
+
+
 [Gf,Gdim,phi,n,phif,phifd,per,w,N,performance,Ldf,LDf,FGf,FLdf,FLDf,CovGf] = condesdata (inG,inphi,inper,options);
 
 
 m=Gdim(1); no=Gdim(2); ni=Gdim(3);
 
+if no>1 || ni>1
+    if iscell(inphi)
+        for i=1:size(phi,1)
+            for j=1:size(phi,2)
+                if strcmpi(inphi{i,j}.ConStruc,'tf')
+                    error('ConStruc ''TF'' can only be used for SISO systems')
+                end
+            end
+        end
+    else
+        if strcmpi(inphi.ConStruc,'tf')
+            error('ConStruc ''TF'' can only be used for SISO systems')
+        end
+    end
+end
+
+
+
+if strcmpi(performance,'Hinf') && (no>1 || ni>1 || ~strcmpi(inphi.ConStruc,'tf')) % if MIMO or not TF
+    for i=1:length(per)
+        if iscell(per{i})
+            for j=1:length(per{i})
+                if isempty(per{i}{j}.Ld)
+                    error('Ld must be specified for H infinity performance (unless ''TF'' ConStruc is used)')
+                end
+            end
+        else
+            if isempty(per{i}.Ld)
+                error('Ld must be specified for H infinity performance (unless ''TF'' ConStruc is used)')
+            end
+        end
+    end
+end
+
+
+
 if no==1 && ni==1 % check stability of SISO systems
     check_Ld_stability(per,inG,phi);
 end
 
-K = [];
-sol_info = [];
-return;
 
 %------- Gain scheduled vector construction -------------------------------
 theta=options.gs;
