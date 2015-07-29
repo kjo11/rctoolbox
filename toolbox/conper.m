@@ -88,7 +88,7 @@ elseif strncmpi(PerType, 'Hinf',2)
         if nargin > 2
             per.Ld=Ld;
         else
-            error('A desired open-loop frequency function is needed!');
+            per.Ld=[];
         end
         
         
