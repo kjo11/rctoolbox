@@ -2022,3 +2022,45 @@ end
 
 
 end
+
+
+function [N,M] = tf_getMN(inG)
+% Split G into N and M (G = N*M^-1) and to get fs for TF ConStruc
+
+if ~iscell(inG)
+    inG = {inG};
+end
+
+N = cell(length(inG));
+M = N;
+
+for i=1:length(inG)
+    G = inG{i};
+    
+    if iscell(G) % If N and M explicitly given as cell
+        N{i} = G{1};
+        M{i} = G{2};
+    elseif isa(G,'frd') % If G an frd model
+        N{i} = G;
+        M{i} = tf(1,1);
+    else
+        try % isstable and tf give errors for models with internal delays etc
+            if isstable(G)
+                N{i} = G;
+                M{i} = tf(1,1);
+            else
+                [~,den,Ts]=tfdata(G,'v');
+                F = poly(-100*ones(length(den)-1,1));
+                N{i} = G*tf(den,F,Ts); % keep uncertainty info etc
+                M{i} = tf(den,F,Ts);
+            end
+        catch
+            N{i} = G;
+            M{i} = tf(1,1);
+        end
+    end
+end
+
+
+end
+
