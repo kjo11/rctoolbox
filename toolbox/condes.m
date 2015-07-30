@@ -57,45 +57,15 @@ end
 
 m=Gdim(1); no=Gdim(2); ni=Gdim(3);
 
-if no>1 || ni>1
-    if iscell(inphi)
-        for i=1:size(phi,1)
-            for j=1:size(phi,2)
-                if strcmpi(inphi{i,j}.ConStruc,'tf')
-                    error('ConStruc ''TF'' can only be used for SISO systems')
-                end
-            end
-        end
-    else
-        if strcmpi(inphi.ConStruc,'tf')
-            error('ConStruc ''TF'' can only be used for SISO systems')
-        end
-    end
-end
 
-
-
-if strcmpi(performance,'Hinf') && (no>1 || ni>1 || ~strcmpi(inphi.ConStruc,'tf')) % if MIMO or not TF
-    for i=1:length(per)
-        if iscell(per{i})
-            for j=1:length(per{i})
-                if isempty(per{i}{j}.Ld)
-                    error('Ld must be specified for H infinity performance (unless ''TF'' ConStruc is used)')
-                end
-            end
-        else
-            if isempty(per{i}.Ld)
-                error('Ld must be specified for H infinity performance (unless ''TF'' ConStruc is used)')
-            end
-        end
-    end
-end
-
-
+isTF = tf_sanity_check(no,ni,inphi,per);
 
 if no==1 && ni==1 % check stability of SISO systems
     check_Ld_stability(per,inG,phi);
 end
+
+
+
 
 
 %------- Gain scheduled vector construction -------------------------------
@@ -1972,3 +1942,49 @@ end
 end
 
 
+function isTF = tf_sanity_check(no,ni,inphi,per)
+isTF = 0;
+
+if no==1 && ni==1 % SISO
+    if strcmpi(inphi.ConStruc,'tf')
+        for i=1:length(per)
+            if ~strcmpi(per{i}.PerType,'Hinf') % Check TF performance type
+                error('Only H-infinity performance supported for rational controllers')
+            end
+        end
+        isTF = 1;
+    else
+        for i=1:length(per)
+            if strcmpi(per{i}.PerType,'Hinf') && isempty(per{i}.Ld)
+                error('Ld must be specified for H infinity performance (unless ''TF'' ConStruc is used)')
+            end
+        end
+    end
+else
+% Check that no MIMO systems have TF
+    if iscell(inphi)
+        for i=1:size(inphi,1)
+            for j=1:size(inphi,2)
+                if strcmpi(inphi{i,j}.ConStruc,'tf')
+                    error('ConStruc ''TF'' can only be used for SISO systems')
+                end
+            end
+        end
+    else
+        if strcmpi(inphi.ConStruc,'tf')
+            error('ConStruc ''TF'' can only be used for SISO systems')
+        end
+    end
+
+% Check that Ld specified for Hinf
+    for i=1:length(per)
+        for j=1:length(per{i})
+            if strcmpi(per{i}{j}.PerType,'Hinf') && isempty(per{i}{j}.Ld)
+                error('Ld must be specified for H infinity performance (unless ''TF'' ConStruc is used)')
+            end
+        end
+    end
+end
+
+
+end
