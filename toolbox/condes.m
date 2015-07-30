@@ -50,6 +50,11 @@ if nargin < 4
     options = condesopt;
 end
 
+isTF = tf_sanity_check(inG,inphi,inper);
+
+if isTF
+    [inG,M] = tf_getMN(inG);
+end
 
 
 [Gf,Gdim,phi,n,phif,phifd,per,w,N,performance,Ldf,LDf,FGf,FLdf,FLDf,CovGf] = condesdata (inG,inphi,inper,options);
@@ -58,7 +63,7 @@ end
 m=Gdim(1); no=Gdim(2); ni=Gdim(3);
 
 
-isTF = tf_sanity_check(no,ni,inphi,per);
+
 
 if no==1 && ni==1 % check stability of SISO systems
     check_Ld_stability(per,inG,phi);
@@ -1942,10 +1947,27 @@ end
 end
 
 
-function isTF = tf_sanity_check(no,ni,inphi,per)
+function isTF = tf_sanity_check(inG,inphi,inper)
+% Function to test for errors related to TF ConStruc
+if iscell(inG)
+    if iscell(inG{1})
+        [no,ni] = size(inG{1}{1});
+    else
+        [no,ni] = size(inG{1});
+    end
+else
+    [no,ni] = size(inG);
+end
+
 isTF = 0;
 
 if no==1 && ni==1 % SISO
+    if iscell(inper)
+        per = inper;
+    else
+        per = {inper};
+    end
+    
     if strcmpi(inphi.ConStruc,'tf')
         for i=1:length(per)
             if ~strcmpi(per{i}.PerType,'Hinf') % Check TF performance type
@@ -1961,6 +1983,18 @@ if no==1 && ni==1 % SISO
         end
     end
 else
+    if iscell(inper)
+        if iscell(inper{1})
+            per = inper;
+        else
+            per = {inper};
+        end
+    else
+        per = cell(1);
+        per{1} = {inper};
+    end
+    
+    
 % Check that no MIMO systems have TF
     if iscell(inphi)
         for i=1:size(inphi,1)
