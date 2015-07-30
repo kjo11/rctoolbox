@@ -235,7 +235,9 @@ for j=1:m
             FphiGf{j}((u-1)*Ngs+1:u*Ngs,:)=kron(theta_bar(j,:)',totod{j}(u,:));
         end
     end
-    Gfreq{j} = kron(theta_bar(j,:)',Gf{j});
+    if isTF
+        Gfreq{j} = kron(theta_bar(j,:)',squeeze(Gf{j}));
+    end
     if ~isempty(Ldf)
         H = H + real( FphiGf{j}*FphiGf{j}');
         f = f + transpose( -real(FLdf{j}.' * FphiGf{j}') );
@@ -277,12 +279,16 @@ for j=1:m
                 end
                 phiCov{j}{q}(p,:)=phiGfreq{j}(p,:).*(1+Pxy{j}./squeeze(Gf{j})');
             end
-            GCov{j}{q} = Gfreq{j}+Pxy{j};    
+            if isTF
+                GCov{j}{q} = Gfreq{j}+Pxy{j};    
+            end
         end
         
     else
         phiCov{j}{1}=phiGfreq{j};
-        GCov{j}{1}=Gfreq{j};
+        if isTF
+            GCov{j}{1}=Gfreq{j};
+        end
         nqq=1;
     end
 end
@@ -529,9 +535,9 @@ end
 
                                 for k=1:nqq
                                     if ~isempty(nq)
-                                        [A1 b1 HinfConstraint1]=tf_Ab_HinfCons(GCov{j}{k},Mf{j},phif,fsf,Wfgamma{j},nq,lambda);
+                                        [A1 b1 HinfConstraint1]=tf_Ab_HinfCons(GCov{j}{k},Mf{j},phif{j},fsf,Wfgamma{j},20,ntot,lambda);
                                     else
-                                        [A1 b1 HinfConstraint1]=tf_Ab_HinfCons(GCov{j}{k},Mf{j},phif,fsf,Wfgamma{j},nq,lambda,rho);
+                                        [A1 b1 HinfConstraint1]=tf_Ab_HinfCons(GCov{j}{k},Mf{j},phif{j},fsf,Wfgamma{j},20,ntot,lambda,rho);
                                     end
                                     A=[A ; A1];
                                     b=[b ; b1];
@@ -2192,9 +2198,11 @@ end
 function [A, b, HinfConstraint]=tf_Ab_HinfCons(Nf,Mf,phif,fsf,Wfgamma,ntheta,ntot,lambda,rho)
 % Compute Hinf constraints for TF structure
 
+
 A = [];
 b = [];
 HinfConstraint = [];
+
 
 
 if ~isempty(ntheta) % linear constraints
@@ -2205,9 +2213,9 @@ if ~isempty(ntheta) % linear constraints
             for j=1:2*ntot
                 if j<=ntot
                     %[[S] [T]]
-                    phiGq(j,:)= squeeze(phif(j,1,:).*Nf)' - exp(1i*2*pi*q/ntheta)/cos(pi/ntheta)*(lambda(2)*squeeze(Wfgamma(2,1,:))'.*squeeze(phif(j,1,:).*Nf)' + lambda(3)*squeeze(Wfgamma(3,1,:))'.*sqeeze(phif(j,1,:).*Mf)');% ST SS SU
+                    phiGq(j,:)= squeeze(phif(j,1,:).*Nf)' - exp(1i*2*pi*q/ntheta)/cos(pi/ntheta)*(lambda(2)*squeeze(Wfgamma(:,1))'.*squeeze(phif(j,1,:).*Nf)' + lambda(3)*squeeze(Wfgamma(:,3))'.*sqeeze(phif(j,1,:).*Mf)');% ST SS SU
                 else
-                    phiGq(j,:)= squeeze(phif(j-ntot,1,:).*fsf.*Mf)' - exp(1i*2*pi*q/ntheta)/cos(pi/ntheta)*(lambda(1)*squeeze(Wfgamma(1,1,:))'.*squeeze(phif(j-ntot,1,:).*fsf.*Mf)' + lambda(4)*squeeze(Wfgamma(4,1,:))'.*squeeze(phif(j-ntot,1,:).*fsf.*Nf)');
+                    phiGq(j,:)= squeeze(phif(j-ntot,1,:).*fsf.*Mf)' - exp(1i*2*pi*q/ntheta)/cos(pi/ntheta)*(lambda(1)*squeeze(Wfgamma(:,1))'.*squeeze(phif(j-ntot,1,:).*fsf.*Mf)' + lambda(4)*squeeze(Wfgamma(:,4))'.*squeeze(phif(j-ntot,1,:).*fsf.*Nf)');
                 end
             end
             A1=-real(transpose(phiGq));
@@ -2219,14 +2227,14 @@ if ~isempty(ntheta) % linear constraints
     end
 
 
-    if lambda(1)==0 && max(Wfgamma(1,1,:),3)>0
+    if lambda(1)==0 && max(Wfgamma(:,1),3)>0
         for q=1:ntheta% gridding the theta
             for j=1:2*ntot
                 if j<=ntot
                     %[[S] [T]]
                     phiGq(j,:)= squeeze(phif(j,1,:).*Nf)';
                 else
-                    phiGq(j,:)= squeeze(phif(j-ntot,1,:).*fsf.*Mf)' - exp(1i*2*pi*q/ntheta)/cos(pi/ntheta)*squeeze(Wfgamma(1,1,:))'.*squeeze(phif(j-ntot,1,:).*fsf.*Mf)';
+                    phiGq(j,:)= squeeze(phif(j-ntot,1,:).*fsf.*Mf)' - exp(1i*2*pi*q/ntheta)/cos(pi/ntheta)*squeeze(Wfgamma(:,1))'.*squeeze(phif(j-ntot,1,:).*fsf.*Mf)';
                 end
             end
             A1=-real(transpose(phiGq));
@@ -2238,12 +2246,12 @@ if ~isempty(ntheta) % linear constraints
     end
 
 
-    if lambda(2)==0 && max(Wfgamma(2,1,:),3)>0
+    if lambda(2)==0 && max(Wfgamma(:,2),3)>0
         for q=1:ntheta% gridding the theta
             for j=1:2*ntot
                 if j<=ntot
                     %[[S] [T]]
-                    phiGq(j,:)= squeeze(phif(j,1,:).*Nf)' - exp(1i*2*pi*q/ntheta)/cos(pi/ntheta)*squeeze(Wfgamma(2,1,:))'.*squeeze(phif(j-ntot,1,:).*Nf)';
+                    phiGq(j,:)= squeeze(phif(j,1,:).*Nf)' - exp(1i*2*pi*q/ntheta)/cos(pi/ntheta)*squeeze(Wfgamma(:,2))'.*squeeze(phif(j-ntot,1,:).*Nf)';
                 else
                     phiGq(j,:)= squeeze(phif(j-ntot,1,:).*fsf.*Mf)';
                 end
@@ -2257,12 +2265,12 @@ if ~isempty(ntheta) % linear constraints
     end
 
     
-    if lambda(3)==0 && max(Wfgamma(3,1,:),3)>0
+    if lambda(3)==0 && max(Wfgamma(:,3),3)>0
         for q=1:ntheta% gridding the theta
             for j=1:2*ntot
                 if j<=ntot
                     %[[S] [T]]
-                    phiGq(j,:)= squeeze(phif(j,1,:).*Nf)' - exp(1i*2*pi*q/ntheta)/cos(pi/ntheta)*squeeze(Wfgamma(3,1,:))'.*squeeze(phif(j-ntot,1,:).*Mf)';
+                    phiGq(j,:)= squeeze(phif(j,1,:).*Nf)' - exp(1i*2*pi*q/ntheta)/cos(pi/ntheta)*squeeze(Wfgamma(:,3))'.*squeeze(phif(j-ntot,1,:).*Mf)';
                 else
                     phiGq(j,:)= squeeze(phif(j-ntot,1,:).*fsf.*Mf)';
                 end
@@ -2276,14 +2284,14 @@ if ~isempty(ntheta) % linear constraints
     end
 
     
-    if lambda(4)==0 && max(Wfgamma(4,1,:),3)>0
+    if lambda(4)==0 && max(Wfgamma(:,4),3)>0
         for q=1:ntheta% gridding the theta
             for j=1:2*ntot
                 if j<=ntot
                     %[[S] [T]]
                     phiGq(j,:)= squeeze(phif(j,1,:).*Nf)';
                 else
-                    phiGq(j,:)= squeeze(phif(j-ntot,1,:).*fsf.*Mf)' - exp(1i*2*pi*q/ntheta)/cos(pi/ntheta)*squeeze(Wfgamma(4,1,:))'.*squeeze(phif(j-ntot,1,:).*fsf.*Nf)';
+                    phiGq(j,:)= squeeze(phif(j-ntot,1,:).*fsf.*Mf)' - exp(1i*2*pi*q/ntheta)/cos(pi/ntheta)*squeeze(Wfgamma(:,4))'.*squeeze(phif(j-ntot,1,:).*fsf.*Nf)';
                 end
             end
             A1=-real(transpose(phiGq));
@@ -2298,27 +2306,27 @@ else
     rhox = rho(1:ntot,1);
     rhoy = [1; rho(ntot+1:end,1)];
     HinfConstraint = [HinfConstraint, real(squeeze(Nf).*(squeeze(phif)'*rhox) + squeeze(Mf).*(squeeze(phif)'*rhoy)) >...
-        abs(lambda(1)*squeeze(Wfgamma(1,1,:).*Mf.*fsf).*(squeeze(phif)'*rhoy) + squeeze(lambda(2)*Wfgamma(2,1,:).*Nf).*(squeeze(phif)'*rhox)...
-        + lambda(3)*squeeze(Wfgamma(3,1,:).*Mf).*(squeeze(phif)'*rhox) + lambda(4)*squeeze(Wfgamma(4,1,:).*Nf.*fsf).*(squeeze(phif)'*rhoy))];
+        abs(lambda(1)*squeeze(Wfgamma(:,1).*Mf.*fsf).*(squeeze(phif)'*rhoy) + squeeze(lambda(2)*Wfgamma(:,2).*Nf).*(squeeze(phif)'*rhox)...
+        + lambda(3)*squeeze(Wfgamma(:,3).*Mf).*(squeeze(phif)'*rhox) + lambda(4)*squeeze(Wfgamma(:,4).*Nf.*fsf).*(squeeze(phif)'*rhoy))];
     
     if lambda(1)==0 && max(Wfgamma(1,1,:),1)>0
         HinfConstraint = [HinfConstraint, real(squeeze(Nf).*(squeeze(phif)'*rhox) + squeeze(Mf).*(squeeze(phif)'*rhoy)) >...
-            abs(squeeze(Wfgamma(1,1,:).*Mf.*fsf).*(squeeze(phif)'*rhoy))];
+            abs(squeeze(Wfgamma(:,1).*Mf.*fsf).*(squeeze(phif)'*rhoy))];
     end
     
     if lambda(2)==0 && max(Wfgamma(2,1,:),1)>0
         HinfConstraint = [HinfConstraint, real(squeeze(Nf).*(squeeze(phif)'*rhox) + squeeze(Mf).*(squeeze(phif)'*rhoy)) >...
-            abs(squeeze(Wfgamma(2,1,:).*Nf).*(squeeze(phif)'*rhox))];
+            abs(squeeze(Wfgamma(:,2).*Nf).*(squeeze(phif)'*rhox))];
     end
     
     if lambda(3)==0 && max(Wfgamma(3,1,:),1)>0
         HinfConstraint = [HinfConstraint, real(squeeze(Nf).*(squeeze(phif)'*rhox) + squeeze(Mf).*(squeeze(phif)'*rhoy)) >...
-            abs(squeeze(Wfgamma(3,1,:).*Mf).*(squeeze(phif)'*rhox))];
+            abs(squeeze(Wfgamma(:,3).*Mf).*(squeeze(phif)'*rhox))];
     end
     
     if lambda(4)==0 && max(Wfgamma(4,1,:),1)>0
         HinfConstraint = [HinfConstraint, real(squeeze(Nf).*(squeeze(phif)'*rhox) + squeeze(Mf).*(squeeze(phif)'*rhoy)) >...
-            abs(squeeze(Wfgamma(4,1,:).*Nf.*fsf).*(squeeze(phif)'*rhoy))];
+            abs(squeeze(Wfgamma(:,4).*Nf.*fsf).*(squeeze(phif)'*rhoy))];
     end
     
 end
