@@ -1,24 +1,58 @@
+% Debug function check_Ld_stability for Ld and G given as d/c tf
+
+addpath('../../toolbox')
 s = tf('s');
-% Ld =  100*(s-800)^4/(s*(s-200)^8);
-Ld = 10*(s+18)^7/(s^3*(s+100)^7);
-% Ld = 1/(s^3*(s-1));
-Ldfrd = frd(Ld,logspace(-12,12,100000));
+z = tf('z',0.01);
 
-G = 1/(s-1*exp(-s));
-phi = conphi('PID');
 
-per = {conper('LS',0.4,Ldfrd)};
+%% continuous, stable
+G = exp(-3*s)/(s*(s+1));
 
-[n_un,n_bd] = frd_windingno(Ldfrd);
+% Ld = 10*(s+1)/((s^2)*(s-1)); % closed loop unstable
+% Ld = 10/s; % poles on stability boundary
+% Ld = 1*(s+1)/(s^2*(s-1)); % unstable poles
+Ld = (s-1)^3/(s^2*(s+1)); % not strictly proper
 
-p = pole(Ld);
-pcl = pole(feedback(1,Ld));
+per = conper('LS',0.4,Ld);
 
-n_un2 = n_un + sum(real(pcl)>0);
-real_n_un = sum(real(p) > 0);
-real_n_bd = sum(real(p) == 0);
 
-n_un2 == real_n_un
-n_bd == real_n_bd
 
-check_Ld_stability(per,G,phi.phi);
+phi = conphi('Laguerre',[0.5 4],'s',1/s);
+
+K = condes(G,phi,per);
+
+%% continuous, unstable
+G = exp(-3*s)/((s-1)*(s-10));
+
+% Ld = 10/s; % unstable poles
+Ld = 100*(s+1)*(s+10)/(s*(s-1)*(s-10)); % works
+
+per = conper('LS',0.4,Ld);
+phi = conphi('Laguerre',[0.5 4],'s',1/s);
+K = condes(G,phi,per);
+
+%% discrete, stable
+G = (z-0.1)/(z^3*(z^2+z+0.5));
+
+% Ld = 10/(s-1); % unstable/SB poles
+% Ld = 10/(s*(s-1)); % unstable
+% Ld = (s-1)^3/(s^2*(s+1)); % not strictly proper
+Ld = 10/s; % works
+
+per = conper('LS',0.4,Ld);
+phi = conphi('Laguerre',[G.Ts,0.5 4],'z',z/(z-1));
+K = condes(G,phi,per);
+
+%% discrete, unstable
+G = (z-0.1)/(z^3*(z^2+2*z+0.5));
+
+% Ld = 10/(s-1); % SB poles
+% Ld = 10/(s*(s-1)); % unstable
+% Ld = (s-1)^3/(s*(s+1)); % not strictly proper
+% Ld = 10/s; % unstable poles
+Ld = 10*(s+1)/(s*(s-1)); % works
+
+per = conper('LS',0.4,Ld);
+phi = conphi('Laguerre',[G.Ts,0.5 4],'z',z/(z-1));
+K = condes(G,phi,per);
+

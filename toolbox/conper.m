@@ -69,12 +69,6 @@ if strncmpi(PerType,'GPhC',2)
             per.Ld=[];
         end
         
-        if Inpar(1) <= 1
-            error('The gain margin should be greater than 1.');
-        elseif Inpar(2) <= 0 || Inpar(2) >= 90
-            error('The phase margin should be between 0 and 90 degrees.');
-        end
-        
         per.par=Inpar;
         per.PerType='GPhC';
         
@@ -83,10 +77,6 @@ elseif strncmpi(PerType,'LS',2)
         per.Ld=Ld;
         if nargin < 3
             error('Please specify a desired open-loop frequency function for loop shaping!');
-        end
-        
-        if Inpar(1) < 0 || Inpar(1) > 1
-            error('Modulus margin should be between 0 and 1.')
         end
         
         per.par=Inpar;

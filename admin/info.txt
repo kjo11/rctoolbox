@@ -221,8 +221,29 @@ Total: 4h (98h45)
 
 - bug in Yalmip state space constraints for high order controllers
 - test MIMO yalmip state space
+- read rational paper
 
 Hours:
 10.20-12.45
 13.45-15.35
-Total: 4h (102h45)
+16.15-17.15
+Total: 5h (103h45)
+
+
+29.7:
+
+- go over rational controller code
+
+Hours:
+9.15-12.15
+Total: 3h (106h45)
+
+30.7:
+
+- sanity check for transfer function types
+
+Hours:
+10.40-12.40
+13-16
+16.20-
+

@@ -11,7 +11,6 @@ function phi = conphi(ConType,ConPar,CorD,F)
 %       'Laguerre':     For Laguerre basis function
 %       'Generalized':  For Generalized basis function
 %       'UD':           For user defined structure
-%       'SS':           For state space
 %
 % ConPar : is a scalar or a vector of parameters for the chosen controller type
 %
@@ -31,23 +30,12 @@ function phi = conphi(ConType,ConPar,CorD,F)
 %
 %       For user defined structure, ConPar is a column vector of stable
 %       transfer functions.
-%       
-%       For state space, ConPar is a vector containing the eigenvalues of 
-%       the controller A matrix. ConPar can also be given as a cell where
-%       ConPar{1} gives the eigenvalues of the A matrix, ConPar{2} gives
-%       the C matrix of the controller and (optionally) ConPar{3} gives the
-%       D matrix of the controller. (By default the C matrix is [1 0 0 ...])
-%       and the D matrix is 0.
 %
 % CorD : is a string that can be 's' or 'z' to define continuous-time or
 %       discrete-time controller. If it is not assigned a continuous-time 
-%       controller will be considered as default.
+%       controller will be aconsidered as default.
 %
 % F: is a transfer function that is fixed in the controller (e.g. an integrator)
-%
-% ConStruc: is a string that can be 'LP' for linearly parameterized
-%       controllers (default) or 'SS' for a state space representation
-%
 %
 % Examples:
 %   phi=conphi('PID');  % defines a continuous-time PID controller

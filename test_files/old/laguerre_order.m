@@ -1,3 +1,5 @@
+addpath('../../toolbox');
+
 load flex_trans.mat
 s = tf('s');
 z = tf('z');
