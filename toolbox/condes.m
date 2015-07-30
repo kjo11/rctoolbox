@@ -1846,70 +1846,74 @@ for m=1:length(inG)
     G = inG{m};
     Ld = per{m}.Ld;
     
-    if isa(G,'frd') || isa(Ld,'frd')
-        continue;
-    end
-    
-    % Check that Ld is strictly proper
-    if isdt(Ld)
-        var = tf('z');
-    else
-        var = tf('s');
-    end
-    if ~isproper(Ld*var)
-        warning('Ld does not appear to be strictly proper.');
-        return;
-    end
-    
-    % Check closed-loop stability of Ld
-    CLd = feedback(1,Ld);
-    if isdt(CLd)
-        x = isstable(absorbDelay(CLd));
-    elseif isa(CLd,'ss') && ~isempty(CLd.InternalDelay) && CLd.InternalDelay ~= 0
-        x = isstable(pade(CLd,10));
-    else
-        x = isstable(CLd);
-    end
-    if x==0
-        warning('Ld appears to be closed-loop unstable.')
-    end
-    
-    
-    % get poles on stability boundary of Phi
-    Phi = zpk([],[],0,phi.Ts);
-    for i=1:size(phi,1)
-        Phi = Phi + zpk([],pole(phi(i)),1,phi.Ts);
-    end
-    Phi = minreal(Phi); % lowest common denominator of phi
-    [~,pphi_bd] = getpoles(Phi);
+    if ~isempty(Ld)
 
-    % get poles of G
-    [n_uns,p_bd] = getpoles(G);
-    
-    % combine poles of G and phi and sort
-    p_bd = sort([p_bd; pphi_bd]);
-
-    % Make sure Ld and G are both continuous/discrete before computing
-    % poles
-    if isdt(G)
-        if isdt(Ld)
-            Ld = d2d(Ld,G.Ts);
-        else
-            Ld = c2d(Ld,G.Ts);
+        if isa(G,'frd') || isa(Ld,'frd')
+            continue;
         end
-    elseif isdt(Ld)
-        Ld = d2c(Ld);
+
+        % Check that Ld is strictly proper
+        if isdt(Ld)
+            var = tf('z');
+        else
+            var = tf('s');
+        end
+        if ~isproper(Ld*var)
+            warning('Ld does not appear to be strictly proper.');
+            return;
+        end
+
+        % Check closed-loop stability of Ld
+        CLd = feedback(1,Ld);
+        if isdt(CLd)
+            x = isstable(absorbDelay(CLd));
+        elseif isa(CLd,'ss') && ~isempty(CLd.InternalDelay) && CLd.InternalDelay ~= 0
+            x = isstable(pade(CLd,10));
+        else
+            x = isstable(CLd);
+        end
+        if x==0
+            warning('Ld appears to be closed-loop unstable.')
+        end
+
+
+        % get poles on stability boundary of Phi
+        Phi = zpk([],[],0,phi.Ts);
+        for i=1:size(phi,1)
+            Phi = Phi + zpk([],pole(phi(i)),1,phi.Ts);
+        end
+        Phi = minreal(Phi); % lowest common denominator of phi
+        [~,pphi_bd] = getpoles(Phi);
+
+        % get poles of G
+        [n_uns,p_bd] = getpoles(G);
+
+        % combine poles of G and phi and sort
+        p_bd = sort([p_bd; pphi_bd]);
+
+        % Make sure Ld and G are both continuous/discrete before computing
+        % poles
+        if isdt(G)
+            if isdt(Ld)
+                Ld = d2d(Ld,G.Ts);
+            else
+                Ld = c2d(Ld,G.Ts);
+            end
+        elseif isdt(Ld)
+            Ld = d2c(Ld);
+        end
+        [nL_uns,pL_bd] = getpoles(Ld);
+        pL_bd = sort(pL_bd);
+
+        delta = 1e-6;
+        if length(p_bd)~=length(pL_bd) || sum(abs(p_bd-pL_bd)>delta)~=0
+            warning('Ld does not appear to contain the poles of G*K on the stability boundary. This choice of Ld may generate an unstable controller.')
+        end
+        if n_uns~=nL_uns
+            warning('Ld and G*K should have the same number of unstable poles, but it appears that Ld has %i and G{%i}*K has %i. This choice of Ld may generate an unstable controller.',nL_uns,m,n_uns)
+        end
     end
-    [nL_uns,pL_bd] = getpoles(Ld);
-    pL_bd = sort(pL_bd);
-    
-    delta = 1e-6;
-    if length(p_bd)~=length(pL_bd) || sum(abs(p_bd-pL_bd)>delta)~=0
-        warning('Ld does not appear to contain the poles of G*K on the stability boundary. This choice of Ld may generate an unstable controller.')
-    end
-    if n_uns~=nL_uns
-        warning('Ld and G*K should have the same number of unstable poles, but it appears that Ld has %i and G{%i}*K has %i. This choice of Ld may generate an unstable controller.',nL_uns,m,n_uns)
-    end
+        
 end
 
 end
