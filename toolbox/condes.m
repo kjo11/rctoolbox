@@ -63,9 +63,9 @@ end
 [Gf,Gdim,phi,n,phif,phifd,per,w,N,performance,Ldf,LDf,FGf,FLdf,FLDf,CovGf] = condesdata (inG,inphi,inper,options);
 
 if isTF
-    for i=1:length(w)
-        Mf{i} = freqresp(M,w);
-        fsf{i} = freqresp(inphi.fs,w);
+    for j=1:length(w)
+        Mf{j} = freqresp(M{j},w{j});
+        fsf{j} = freqresp(inphi.fs,w{j});
     end
 end
 
@@ -463,14 +463,119 @@ end
             
         case 'Hinf'
             
-            a=cell(1,m); d=cell(1,m);
-             
+            
+            if isTF
+                
+                if isempty(gamma)
+                    error('Gamma must be specified for TF controller structure')
+                end
+                
+                for j=1:m
+                    W{j} = per{j}.par;
+                
+                    for k=1:4
+                        if isempty(W{j}{k})
+                            Wf{j}(:,k)=zeros(N(j),1);
+                        elseif strcmp(class(W{j}{k}),'frd')
+                            w1=W{j}{k}.Frequency;
+                            x1=W{j}{k}.ResponseData;
+                            Wf{j}(:,k)=interp1(w1,x1(:),w{j},[],'extrap');
+                        else
+                            Wf{j}(:,k)=freqresp(W{j}{k},w{j});
+                        end
+                    end   
+                end
+                
+                
+                %------------ Bisection algorithm to minimize gamma------------------------
 
-                       
+                    gamma_opt=0;
+                    gamma_opt_old = g_max + g_tol + 1;
+                    nit = 0;
+
+                    while gamma_opt_old - gamma_opt > g_tol
+
+                        nit = nit+1;
+                        if nit ~= 1
+                            if gamma_opt~=0
+                                gamma_opt_old = gamma_opt;
+                                g_min=options.gamma(1);
+                                g_max=gamma_opt;
+                            else
+                                break;
+                            end
+                        end
+
+                        while g_max-g_min > g_tol
+
+                            A=[];
+                            b=[];
+
+                            HinfConstraint=[];
+
+                            for j=1:m
+                                if sum(lambda)==0
+                                    Wfgamma{j}=inv(gamma)*Wf{j};
+                                else
+                                    for k=1:4,
+                                        if lambda(k)~=0
+                                            Wfgamma{j}(:,k)=inv(gamma)*Wf{j}(:,k);
+                                        else
+                                            Wfgamma{j}(:,k)=Wf{j}(:,k);
+                                        end
+                                    end
+                                end
+
+
+                                for k=1:nqq
+                                    if ~isempty(nq)
+                                        [A1 b1 HinfConstraint1]=tf_Ab_HinfCons(GCov{j}{k},Mf{j},phif,fsf,Wfgamma{j},nq,lambda);
+                                    else
+                                        [A1 b1 HinfConstraint1]=tf_Ab_HinfCons(GCov{j}{k},Mf{j},phif,fsf,Wfgamma{j},nq,lambda,rho);
+                                    end
+                                    A=[A ; A1];
+                                    b=[b ; b1];
+                                    HinfConstraint=[HinfConstraint HinfConstraint1];
+                                end
+
+                            end
+
+                            [x,optval,xflag] = solveopt(H,f,A,b,HinfConstraint,YesYalmip,rho,ops);
+
+                            if xflag==1,
+
+                                x_opt=x;gamma_opt=gamma;optval_opt=optval;xflag_opt=xflag;
+
+                                g_max=gamma;
+                                disp(['gamma=', num2str(g_max)])
+                                gamma=mean([g_min,gamma]);
+                                %gamma=mean([options.gamma(1),gamma]);
+
+
+                            else
+                                g_min=gamma;
+                                gamma=mean([g_max,gamma]);
+                            end
+
+                        end
+
+
+                    end
+
+                    if gamma_opt~=0
+                        x=x_opt;gamma=gamma_opt;optval=optval_opt;xflag=xflag_opt;
+                    end
+                
+            else
+            
+            a=cell(1,m); d=cell(1,m);
+
+
+
             for j=1:m
-                
+
                 W{j}=per{j}.par;
-                
+
                 for k=1:4
                     if isempty(W{j}{k})
                         Wf{j}(:,k)=zeros(N(j),1);
@@ -484,14 +589,14 @@ end
                     if k==3, Wf{j}(:,3)=Wf{j}(:,3)./squeeze(Gf{j}); end
                     if k==4, Wf{j}(:,4)=Wf{j}(:,4).*squeeze(Gf{j}); end
                 end                
-                                
-                
+
+
                 a{j}(:,1)=real(Ldf{j})+1;
                 a{j}(:,2)=imag(Ldf{j});
-                                
-                
-                           
-                
+
+
+
+
                 if isempty(gamma),
                     for k=1:nqq
                         if ~isempty(nq)
@@ -504,19 +609,19 @@ end
                         HinfConstraint=[HinfConstraint HinfConstraint1];
                     end
                 end
-                
+
             end
-            
-            
-            
+
+
+
             if isempty(gamma),  % Minimizing L-Ld under H infinity constraints
-                
-                
+
+
                 [x,optval,xflag] = solveopt(H,f,A,b,HinfConstraint,YesYalmip,rho,ops);
-                              
-                
+
+
             else
-                
+
 %------------ Bisection algorithm to minimize gamma------------------------
 
                 gamma_opt=0;
@@ -524,7 +629,7 @@ end
                 nit = 0;
 
                 while gamma_opt_old - gamma_opt > g_tol
-                    
+
                     nit = nit+1;
                     if nit ~= 1
                         if gamma_opt~=0
@@ -586,25 +691,26 @@ end
                             gamma=mean([g_min,gamma]);
                             %gamma=mean([options.gamma(1),gamma]);
 
-                            
+
                         else
                             g_min=gamma;
                             gamma=mean([g_max,gamma]);
                         end
 
                     end
-                    
-                    
+
+
                 end
 
                 if gamma_opt~=0
                     x=x_opt;gamma=gamma_opt;optval=optval_opt;xflag=xflag_opt;
                 end
-                
+
                 %--------------------------------------------------------------------------
-                
+
             end
             
+            end
             
     end
     
@@ -2077,3 +2183,145 @@ end
 
 end
 
+
+
+function [A, b, HinfConstraint]=tf_Ab_HinfCons(Nf,Mf,phif,fsf,Wfgamma,ntheta,ntot,lambda,rho)
+% Compute Hinf constraints for TF structure
+
+A = [];
+b = [];
+HinfConstraint = [];
+
+
+if ~isempty(ntheta) % linear constraints
+    
+    % Hinf constraints
+    if sum(lambda)>0
+        for q=1:ntheta% gridding the theta
+            for j=1:2*ntot
+                if j<=ntot
+                    %[[S] [T]]
+                    phiGq(j,:)= squeeze(phif(j,1,:).*Nf)' - exp(1i*2*pi*q/ntheta)/cos(pi/ntheta)*(lambda(2)*squeeze(Wfgamma(2,1,:))'.*squeeze(phif(j,1,:).*Nf)' + lambda(3)*squeeze(Wfgamma(3,1,:))'.*sqeeze(phif(j,1,:).*Mf)');% ST SS SU
+                else
+                    phiGq(j,:)= squeeze(phif(j-ntot,1,:).*fsf.*Mf)' - exp(1i*2*pi*q/ntheta)/cos(pi/ntheta)*(lambda(1)*squeeze(Wfgamma(1,1,:))'.*squeeze(phif(j-ntot,1,:).*fsf.*Mf)' + lambda(4)*squeeze(Wfgamma(4,1,:))'.*squeeze(phif(j-ntot,1,:).*fsf.*Nf)');
+                end
+            end
+            A1=-real(transpose(phiGq));
+            h=size(A1);
+            b1=-realtol*ones(h(1),1);
+            A = [A ; A1];
+            b = [b ; b1];
+        end 
+    end
+
+
+    if lambda(1)==0 && max(Wfgamma(1,1,:),3)>0
+        for q=1:ntheta% gridding the theta
+            for j=1:2*ntot
+                if j<=ntot
+                    %[[S] [T]]
+                    phiGq(j,:)= squeeze(phif(j,1,:).*Nf)';
+                else
+                    phiGq(j,:)= squeeze(phif(j-ntot,1,:).*fsf.*Mf)' - exp(1i*2*pi*q/ntheta)/cos(pi/ntheta)*squeeze(Wfgamma(1,1,:))'.*squeeze(phif(j-ntot,1,:).*fsf.*Mf)';
+                end
+            end
+            A1=-real(transpose(phiGq));
+            h=size(A1);
+            b1=-realtol*ones(h(1),1);
+            A = [A ; A1];
+            b = [b ; b1];
+        end 
+    end
+
+
+    if lambda(2)==0 && max(Wfgamma(2,1,:),3)>0
+        for q=1:ntheta% gridding the theta
+            for j=1:2*ntot
+                if j<=ntot
+                    %[[S] [T]]
+                    phiGq(j,:)= squeeze(phif(j,1,:).*Nf)' - exp(1i*2*pi*q/ntheta)/cos(pi/ntheta)*squeeze(Wfgamma(2,1,:))'.*squeeze(phif(j-ntot,1,:).*Nf)';
+                else
+                    phiGq(j,:)= squeeze(phif(j-ntot,1,:).*fsf.*Mf)';
+                end
+            end
+            A1=-real(transpose(phiGq));
+            h=size(A1);
+            b1=-realtol*ones(h(1),1);
+            A = [A ; A1];
+            b = [b ; b1];
+        end 
+    end
+
+    
+    if lambda(3)==0 && max(Wfgamma(3,1,:),3)>0
+        for q=1:ntheta% gridding the theta
+            for j=1:2*ntot
+                if j<=ntot
+                    %[[S] [T]]
+                    phiGq(j,:)= squeeze(phif(j,1,:).*Nf)' - exp(1i*2*pi*q/ntheta)/cos(pi/ntheta)*squeeze(Wfgamma(3,1,:))'.*squeeze(phif(j-ntot,1,:).*Mf)';
+                else
+                    phiGq(j,:)= squeeze(phif(j-ntot,1,:).*fsf.*Mf)';
+                end
+            end
+            A1=-real(transpose(phiGq));
+            h=size(A1);
+            b1=-realtol*ones(h(1),1);
+            A = [A ; A1];
+            b = [b ; b1];
+        end 
+    end
+
+    
+    if lambda(4)==0 && max(Wfgamma(4,1,:),3)>0
+        for q=1:ntheta% gridding the theta
+            for j=1:2*ntot
+                if j<=ntot
+                    %[[S] [T]]
+                    phiGq(j,:)= squeeze(phif(j,1,:).*Nf)';
+                else
+                    phiGq(j,:)= squeeze(phif(j-ntot,1,:).*fsf.*Mf)' - exp(1i*2*pi*q/ntheta)/cos(pi/ntheta)*squeeze(Wfgamma(4,1,:))'.*squeeze(phif(j-ntot,1,:).*fsf.*Nf)';
+                end
+            end
+            A1=-real(transpose(phiGq));
+            h=size(A1);
+            b1=-realtol*ones(h(1),1);
+            A = [A ; A1];
+            b = [b ; b1];
+        end 
+    end
+    
+else
+    rhox = rho(1:ntot,1);
+    rhoy = [1; rho(ntot+1:end,1)];
+    HinfConstraint = [HinfConstraint, real(squeeze(Nf).*(squeeze(phif)'*rhox) + squeeze(Mf).*(squeeze(phif)'*rhoy)) >...
+        abs(lambda(1)*squeeze(Wfgamma(1,1,:).*Mf.*fsf).*(squeeze(phif)'*rhoy) + squeeze(lambda(2)*Wfgamma(2,1,:).*Nf).*(squeeze(phif)'*rhox)...
+        + lambda(3)*squeeze(Wfgamma(3,1,:).*Mf).*(squeeze(phif)'*rhox) + lambda(4)*squeeze(Wfgamma(4,1,:).*Nf.*fsf).*(squeeze(phif)'*rhoy))];
+    
+    if lambda(1)==0 && max(Wfgamma(1,1,:),1)>0
+        HinfConstraint = [HinfConstraint, real(squeeze(Nf).*(squeeze(phif)'*rhox) + squeeze(Mf).*(squeeze(phif)'*rhoy)) >...
+            abs(squeeze(Wfgamma(1,1,:).*Mf.*fsf).*(squeeze(phif)'*rhoy))];
+    end
+    
+    if lambda(2)==0 && max(Wfgamma(2,1,:),1)>0
+        HinfConstraint = [HinfConstraint, real(squeeze(Nf).*(squeeze(phif)'*rhox) + squeeze(Mf).*(squeeze(phif)'*rhoy)) >...
+            abs(squeeze(Wfgamma(2,1,:).*Nf).*(squeeze(phif)'*rhox))];
+    end
+    
+    if lambda(3)==0 && max(Wfgamma(3,1,:),1)>0
+        HinfConstraint = [HinfConstraint, real(squeeze(Nf).*(squeeze(phif)'*rhox) + squeeze(Mf).*(squeeze(phif)'*rhoy)) >...
+            abs(squeeze(Wfgamma(3,1,:).*Mf).*(squeeze(phif)'*rhox))];
+    end
+    
+    if lambda(4)==0 && max(Wfgamma(4,1,:),1)>0
+        HinfConstraint = [HinfConstraint, real(squeeze(Nf).*(squeeze(phif)'*rhox) + squeeze(Mf).*(squeeze(phif)'*rhoy)) >...
+            abs(squeeze(Wfgamma(4,1,:).*Nf.*fsf).*(squeeze(phif)'*rhoy))];
+    end
+    
+end
+        
+
+
+
+
+
+end
