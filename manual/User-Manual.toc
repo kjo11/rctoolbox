@@ -1,0 +1,36 @@
+\contentsline {chapter}{\numberline {1}Introduction}{2}
+\contentsline {section}{\numberline {1.1}Class of models and controllers}{3}
+\contentsline {subsection}{\numberline {1.1.1}Models}{3}
+\contentsline {subsection}{\numberline {1.1.2}Controllers}{3}
+\contentsline {subsubsection}{PID, PI, PD:}{3}
+\contentsline {subsubsection}{Laguerre basis functions:}{4}
+\contentsline {subsubsection}{Generalized orthonormal basis functions:}{4}
+\contentsline {subsubsection}{State space:}{4}
+\contentsline {subsubsection}{Transfer function:}{5}
+\contentsline {section}{\numberline {1.2}GPhC controller}{5}
+\contentsline {section}{\numberline {1.3}Loop shaping controller}{8}
+\contentsline {section}{\numberline {1.4}$H_\infty $ controller}{9}
+\contentsline {section}{\numberline {1.5}MIMO controller}{11}
+\contentsline {section}{\numberline {1.6}Gain-scheduled controller}{12}
+\contentsline {chapter}{\numberline {2}Toolbox commands}{14}
+\contentsline {section}{\numberline {2.1}Determining controller structure}{14}
+\contentsline {subsection}{\numberline {2.1.1}Example 1}{15}
+\contentsline {subsection}{\numberline {2.1.2}Example 2}{16}
+\contentsline {subsection}{\numberline {2.1.3}Example 3}{16}
+\contentsline {subsection}{\numberline {2.1.4}Example 4}{17}
+\contentsline {subsection}{\numberline {2.1.5}Example 5}{17}
+\contentsline {subsection}{\numberline {2.1.6}Example 6}{18}
+\contentsline {subsection}{\numberline {2.1.7}Example 7}{18}
+\contentsline {section}{\numberline {2.2}Determining control performance}{19}
+\contentsline {subsection}{\numberline {2.2.1}Examples}{21}
+\contentsline {section}{\numberline {2.3}Controller Design}{22}
+\contentsline {subsection}{\numberline {2.3.1}Examples}{24}
+\contentsline {subsubsection}{Controller design with {\tt GPhC} performance for a single model system}{24}
+\contentsline {subsubsection}{Controller design with {\tt GPhC} performance for a multi-model system}{25}
+\contentsline {subsubsection}{Controller design with {\tt LS} performance for a multivariable system}{26}
+\contentsline {subsubsection}{Controller design with {\tt Hinf} performance}{27}
+\contentsline {section}{\numberline {2.4}Controller design options}{27}
+\contentsline {subsection}{\numberline {2.4.1}Examples}{30}
+\contentsline {subsubsection}{$H_\infty $ controller design for an unstable system}{30}
+\contentsline {subsubsection}{Gain-scheduled controller design for a domestic condensing boiler}{31}
+\contentsline {subsubsection}{Simultaneous stabilization (example from Robust Control Toolbox of Matlab)}{32}
