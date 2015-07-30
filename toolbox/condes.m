@@ -724,8 +724,14 @@ end
     end
     
     
-    for k=1:n
-        rhox(k,:)=x((k-1)*Ngs+1:k*Ngs);
+    if isTF
+        for k=1:2*n-1
+            rhox(k,:)=x((k-1)*Ngs+1:k*Ngs);
+        end
+    else
+        for k=1:n
+            rhox(k,:)=x((k-1)*Ngs+1:k*Ngs);
+        end
     end
     
     
@@ -733,12 +739,23 @@ end
         fprintf('\n');
         disp('K{1}+theta_1 K{2}+theta_2 K{3} + ... +theta_1^2 k{n}+theta_2^2k{n+1}+...')
         fprintf('\n');
-        for k=1:Ngs
-            K{k} = reduced_order(rhox(:,k),phi,inphi.ConType);
-            disp(['K{'  int2str(k) '}=']),K{k}
+        if isTF
+            for k=1:Ngs
+                K{k} = minreal((rhox(k,1:ntot)'*phi)/([1,rhox(k,ntot+2:end)]'*phi));
+                disp(['K{'  int2str(k) '}=']),K{k}
+            end
+        else
+            for k=1:Ngs
+                K{k} = reduced_order(rhox(:,k),phi,inphi.ConType);
+                disp(['K{'  int2str(k) '}=']),K{k}
+            end
         end
     else
-        K = reduced_order(rhox,phi,inphi.ConType);
+        if isTF
+            K = minreal((rhox(1:ntot)'*phi)/([1;rhox(ntot+1:end)]'*phi));
+        else
+            K = reduced_order(rhox,phi,inphi.ConType);
+        end
     end
     
     
