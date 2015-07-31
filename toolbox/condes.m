@@ -120,7 +120,7 @@ end
 if (strcmp(options.yalmip,'on') | isempty(options.nq)| (no > 2 & strcmp(options.Gbands,'on'))) & exist('yalmip')>1 % Use YALMIP interface
         
     if isTF
-        rho = sdpvar(2*ntot-1,1);
+        rho = sdpvar(2*ntot-Ngs,1);
     else
         rho=sdpvar(ntot,1);
     end
@@ -547,8 +547,8 @@ end
                             end
                             f = zeros(2*ntot-1,1);
                             H = [];
-                            b = b - A(:,ntot+1);
-                            A = [A(:,1:ntot),A(:,ntot+2:end)];
+                            b = b - sum(A(:,ntot+1:ntot+Ngs),2);
+                            A = [A(:,1:ntot),A(:,ntot+Ngs+1:end)];
                             [x,optval,xflag] = solveopt(H,f,A,b,HinfConstraint,YesYalmip,rho,ops);
 
                             if xflag==1,
@@ -725,7 +725,7 @@ end
     
     
     if isTF
-        for k=1:2*n-1
+        for k=1:2*n-Ngs
             rhox(k,:)=x((k-1)*Ngs+1:k*Ngs);
         end
     else
@@ -741,7 +741,7 @@ end
         fprintf('\n');
         if isTF
             for k=1:Ngs
-                K{k} = minreal((rhox(k,1:ntot)'*phi)/([1,rhox(k,ntot+2:end)]'*phi));
+                K{k} = minreal((rhox(k,1:n)'*phi)/([1,rhox(k,n+1:end)]'*phi));
                 disp(['K{'  int2str(k) '}=']),K{k}
             end
         else
@@ -752,7 +752,7 @@ end
         end
     else
         if isTF
-            K = minreal((rhox(1:ntot)'*phi)/([1;rhox(ntot+1:end)]'*phi));
+            K = minreal((rhox(1:n)'*phi)/([1;rhox(n+1:end)]'*phi));
         else
             K = reduced_order(rhox,phi,inphi.ConType);
         end
@@ -1827,7 +1827,7 @@ if YesYalmip==1,
     
     if ~isempty(A)
         try
-            Constraint=[ConvCons, (A*rho < b)];
+            Constraint=[ConvCons, (A*rho <= b)];
         catch
             Constraint=[ConvCons set(A*rho < b)];
         end
@@ -2325,7 +2325,7 @@ if ~isempty(ntheta) % linear constraints
     
 else
     rhox = rho(1:ntot,1);
-    rhoy = [1; rho(ntot+1:end,1)];
+    rhoy = [ones(2*ntot-length(rho),1); rho(ntot+1:end,1)];
     HinfConstraint = [HinfConstraint, real(Nf.*(squeeze(phif)'*rhox) + Mf.*(squeeze(phif)'*rhoy)) >...
         abs(lambda(1)*Wfgamma(:,1).*Mf.*fsf.*(squeeze(phif)'*rhoy) + lambda(2)*Wfgamma(:,2).*Nf.*(squeeze(phif)'*rhox)...
         + lambda(3)*Wfgamma(:,3).*Mf.*(squeeze(phif)'*rhox) + lambda(4)*Wfgamma(:,4).*Nf.*fsf.*(squeeze(phif)'*rhoy))];
