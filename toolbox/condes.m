@@ -151,7 +151,11 @@ else  % Use optimization toolbox
     YesYalmip=0;
     rho=zeros(ntot,1);
     
-    ops = optimset ('Largescale', 'off');
+    if isTF
+        ops = optimset ('Largescale', 'on','MaxIter',100000,'TolFun',1e-8);
+    else
+        ops = optimset ('Largescale', 'off');
+    end
     if ~isempty (options.solveroptions)
         names = fieldnames(options.solveroptions);
         for k=1:length(names);
