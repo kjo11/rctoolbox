@@ -474,121 +474,7 @@ end
         case 'Hinf'
             
             
-            if isTF
-                
-                if isempty(gamma)
-                    error('Gamma must be specified for TF controller structure')
-                end
-                
-                for j=1:m
-                    W{j} = per{j}.par;
-                
-                    for k=1:4
-                        if isempty(W{j}{k})
-                            Wf{j}(:,k)=zeros(N(j),1);
-                        elseif strcmp(class(W{j}{k}),'frd')
-                            w1=W{j}{k}.Frequency;
-                            x1=W{j}{k}.ResponseData;
-                            Wf{j}(:,k)=interp1(w1,x1(:),w{j},[],'extrap');
-                        else
-                            Wf{j}(:,k)=freqresp(W{j}{k},w{j});
-                        end
-                    end   
-                end
-                
-                
-                %------------ Bisection algorithm to minimize gamma------------------------
-
-                    gamma_opt=0;
-                    gamma_opt_old = g_max + g_tol + 1;
-                    nit = 0;
-
-                    while gamma_opt_old - gamma_opt > g_tol
-
-                        nit = nit+1;
-                        if nit ~= 1
-                            if gamma_opt~=0
-                                gamma_opt_old = gamma_opt;
-                                g_min=options.gamma(1);
-                                g_max=gamma_opt;
-                            else
-                                break;
-                            end
-                        end
-
-                        while g_max-g_min > g_tol
-
-                            A=[];
-                            b=[];
-
-                            HinfConstraint=[];
-
-                            for j=1:m
-                                if sum(lambda)==0
-                                    Wfgamma{j}=inv(gamma)*Wf{j};
-                                else
-                                    for k=1:4,
-                                        if lambda(k)~=0
-                                            Wfgamma{j}(:,k)=inv(gamma)*Wf{j}(:,k);
-                                        else
-                                            Wfgamma{j}(:,k)=Wf{j}(:,k);
-                                        end
-                                    end
-                                end
-
-
-                                for k=1:nqq
-                                    if ~isempty(nq)
-                                        [A1 b1 HinfConstraint1]=tf_Ab_HinfCons(GCov{j}{k},Mf{j},phif{j},fsf{j},Wfgamma{j},25,ntot,lambda);
-                                    else
-                                        [A1 b1 HinfConstraint1]=tf_Ab_HinfCons(GCov{j}{k},Mf{j},phif{j},fsf{j},Wfgamma{j},20,ntot,lambda,rho);
-                                    end
-                                    A=[A ; A1];
-                                    b=[b ; b1];
-                                    HinfConstraint=[HinfConstraint HinfConstraint1];
-                                end
-
-                            end
-                            
-                            % force y to be monic
-                            b = b - sum(A(:,ntot+1:ntot+Ngs),2);
-                            A = [A(:,1:ntot),A(:,ntot+Ngs+1:end)];
-                            
-                            % no optimization 
-                            f = zeros(2*ntot-Ngs,1);
-                            H = [];
-
-                            [x,optval,xflag] = solveopt(H,f,A,b,HinfConstraint,YesYalmip,rho,ops);
-
-                            if xflag==1,
-
-                                x_opt=x;gamma_opt=gamma;optval_opt=optval;xflag_opt=xflag;
-
-                                g_max=gamma;
-                                disp(['gamma=', num2str(g_max)])
-                                gamma=mean([g_min,gamma]);
-                                %gamma=mean([options.gamma(1),gamma]);
-
-
-                            else
-                                g_min=gamma;
-                                gamma=mean([g_max,gamma]);
-                            end
-
-                        end
-
-
-                    end
-
-                    if gamma_opt~=0
-                        x=x_opt;gamma=gamma_opt;optval=optval_opt;xflag=xflag_opt;
-                    end
-                
-            else
-            
             a=cell(1,m); d=cell(1,m);
-
-
 
             for j=1:m
 
@@ -604,14 +490,16 @@ end
                     else
                         Wf{j}(:,k)=freqresp(W{j}{k},w{j});
                     end
-                    if k==3, Wf{j}(:,3)=Wf{j}(:,3)./squeeze(Gf{j}); end
-                    if k==4, Wf{j}(:,4)=Wf{j}(:,4).*squeeze(Gf{j}); end
+                    if ~isTF
+                        if k==3, Wf{j}(:,3)=Wf{j}(:,3)./squeeze(Gf{j}); end
+                        if k==4, Wf{j}(:,4)=Wf{j}(:,4).*squeeze(Gf{j}); end
+                    end
                 end                
 
-
-                a{j}(:,1)=real(Ldf{j})+1;
-                a{j}(:,2)=imag(Ldf{j});
-
+                if ~isTF
+                    a{j}(:,1)=real(Ldf{j})+1;
+                    a{j}(:,2)=imag(Ldf{j});
+                end
 
 
 
@@ -633,9 +521,11 @@ end
 
 
             if isempty(gamma),  % Minimizing L-Ld under H infinity constraints
-
-
-                [x,optval,xflag] = solveopt(H,f,A,b,HinfConstraint,YesYalmip,rho,ops);
+                if isTF
+                    error('Gamma must be specified for TF controller structure')
+                else
+                    [x,optval,xflag] = solveopt(H,f,A,b,HinfConstraint,YesYalmip,rho,ops);
+                end
 
 
             else
@@ -654,8 +544,10 @@ end
                             gamma_opt_old = gamma_opt;
                             g_min=options.gamma(1);
                             g_max=gamma_opt;
-                            for j=1:m, 
-                                Ldf{j}=transpose(phiGfreq{j})*x; 
+                            if ~isTF
+                                for j=1:m, 
+                                    Ldf{j}=transpose(phiGfreq{j})*x; 
+                                end
                             end
                         else
                             break;
@@ -686,16 +578,34 @@ end
 
 
                             for k=1:nqq
-                                if ~isempty(nq)
-                                    [A1 b1 HinfConstraint1]=Ab_HinfCons(phiCov{j}{k},Wfgamma{j},Ldf{j},nq,lambda);
+                                if ~isTF
+                                    if ~isempty(nq)
+                                        [A1 b1 HinfConstraint1]=Ab_HinfCons(phiCov{j}{k},Wfgamma{j},Ldf{j},nq,lambda);
+                                    else
+                                        [A1 b1 HinfConstraint1]=Ab_HinfCons(phiCov{j}{k},Wfgamma{j},Ldf{j},nq,lambda,rho);
+                                    end
                                 else
-                                    [A1 b1 HinfConstraint1]=Ab_HinfCons(phiCov{j}{k},Wfgamma{j},Ldf{j},nq,lambda,rho);
+                                    if ~isempty(nq)
+                                        [A1 b1 HinfConstraint1]=tf_Ab_HinfCons(GCov{j}{k},Mf{j},phif{j},fsf{j},Wfgamma{j},25,ntot,lambda);
+                                    else
+                                        [A1 b1 HinfConstraint1]=tf_Ab_HinfCons(GCov{j}{k},Mf{j},phif{j},fsf{j},Wfgamma{j},20,ntot,lambda,rho);
+                                    end
                                 end
                                 A=[A ; A1];
                                 b=[b ; b1];
                                 HinfConstraint=[HinfConstraint HinfConstraint1];
                             end
 
+                        end
+                        
+                        if isTF
+                            % force y to be monic
+                            b = b - sum(A(:,ntot+1:ntot+Ngs),2);
+                            A = [A(:,1:ntot),A(:,ntot+Ngs+1:end)];
+                            
+                            % no optimization 
+                            f = zeros(2*ntot-Ngs,1);
+                            H = [];
                         end
 
                         [x,optval,xflag] = solveopt(H,f,A,b,HinfConstraint,YesYalmip,rho,ops);
@@ -726,7 +636,6 @@ end
 
                 %--------------------------------------------------------------------------
 
-            end
             
             end
             

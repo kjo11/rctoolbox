@@ -2,7 +2,7 @@ addpath('../../toolbox')
 addpath(genpath('../../../matlab_tools'))
 s = tf('s');
 
-phi = conphi('lag',[20 6],'s',[],'tf');
+phi = conphi('lag',[20 10],'s',[],'tf');
 W = cell(2,1);
 x=0.009;
 W{1} = tf(0.33*(s+1515*x)/(s+x));
@@ -19,11 +19,12 @@ per = conper('Hinf',W);
 % G = (s+1)/(s-1)/(s+10);
 G=2/(s-2)*tf(1,[.06 1]);%nominal system
 
-opts = condesopt('gamma',[0.7 2 0.01],'lambda',[1 1 0 0],'yalmip','off','w',logspace(-2,4,200));
+opts = condesopt('gamma',[0.3 2 0.01],'lambda',[1 1 0 0],'yalmip','off','w',logspace(-3,3,50));
 
 [K,sol] = condes(G,phi,per,opts);
 
 S = feedback(1,K*G);
 T = feedback(K*G,1);
 figure; bode(W{1}*S,tf(sol.gamma,1))
-figure; bode(W{2}*T,tf(sol.gamma,2))
+figure; bode(W{2}*T,tf(sol.gamma,1))
+figure; bode(W{1}*S+W{2}*T,tf(sol.gamma,1))
