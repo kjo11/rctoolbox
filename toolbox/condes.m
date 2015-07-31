@@ -2235,7 +2235,7 @@ if ~isempty(ntheta) % linear constraints
             for j=1:2*ntot
                 if j<=ntot
                     phi = squeeze(phif(j,1,:));
-                    phiGq(j,:)= (phi.*Nf - exp(1i*2*pi*q/ntheta)/cos(pi/ntheta) * (lambda(2)*Wfgamma(:,1).*phi.*Nf + lambda(3)*Wfgamma(:,3).*phi.*Mf))';
+                    phiGq(j,:)= (phi.*Nf - exp(1i*2*pi*q/ntheta)/cos(pi/ntheta) * (lambda(2)*Wfgamma(:,2).*phi.*Nf + lambda(3)*Wfgamma(:,3).*phi.*Mf))';
                 else
                     phi = squeeze(phif(j-ntot,1,:));
                     phiGq(j,:)= (phi.*fsf.*Mf - exp(1i*2*pi*q/ntheta)/cos(pi/ntheta)*(lambda(1)*Wfgamma(:,1).*phi.*fsf.*Mf + lambda(4)*Wfgamma(:,4).*phi.*fsf.*Nf))';
