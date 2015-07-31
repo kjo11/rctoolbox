@@ -249,7 +249,7 @@ if nargin > 3 && ~isempty(F)
         phi.phi=minreal(F*phi.phi);
         phi.ConType =['Ftimes' phi.ConType];
     else
-        phi.fs = F;
+        phi.fs = minreal(1/F);
     end
 end
 
