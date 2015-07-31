@@ -90,6 +90,7 @@ if strcmpi(ConStruc,'tf')
     if ~ (strncmp(ConType,'lag',3) || strncmp(ConType,'gen',3))
         error('ConStruc ''TF'' can only be used with ConType ''Laguerre'' or ''Generalized''')
     end
+    phi.fs = tf(1,1);
 elseif strcmpi(ConStruc,'lp')
     phi.ConStruc = 'lp';
 end

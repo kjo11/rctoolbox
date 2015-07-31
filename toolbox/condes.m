@@ -65,11 +65,7 @@ end
 if isTF
     for j=1:length(w)
         Mf{j} = squeeze(freqresp(M{j},w{j}));
-        if isfield(inphi,'fs')
-            fsf{j} = squeeze(freqresp(inphi.fs,w{j}));
-        else
-            fsf{j} = ones(length(w{j},1));;
-        end
+        fsf{j} = squeeze(freqresp(inphi.fs,w{j}));
     end
 end
 
