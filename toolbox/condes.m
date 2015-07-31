@@ -65,7 +65,11 @@ end
 if isTF
     for j=1:length(w)
         Mf{j} = squeeze(freqresp(M{j},w{j}));
-        fsf{j} = squeeze(freqresp(inphi.fs,w{j}));
+        if isfield(inphi,'fs')
+            fsf{j} = squeeze(freqresp(inphi.fs,w{j}));
+        else
+            fsf{j} = ones(length(w{j},1));;
+        end
     end
 end
 
@@ -535,7 +539,7 @@ end
 
                                 for k=1:nqq
                                     if ~isempty(nq)
-                                        [A1 b1 HinfConstraint1]=tf_Ab_HinfCons(GCov{j}{k},Mf{j},phif{j},fsf{j},Wfgamma{j},20,ntot,lambda);
+                                        [A1 b1 HinfConstraint1]=tf_Ab_HinfCons(GCov{j}{k},Mf{j},phif{j},fsf{j},Wfgamma{j},25,ntot,lambda);
                                     else
                                         [A1 b1 HinfConstraint1]=tf_Ab_HinfCons(GCov{j}{k},Mf{j},phif{j},fsf{j},Wfgamma{j},20,ntot,lambda,rho);
                                     end
