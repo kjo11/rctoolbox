@@ -1107,7 +1107,7 @@ else % if MIMO
     K1=cell(1,Ngs);
     
     if isStateSpace
-        K1 = ss_compute_controller(x,A_ss,B_ss,C_ss,nss,Ngs,no,ni,YesYalmip);
+        K1 = ss_compute_controller(x,A_ss,B_ss,C_ss,nss,Ngs,no,ni);
     else
 
         for p=1:ni
