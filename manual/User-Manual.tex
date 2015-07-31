@@ -421,7 +421,7 @@ For continuous-time  Laguerre basis function, {\tt ConPar} is $[\xi \quad n]$ wh
 
 \item[\texttt{ConStruc}] is either \texttt{'LP'} for a linearly parameterized controller (default) or \texttt{'SS'} for a state-space controller.
 
-\item[\texttt{ConOpt}] for a state space controller is a cell containing a string \texttt{'B'} or \texttt{'C'} and the desired B or C matrix of the controller. By default, C = [1 0 0 0 ...].
+\item[\texttt{ConOpt}] for a state space controller: is a cell containing a string \texttt{'B'} or \texttt{'C'} and the desired B or C matrix of the controller. By default, C = [1 0 0 0 ...].
     
 
 \end{description}
@@ -540,9 +540,9 @@ phi.phi
 
  
 From input to output...
-     1
+    1
 1:  -
-     s
+    s
  
         1
 2:  --------
@@ -866,6 +866,47 @@ Zero/pole/gain from input 2 to output...
       0.15087 (s+0.07343)
  #2:  -------------------
                s
+\end{lstlisting}
+
+\subsubsection{Controller design in state space with {\tt LS} performance for a multivariable system}
+Consider the same MIMO model as in the previous example.
+The objective is to design a MIMO PID controller in state space to achieve the same performance as in the previous example (modulus margin of 0.5, open-loop transfer function of $\frac{1}{30s}$).
+
+\begin{lstlisting}
+s=tf('s');
+G=[5*exp(-3*s)/(4*s+1) 2.5*exp(-5*s)/(15*s+1); -4*exp(-6*s)/(20*s+1) exp(-4*s)/(5*s+1)];
+
+phi=conphi('pid',[],'s',[],'ss'); 
+per=conper('LS',0.5,1/(30*s)); 
+opts = condesopt('yalmip','off','gbands','off');
+
+K=condes(G,phi,per,opts)
+
+
+K =
+ 
+  a = 
+           x1      x2
+   x1       0       1
+   x2       0  -8.333
+ 
+  b = 
+             u1        u2
+   x1  -0.07789   -0.2858
+   x2    0.6801      2.37
+ 
+  c = 
+       x1  x2
+   y1   1   0
+   y2   1   0
+ 
+  d = 
+            u1       u2
+   y1  0.03529  0.01411
+   y2  0.03274   0.1328
+ 
+Continuous-time state-space model.
+
 \end{lstlisting}
 
 \subsubsection{Controller design with {\tt Hinf} performance}
