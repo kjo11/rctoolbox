@@ -2223,6 +2223,8 @@ A = [];
 b = [];
 HinfConstraint = [];
 
+realtol = 0.0001;
+
 
 
 if ~isempty(ntheta) % linear constraints
@@ -2241,7 +2243,6 @@ if ~isempty(ntheta) % linear constraints
             end
             A1=-real(transpose(phiGq));
             h=size(A1);
-            realtol = 0.0001;
             b1=-realtol*ones(h(1),1);
             A = [A ; A1];
             b = [b ; b1];
@@ -2249,7 +2250,7 @@ if ~isempty(ntheta) % linear constraints
     end
 
 
-    if lambda(1)==0 && max(Wfgamma(:,1))>0
+    if lambda(1)==0 && max(abs(Wfgamma(:,1)))>0
         for q=1:ntheta% gridding the theta
             for j=1:2*ntot
                 if j<=ntot
@@ -2267,7 +2268,7 @@ if ~isempty(ntheta) % linear constraints
     end
 
 
-    if lambda(2)==0 && max(Wfgamma(:,2))>0
+    if lambda(2)==0 && max(abs(Wfgamma(:,2)))>0
         for q=1:ntheta% gridding the theta
             for j=1:2*ntot
                 if j<=ntot
@@ -2286,7 +2287,7 @@ if ~isempty(ntheta) % linear constraints
     end
 
     
-    if lambda(3)==0 && max(Wfgamma(:,3))>0
+    if lambda(3)==0 && max(abs(Wfgamma(:,3)))>0
         for q=1:ntheta% gridding the theta
             for j=1:2*ntot
                 if j<=ntot
@@ -2305,7 +2306,7 @@ if ~isempty(ntheta) % linear constraints
     end
 
     
-    if lambda(4)==0 && max(Wfgamma(:,4))>0
+    if lambda(4)==0 && max(abs(Wfgamma(:,4)))>0
         for q=1:ntheta% gridding the theta
             for j=1:2*ntot
                 if j<=ntot
@@ -2330,22 +2331,22 @@ else
         abs(lambda(1)*Wfgamma(:,1).*Mf.*fsf.*(squeeze(phif)'*rhoy) + lambda(2)*Wfgamma(:,2).*Nf.*(squeeze(phif)'*rhox)...
         + lambda(3)*Wfgamma(:,3).*Mf.*(squeeze(phif)'*rhox) + lambda(4)*Wfgamma(:,4).*Nf.*fsf.*(squeeze(phif)'*rhoy))];
     
-    if lambda(1)==0 && max(Wfgamma(:,1))>0
+    if lambda(1)==0 && max(abs(Wfgamma(:,1)))>0
         HinfConstraint = [HinfConstraint, real(Nf.*(squeeze(phif)'*rhox) + Mf.*(squeeze(phif)'*rhoy)) >...
             abs(Wfgamma(:,1).*Mf.*fsf.*(squeeze(phif)'*rhoy))];
     end
     
-    if lambda(2)==0 && max(Wfgamma(:,2))>0
+    if lambda(2)==0 && max(abs(Wfgamma(:,2)))>0
         HinfConstraint = [HinfConstraint, real(Nf.*(squeeze(phif)'*rhox) + Mf.*(squeeze(phif)'*rhoy)) >...
             abs(Wfgamma(:,2).*Nf.*(squeeze(phif)'*rhox))];
     end
     
-    if lambda(3)==0 && max(Wfgamma(:,3))>0
+    if lambda(3)==0 && max(abs(Wfgamma(:,3)))>0
         HinfConstraint = [HinfConstraint, real(Nf.*(squeeze(phif)'*rhox) + Mf.*(squeeze(phif)'*rhoy)) >...
             abs(Wfgamma(:,3).*Mf.*(squeeze(phif)'*rhox))];
     end
     
-    if lambda(4)==0 && max(Wfgamma(:,4))>0
+    if lambda(4)==0 && max(abs(Wfgamma(:,4)))>0
         HinfConstraint = [HinfConstraint, real(Nf.*(squeeze(phif)'*rhox) + Mf.*(squeeze(phif)'*rhoy)) >...
             abs(Wfgamma(:,4).*Nf.*fsf.*(squeeze(phif)'*rhoy))];
     end
