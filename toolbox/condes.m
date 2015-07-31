@@ -549,10 +549,15 @@ end
                                 end
 
                             end
-                            f = zeros(2*ntot-1,1);
-                            H = [];
+                            
+                            % force y to be monic
                             b = b - sum(A(:,ntot+1:ntot+Ngs),2);
                             A = [A(:,1:ntot),A(:,ntot+Ngs+1:end)];
+                            
+                            % no optimization 
+                            f = zeros(2*ntot-Ngs,1);
+                            H = [];
+
                             [x,optval,xflag] = solveopt(H,f,A,b,HinfConstraint,YesYalmip,rho,ops);
 
                             if xflag==1,
@@ -745,7 +750,7 @@ end
         fprintf('\n');
         if isTF
             for k=1:Ngs
-                K{k} = minreal((rhox(k,1:n)'*phi)/([1,rhox(k,n+1:end)]'*phi));
+                K{k} = minreal((rhox(k,1:n)'*phi)/([1;rhox(k,n+1:end)]'*phi*inphi.fs));
                 disp(['K{'  int2str(k) '}=']),K{k}
             end
         else
@@ -756,7 +761,7 @@ end
         end
     else
         if isTF
-            K = minreal((rhox(1:n)'*phi)/([1;rhox(n+1:end)]'*phi));
+            K = minreal((rhox(1:n)'*phi)/([1;rhox(n+1:end)]'*phi*inphi.fs));
         else
             K = reduced_order(rhox,phi,inphi.ConType);
         end
@@ -2204,7 +2209,7 @@ for i=1:length(inG)
             else
                 [~,den,Ts]=tfdata(G,'v');
                 F = poly(-100*ones(length(den)-1,1));
-                N{i} = G*tf(den,F,Ts); % keep uncertainty info etc
+                N{i} = minreal(G*tf(den,F,Ts)); % keep uncertainty info etc
                 M{i} = tf(den,F,Ts);
             end
         catch
@@ -2227,7 +2232,7 @@ A = [];
 b = [];
 HinfConstraint = [];
 
-realtol = 0.0001;
+realtol=0.00001;
 
 
 
