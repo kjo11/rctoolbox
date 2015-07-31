@@ -2273,7 +2273,7 @@ if ~isempty(ntheta) % linear constraints
             for j=1:2*ntot
                 if j<=ntot
                     %[[S] [T]]
-                    phiGq(j,:)= (squeeze(phif(j,1,:)).*Nf - exp(1i*2*pi*q/ntheta)/cos(pi/ntheta)*Wfgamma(:,2).*squeeze(phif(j-ntot,1,:)).*Nf)';
+                    phiGq(j,:)= (squeeze(phif(j,1,:)).*Nf - exp(1i*2*pi*q/ntheta)/cos(pi/ntheta)*Wfgamma(:,2).*squeeze(phif(j,1,:)).*Nf)';
                 else
                     phiGq(j,:)= (squeeze(phif(j-ntot,1,:)).*fsf.*Mf)';
                 end
@@ -2292,7 +2292,7 @@ if ~isempty(ntheta) % linear constraints
             for j=1:2*ntot
                 if j<=ntot
                     %[[S] [T]]
-                    phiGq(j,:)= (squeeze(phif(j,1,:)).*Nf - exp(1i*2*pi*q/ntheta)/cos(pi/ntheta)*Wfgamma(:,3).*squeeze(phif(j-ntot,1,:)).*Mf)';
+                    phiGq(j,:)= (squeeze(phif(j,1,:)).*Nf - exp(1i*2*pi*q/ntheta)/cos(pi/ntheta)*Wfgamma(:,3).*squeeze(phif(j,1,:)).*Mf)';
                 else
                     phiGq(j,:)= (squeeze(phif(j-ntot,1,:)).*fsf.*Mf)';
                 end
