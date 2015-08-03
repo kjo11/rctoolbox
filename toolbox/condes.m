@@ -620,11 +620,11 @@ end
         if isStateSpace
             if isempty(B_ss)
                 for k=1:Ngs
-                    K{k} = ss(A_ss,rhox(1:end-1,k),C_ss,rhox(end,k));
+                    K{k} = ss(A_ss,rhox(1:end-1,k),C_ss,rhox(end,k),phi.Ts);
                 end
             else
                 for k=1:Ngs
-                    K{k} = ss(A_ss,B_ss,rhox(1:end-1,k)',rhox(end,k));
+                    K{k} = ss(A_ss,B_ss,rhox(1:end-1,k)',rhox(end,k),phi.Ts);
                 end
             end
         else
@@ -636,9 +636,9 @@ end
     else
         if isStateSpace
             if isempty(B_ss)
-                K = ss(A_ss,rhox(1:end-1),C_ss,rhox(end));
+                K = ss(A_ss,rhox(1:end-1),C_ss,rhox(end),phi.Ts);
             else
-                K = ss(A_ss,B_ss,rhox(1:end-1)',rhox(end));
+                K = ss(A_ss,B_ss,rhox(1:end-1)',rhox(end),phi.Ts);
             end
         else
             K = reduced_order(rhox,phi,inphi.ConType);
@@ -1107,7 +1107,7 @@ else % if MIMO
     K1=cell(1,Ngs);
     
     if isStateSpace
-        K1 = ss_compute_controller(x,A_ss,B_ss,C_ss,nss,Ngs,no,ni);
+        K1 = ss_compute_controller(x,A_ss,B_ss,C_ss,nss,Ngs,no,ni,phi{1}.Ts);
     else
 
         for p=1:ni
@@ -2273,7 +2273,7 @@ end
 end
 
 
-function K = ss_compute_controller(x,A_ss,B_ss,C_ss,nss,Ngs,no,ni)
+function K = ss_compute_controller(x,A_ss,B_ss,C_ss,nss,Ngs,no,ni,Ts)
 % Compute output controller for state space
 
 K=cell(1,Ngs);
