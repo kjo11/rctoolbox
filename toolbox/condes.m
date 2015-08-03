@@ -212,6 +212,24 @@ end
 
 %--------------------------------------------------------------------------
 
+
+%----- linear constraint parameters for TF controllers --------------------
+
+ntheta=options.ntheta;
+if ~isempty(ntheta)
+    if ntheta < 3
+        error('ntheta should be an integer greater than 2');
+    end
+end
+
+TFtol=options.TFtol;
+if TFtol < 0
+    error('TFtol should be a small, positive number');
+end
+
+
+%--------------------------------------------------------------------------
+
 HinfConstraint=[]; 
 A=[];
 b=[];
@@ -586,9 +604,9 @@ end
                                     end
                                 else
                                     if ~isempty(nq)
-                                        [A1 b1 HinfConstraint1]=tf_Ab_HinfCons(GCov{j}{k},Mf{j},phif{j},fsf{j},Wfgamma{j},25,ntot,lambda);
+                                        [A1 b1 HinfConstraint1]=tf_Ab_HinfCons(GCov{j}{k},Mf{j},phif{j},fsf{j},Wfgamma{j},ntheta,ntot,TFtol,lambda);
                                     else
-                                        [A1 b1 HinfConstraint1]=tf_Ab_HinfCons(GCov{j}{k},Mf{j},phif{j},fsf{j},Wfgamma{j},20,ntot,lambda,rho);
+                                        [A1 b1 HinfConstraint1]=tf_Ab_HinfCons(GCov{j}{k},Mf{j},phif{j},fsf{j},Wfgamma{j},ntheta,ntot,TFtol,lambda,rho);
                                     end
                                 end
                                 A=[A ; A1];
@@ -2133,15 +2151,13 @@ end
 
 
 
-function [A, b, HinfConstraint]=tf_Ab_HinfCons(Nf,Mf,phif,fsf,Wfgamma,ntheta,ntot,lambda,rho)
+function [A, b, HinfConstraint]=tf_Ab_HinfCons(Nf,Mf,phif,fsf,Wfgamma,ntheta,ntot,realtol,lambda,rho)
 % Compute Hinf constraints for TF structure
 
 
 A = [];
 b = [];
 HinfConstraint = [];
-
-realtol=0.00001;
 
 
 
