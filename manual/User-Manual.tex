@@ -54,7 +54,7 @@ May 2012}
 \tableofcontents
 
 \chapter{Introduction}
-The Frequency-Domain Robust Controller Design Toolbox is a tool for designing robust linearly parameterized controllers in the Nyquist diagram. It can be used to design linearly parameterized controllers of any order for parametric models or nonparametric models obtained for example by the identification toolbox of MATLAB. The robust controllers are designed in terms of $H_\infty$ performance or classical robustness margins such as the gain and phase margin, for single/multi-model, SISO/MIMO systems.  The toolbox also supports designing gain-scheduled controllers. 
+The Frequency-Domain Robust Controller Design Toolbox is a tool for designing robust linearly parameterized controllers and, for SISO systems, rational controllers in the Nyquist diagram. It can be used to design linearly parameterized and SISO rational controllers of any order for parametric models or nonparametric models obtained for example by the identification toolbox of MATLAB. The robust controllers are designed in terms of $H_\infty$ performance or classical robustness margins such as the gain and phase margin, for single/multi-model, SISO/MIMO systems.  The toolbox also supports designing gain-scheduled controllers. 
 
 In all of design cases, linear or convex optimization problems are solved. For linear and quadratic optimization the well-known \texttt{linprog} or \texttt{quadprog} (depending on the problem) commands of the Optimization toolbox of MATLAB are used. While convex optimization problems are formulated with YALMIP and can be solved with all available solvers (e.g. \texttt{sdpt3} is used as a default solver) . Many commands of the Control toolbox of MATLAB are used as well.
 
@@ -70,7 +70,9 @@ Models can be parametric or nonparametric. The design method, in fact, needs the
 
 \subsection{Controllers}
 
-The toolbox designs linearly parameterized controllers. A linearly parameterized controller has the following form:
+The toolbox designs linearly parameterized controllers and SISO rational controllers.
+
+A linearly parameterized controller has the following form:
 \begin{equation}
 \label{linparcon}
 \rho^T \phi(s)=[\rho_1 \: \: \rho_2 \: \: \ldots \:\: \rho_n]\times [\phi_1(s) \: \: \phi_2(s) \:\: \ldots \:\: \phi_n(s)]^T
