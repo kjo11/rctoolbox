@@ -1107,7 +1107,7 @@ else % if MIMO
     K1=cell(1,Ngs);
     
     if isStateSpace
-        K1 = ss_compute_controller(x,A_ss,B_ss,C_ss,nss,Ngs,no,ni,phi{1}.Ts);
+        K1 = ss_compute_controller(x,A_ss,B_ss,C_ss,nss,Ngs,no,ni,phi{1,1}.Ts);
     else
 
         for p=1:ni
@@ -2291,7 +2291,7 @@ for k=1:Ngs
         D_ss = reshape(Dvec(k:Ngs:end),no,ni)';
     end
 
-    K{k} = ss(A_ss,B_ss,C_ss,D_ss);
+    K{k} = ss(A_ss,B_ss,C_ss,D_ss,Ts);
 end
 end
         

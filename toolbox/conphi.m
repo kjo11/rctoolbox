@@ -359,7 +359,7 @@ if strcmp(ConStruc,'ss') && ~strncmp(ConType,'p  ',3)
             phi{1,1}.par.B = B;
             phi{1,1}.par.C = C;
             for i=1:length(phi)
-                phi{i}.phi(end+1) = zpk([],[],1,Ts);
+                phi{i}.phi(end+1,1) = zpk([],[],1,Ts);
                 phi{i}.ConStruc = 'ss';
                 phi{i}.ConType = 'ss';
             end
