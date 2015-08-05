@@ -238,6 +238,7 @@ Hours:
 9.15-12.15
 Total: 3h (106h45)
 
+
 30.7:
 
 - sanity check for transfer function types
@@ -259,3 +260,24 @@ Hours:
 7.20-12.20
 13.20-16.20
 Total: 8h (122h45)
+
+3.8:
+
+- make test files for state space and rational
+- run tests for state space and rational
+- fix bugs
+- update state space documentation
+
+Hours:
+10-13
+14-19
+Total: 8h (130h45)
+
+
+4.8:
+
+- run rational tests
+
+Hours:
+11-12
+Total: 1h (131h45)
