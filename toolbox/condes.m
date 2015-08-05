@@ -522,6 +522,9 @@ end
 
 
                 if isempty(gamma),
+                    if isTF
+                        error('Gamma must be specified for TF controller structure')
+                    end
                     for k=1:nqq
                         if ~isempty(nq)
                             [A1 b1 HinfConstraint1]=Ab_HinfCons(phiCov{j}{k},Wf{j},Ldf{j},nq,lambda);
@@ -539,11 +542,9 @@ end
 
 
             if isempty(gamma),  % Minimizing L-Ld under H infinity constraints
-                if isTF
-                    error('Gamma must be specified for TF controller structure')
-                else
-                    [x,optval,xflag] = solveopt(H,f,A,b,HinfConstraint,YesYalmip,rho,ops);
-                end
+                
+                [x,optval,xflag] = solveopt(H,f,A,b,HinfConstraint,YesYalmip,rho,ops);
+
 
 
             else
