@@ -53,10 +53,10 @@ fsf=freqresp(fs,w{1});
 
 %%%%%%%%%%%%%%%%%%%%%%%%%% frequency response of N_i %%%%%%%%%%
 for q=1:n_uncertainty
-        x0=real(1./squeeze(Nf_nominal(1,1,:)) * exp(1i*2*pi*q/n_uncertainty)/cos(pi/n_uncertainty));
-        y0=imag(1./squeeze(Nf_nominal(1,1,:)) * exp(1i*2*pi*q/n_uncertainty)/cos(pi/n_uncertainty));
+        x0=real(2.4474./squeeze(Nf_nominal(1,1,:)) * exp(1i*2*pi*q/n_uncertainty)/cos(pi/n_uncertainty));
+        y0=imag(2.4474./squeeze(Nf_nominal(1,1,:)) * exp(1i*2*pi*q/n_uncertainty)/cos(pi/n_uncertainty));
         for k=1:num_fre
-            Sigma(k,:,:)=sqrtm(4*(squeeze(CovGf(1,1,k,:,:))));%confidence interval
+            Sigma(k,:,:)=sqrtm((squeeze(CovGf(1,1,k,:,:))));%confidence interval
             Pxy(k)=[1 1i]*squeeze(Sigma(k,:,:))*[x0(k);y0(k)];
         end
         Nf(1,q,:)=transpose(squeeze(Nf_nominal(1,1,:))).*(1+Pxy);
@@ -88,7 +88,7 @@ while g_max-g_min > g_tol
                 if j<=num
                     phiGq(j,:)= [squeeze(phif(j,1,:).*Nf(1,i,:))'];% ST SS SU
                 else
-                    phiGq(j,:)= [squeeze(phif(j-num,1,:).*fsf.*Mf(1,i,:))'+exp(1i*2*pi*q/nq)/cos(q/nq)*squeeze(Wfgamma(1,1,:))'.*squeeze(phif(j-num,1,:).*fsf.*Mf(1,i,:))'];%=
+                    phiGq(j,:)= [squeeze(phif(j-num,1,:).*fsf.*Mf(1,i,:))'-exp(1i*2*pi*q/nq)/cos(pi/nq)*squeeze(Wfgamma(1,1,:))'.*squeeze(phif(j-num,1,:).*fsf.*Mf(1,i,:))'];%=
                 end
             end
             A1=-real(transpose(phiGq));
