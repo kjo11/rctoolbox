@@ -678,7 +678,7 @@ end
         fprintf('\n');
         if isTF
             for k=1:Ngs
-                K{k} = minreal((rhox(k,1:n)'*phi)/([1;rhox(k,n+1:end)]'*phi*inphi.fs));
+                K{k} = minreal(reduced_order(rhox(1:n,k),phi,inphi.ConType)/reduced_order([1;rhox(n+1:end,k)],phi*inphi.fs,inphi.ConType));
                 disp(['K{'  int2str(k) '}=']),K{k}
             end
         else
@@ -689,7 +689,7 @@ end
         end
     else
         if isTF
-            K = minreal((rhox(1:n)'*phi)/([1;rhox(n+1:end)]'*phi*inphi.fs));
+            K = minreal(reduced_order(rhox(1:n),phi,inphi.ConType)/reduced_order([1;rhox(n+1:end)],phi*inphi.fs,inphi.ConType));
         else
             K = reduced_order(rhox,phi,inphi.ConType);
         end
