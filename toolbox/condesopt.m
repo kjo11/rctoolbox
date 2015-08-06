@@ -137,7 +137,7 @@ options.solveroptions=[];
 
 
 
-allfields = {'w','Gbands','beta','np','gs','nq','gamma','lambda','yalmip','F'};
+allfields = {'w','Gbands','beta','np','gs','nq','ntheta','TFtol','gamma','lambda','yalmip','F'};
 
 if mod(nargin,2) ~= 0
     
