@@ -63,10 +63,7 @@ end
 [Gf,Gdim,phi,n,phif,phifd,per,w,N,performance,Ldf,LDf,FGf,FLdf,FLDf,CovGf] = condesdata (inG,inphi,inper,options);
 
 if isTF
-    for j=1:length(w)
-        Mf{j} = squeeze(freqresp(M{j},w{j}));
-        fsf{j} = squeeze(freqresp(inphi.fs,w{j}));
-    end
+    [Mf,fsf,CovMf]=tf_Mf_fsf(w,M,inphi.fs);
 end
 
 m=Gdim(1); no=Gdim(2); ni=Gdim(3);
@@ -2295,8 +2292,19 @@ else
 end
         
 
+end
 
 
 
+function [Mf,fsf,CovMf]=tf_Mf_fsf(w,M,fs)
+for j=1:length(w)
+    Mf{j} = squeeze(freqresp(M{j},w{j}));
+    fsf{j} = squeeze(freqresp(fs,w{j}));
 
+    if isa(Mf{j},'id')
+        [~,~,CovMf{j}]=freqresp(M{j},w{j});
+    else
+        CovMf{j}=[];
+    end
+end
 end
