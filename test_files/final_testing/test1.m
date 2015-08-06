@@ -13,9 +13,10 @@ clear G phi per
 disp('SISO, continuous, stable')
 
 s=tf('s');
-G=exp(-5*s)/(s*(s+1)^3);
+G=exp(-s)/((s+1)^3);
+Ld = 1/s;
 
-for phitype=0:3
+for phitype=2:3
     for ctype=0:2
         for pertype=0:3
 
@@ -53,21 +54,21 @@ for phitype=0:3
 
             switch pertype 
                 case 0
-                    per = conper('LS',0.3,0.1/s^2);
+                    per = conper('LS',0.3,Ld);
                 case 1
-                    W{1} = 5/s;
-                    per = conper('Hinf',W,0.1/s^2);
+                    W{1} = tf(0.5,1);
+                    per = conper('Hinf',W,Ld);
                 case 2
-                    per = conper('GPhC',[2 45 0.1],0.1/s^2);
+                    per = conper('GPhC',[1.2 30 0.5],Ld);
                 case 3
-                    per = conper('GPhC',[2 45]);
+                    per = conper('GPhC',[1.5 15]);
             end
 
 
             K_ss = condes(G,phi_ss,per);
             K = condes(G,phi,per);
 
-            figure; bode(K_ss,K)
+            figure; bode(feedback(G*K_ss,1),feedback(G*K,1))
             title(['phi: ',num2str(phitype),', C: ',num2str(ctype),', per: ',num2str(pertype)])
         end
     end

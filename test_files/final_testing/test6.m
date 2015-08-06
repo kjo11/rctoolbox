@@ -8,7 +8,7 @@ ctype = 2; % 0: default, 1: given c, 2: given b
 pertype = 0; % 0: LS, 1: Hinf
 
 addpath('../../toolbox')
-clear G phi per
+clear G phi per W
 
 disp('MIMO (1x2), continuous')
 
@@ -25,47 +25,48 @@ options = condesopt ('lambda',[1 1 0 0],'gamma',[0.5,2,0.01]);
 
 for phitype=0:3
     for ctype=0:2
-        for pertype=0:3
+        for pertype=0:1
 
             switch ctype
                 case 0
                     Ccell = @(x) {'c',[1,zeros(1,x-1)]};
                 case 1
-                    Ccell = @(x) {'c', ones(1,x)};
+                    Ccell = @(x) {'c', ones(2,x)};
                 case 2
-                    Ccell = @(x) {'b',[(1:x); (1:x)]'};
+                    Ccell = @(x) {'b',ones(x,1)};
             end
 
             switch phitype
                 case 0
                     x = 2;
-                    phi_ss = conphi('pid',0.01,'z',[],'ss',Ccell(x));
-                    phi{1,1} = conphi('pid',0.01,'z');
-                    phi{1,2} = phi{1,1};
+                    phi_ss = conphi('pid',0.01,'s',[],'ss',Ccell(x));
+                    phi{1,1} = conphi('pid',0.01,'s');
+                    phi{2,1} = phi{1,1};
                 case 1
                     x = 1;
-                    phi_ss = conphi('pi',[],'z',[],'ss',Ccell(x));
-                    phi = conphi('pi',[],'z');
+                    phi_ss = conphi('pi',[],'s',[],'ss',Ccell(x));
+                    phi = conphi('pi',[],'s');
                 case 2
                     x = 5;
-                    phi_ss = conphi('lag',[2 x-1],'z',z/(z-1),'ss',Ccell(x));
-                    phi_ss.phi(end) = tf(0,1);
-                    phi = conphi('lag',[2 x-1],'z',z/(z-1));
+                    phi_ss = conphi('lag',[2 x-1],'s',1/s,'ss',Ccell(x));
+%                     phi_ss.phi(end) = tf(0,1);
+                    phi = conphi('lag',[2 x-1],'s',1/s);
                 case 3
                     n = [0.1 0.2 0.3 0.4];
                     x = length(n)+1;
 
-                    phi_ss = conphi('gen',n,'z',z/(z-1),'ss',Ccell(x));
-                    phi_ss.phi(end) = tf(0,1);
-                    phi = conphi('gen',n,'z',z/(z-1));
+                    phi_ss = conphi('gen',n,'s',1/s,'ss',Ccell(x));
+%                     phi_ss.phi(end) = tf(0,1);
+                    phi = conphi('gen',n,'s',1/s);
             end
 
             switch pertype 
                 case 0
+                    per = cell(2,1);
                     per{1} = conper('LS',0.3,Ld);
                     per{2} = conper('LS',0.3,Ld);
                 case 1
-                    W{1} = 5/s;
+                    W{1} = tf(0.01,1);
                     per = conper('Hinf',W,Ld);
             end
 
@@ -74,6 +75,7 @@ for phitype=0:3
             K = condes(G,phi,per);
 
             figure; bode(K_ss,K)
+            title(['phi: ',num2str(phitype),', C: ',num2str(ctype),', per: ',num2str(pertype)])
         end
     end
 end

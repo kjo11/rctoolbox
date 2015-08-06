@@ -25,9 +25,9 @@ W{3}=tf(0.05);
 
 opt=condesopt('gamma',[0.2 1.8 0.001],'lambda',[1 1 0 0],'nq',30);
 
-for phitype=0:3
+for phitype=2:3
     for ctype=0:2
-        for pertype=0:3
+        for pertype=0:1
 
             switch ctype
                 case 0
@@ -48,16 +48,16 @@ for phitype=0:3
                     phi_ss = conphi('pi',[],'s',[],'ss',Ccell(x));
                     phi = conphi('pi',[],'s');
                 case 2
-                    x = 5;
+                    x = 8;
                     phi_ss = conphi('lag',[2 x-1],'s',1/s,'ss',Ccell(x));
-                    phi_ss.phi(end) = tf(0,1);
+%                     phi_ss.phi(end) = tf(0,1);
                     phi = conphi('lag',[2 x-1],'s',1/s);
                 case 3
-                    n = [2 2 2 2];
+                    n = [2 2 2 2 3 4];
                     x = length(n)+1;
 
                     phi_ss = conphi('gen',n,'s',1/s,'ss',Ccell(x));
-                    phi_ss.phi(end) = tf(0,1);
+%                     phi_ss.phi(end) = tf(0,1);
                     phi = conphi('gen',n,'s',1/s);
             end
 
@@ -65,7 +65,7 @@ for phitype=0:3
                 case 0
                     per = conper('LS',0.3,Ld);
                 case 1
-                    W{1} = 5/s;
+                    W{1} = 1/s;
                     per = conper('Hinf',W,Ld);
             end
 
@@ -73,7 +73,8 @@ for phitype=0:3
             K_ss = condes(G,phi_ss,per);
             K = condes(G,phi,per);
 
-            figure; bode(K_ss,K)
+            figure; bode(feedback(G*K_ss,1),feedback(G*K,1))
+            title(['phi: ',num2str(phitype),', C: ',num2str(ctype),', per: ',num2str(pertype)])
         end
     end
 end
