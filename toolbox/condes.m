@@ -621,9 +621,11 @@ end
                         end
                         
                         if isTF
-                            % force y to be monic
-                            b = b - A(:,1);
-                            A = A(:,2:end);
+                            if ~YesYalmip
+                                % force y to be monic
+                                b = b - A(:,1);
+                                A = A(:,2:end);
+                            end
                             
                             % no optimization 
                             f = zeros(2*ntot-Ngs,1);
