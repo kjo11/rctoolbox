@@ -121,7 +121,7 @@ end
 
 %-----------------------Solver choice- ------------------------------------
 
-if (strcmp(options.yalmip,'on') | isempty(options.nq)| (no > 2 & strcmp(options.Gbands,'on'))) & exist('yalmip')>1 % Use YALMIP interface
+if (strcmp(options.yalmip,'on') || isempty(options.nq)|| (no > 2 && strcmp(options.Gbands,'on')) || isempty(options.ntheta)) && exist('yalmip')>1 % Use YALMIP interface
         
     if isTF
         rho = sdpvar(2*ntot-Ngs,1);
@@ -607,7 +607,7 @@ end
                                         [A1 b1 HinfConstraint1]=Ab_HinfCons(phiCov{j}{k},Wfgamma{j},Ldf{j},nq,lambda,rho);
                                     end
                                 else
-                                    if ~isempty(nq)
+                                    if ~isempty(ntheta)
                                         [A1 b1 HinfConstraint1]=tf_Ab_HinfCons(GCov{j}{k},Mf{j},squeeze(phif{j}),fsf{j},Wfgamma{j},ntheta,ntot,TFtol,lambda);
                                     else
                                         [A1 b1 HinfConstraint1]=tf_Ab_HinfCons(GCov{j}{k},Mf{j},squeeze(phif{j}),fsf{j},Wfgamma{j},ntheta,ntot,TFtol,lambda,rho);
