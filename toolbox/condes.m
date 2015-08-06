@@ -664,7 +664,7 @@ end
     
     
     if isTF
-        for k=1:2*n-Ngs
+        for k=1:2*n-1
             rhox(k,:)=x((k-1)*Ngs+1:k*Ngs);
         end
     else
