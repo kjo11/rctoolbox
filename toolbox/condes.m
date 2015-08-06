@@ -104,6 +104,10 @@ Ngs=sum(delta)+1;
 
 ntot=Ngs*sum(sum(n));
 
+if isTF && Ngs~=1
+    error('''TF'' controller structure cannot be used for gain-scheduled controllers')
+end
+
 %--------------------------------------------------------------------------
 
 %---------------Computing index for the vector of controller parameters----
@@ -257,9 +261,6 @@ for j=1:m
             FphiGf{j}((u-1)*Ngs+1:u*Ngs,:)=kron(theta_bar(j,:)',totod{j}(u,:));
         end
         
-        if isTF
-            phifreq{j}((u-1)*Ngs+1:u*Ngs,:)=kron(theta_bar(j,:)',phif{j}(u,:));
-        end
     end
     
     if ~isempty(Ldf)
@@ -607,9 +608,9 @@ end
                                     end
                                 else
                                     if ~isempty(nq)
-                                        [A1 b1 HinfConstraint1]=tf_Ab_HinfCons(GCov{j}{k},Mf{j},phifreq{j},fsf{j},Wfgamma{j},ntheta,ntot,TFtol,lambda);
+                                        [A1 b1 HinfConstraint1]=tf_Ab_HinfCons(GCov{j}{k},Mf{j},squeeze(phif{j}),fsf{j},Wfgamma{j},ntheta,ntot,TFtol,lambda);
                                     else
-                                        [A1 b1 HinfConstraint1]=tf_Ab_HinfCons(GCov{j}{k},Mf{j},phifreq{j},fsf{j},Wfgamma{j},ntheta,ntot,TFtol,lambda,rho);
+                                        [A1 b1 HinfConstraint1]=tf_Ab_HinfCons(GCov{j}{k},Mf{j},squeeze(phif{j}),fsf{j},Wfgamma{j},ntheta,ntot,TFtol,lambda,rho);
                                     end
                                 end
                                 A=[A ; A1];
@@ -664,9 +665,7 @@ end
     
     
     if isTF
-        for k=1:2*n-1
-            rhox(k,:)=x((k-1)*Ngs+1:k*Ngs);
-        end
+        rhox=x;
     else
         for k=1:n
             rhox(k,:)=x((k-1)*Ngs+1:k*Ngs);
@@ -678,16 +677,9 @@ end
         fprintf('\n');
         disp('K{1}+theta_1 K{2}+theta_2 K{3} + ... +theta_1^2 k{n}+theta_2^2k{n+1}+...')
         fprintf('\n');
-        if isTF
-            for k=1:Ngs
-                K{k} = minreal(reduced_order(rhox(n:end,k),phi,inphi.ConType)/reduced_order([1; rhox(1:n-1,k)],phi*inphi.fs,inphi.ConType));
-                disp(['K{'  int2str(k) '}=']),K{k}
-            end
-        else
-            for k=1:Ngs
-                K{k} = reduced_order(rhox(:,k),phi,inphi.ConType);
-                disp(['K{'  int2str(k) '}=']),K{k}
-            end
+        for k=1:Ngs
+            K{k} = reduced_order(rhox(:,k),phi,inphi.ConType);
+            disp(['K{'  int2str(k) '}=']),K{k}
         end
     else
         if isTF
