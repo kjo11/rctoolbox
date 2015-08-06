@@ -621,8 +621,8 @@ end
                         
                         if isTF
                             % force y to be monic
-                            b = b - sum(A(:,ntot+1:ntot+Ngs),2);
-                            A = [A(:,1:ntot),A(:,ntot+Ngs+1:end)];
+                            b = b - A(:,1);
+                            A = A(:,2:end);
                             
                             % no optimization 
                             f = zeros(2*ntot-Ngs,1);
@@ -680,7 +680,7 @@ end
         fprintf('\n');
         if isTF
             for k=1:Ngs
-                K{k} = minreal(reduced_order(rhox(1:n,k),phi,inphi.ConType)/reduced_order([1; rhox(n+1:end,k)],phi*inphi.fs,inphi.ConType));
+                K{k} = minreal(reduced_order(rhox(n:end,k),phi,inphi.ConType)/reduced_order([1; rhox(1:n-1,k)],phi*inphi.fs,inphi.ConType));
                 disp(['K{'  int2str(k) '}=']),K{k}
             end
         else
@@ -691,7 +691,7 @@ end
         end
     else
         if isTF
-            K = minreal(reduced_order(rhox(1:n),phi,inphi.ConType)/reduced_order([1;rhox(n+1:end)],phi*inphi.fs,inphi.ConType));
+            K = minreal(reduced_order(rhox(n:end),phi,inphi.ConType)/reduced_order([1;rhox(1:n-1)],phi*inphi.fs,inphi.ConType));
         else
             K = reduced_order(rhox,phi,inphi.ConType);
         end
@@ -2172,10 +2172,10 @@ if ~isempty(ntheta) % linear constraints
             for j=1:2*ntot
                 if j<=ntot
                     phi = phif(j,:)';
-                    phiGq(j,:)= (phi.*Nf - exp(1i*2*pi*q/ntheta)/cos(pi/ntheta) * (lambda(2)*Wfgamma(:,2).*phi.*Nf + lambda(3)*Wfgamma(:,3).*phi.*Mf))';
+                    phiGq(j,:)= (phi.*fsf.*Mf - exp(1i*2*pi*q/ntheta)/cos(pi/ntheta)*(lambda(1)*Wfgamma(:,1).*phi.*fsf.*Mf + lambda(4)*Wfgamma(:,4).*phi.*fsf.*Nf))';
                 else
                     phi = phif(j-ntot,:)';
-                    phiGq(j,:)= (phi.*fsf.*Mf - exp(1i*2*pi*q/ntheta)/cos(pi/ntheta)*(lambda(1)*Wfgamma(:,1).*phi.*fsf.*Mf + lambda(4)*Wfgamma(:,4).*phi.*fsf.*Nf))';
+                    phiGq(j,:)= (phi.*Nf - exp(1i*2*pi*q/ntheta)/cos(pi/ntheta) * (lambda(2)*Wfgamma(:,2).*phi.*Nf + lambda(3)*Wfgamma(:,3).*phi.*Mf))';
                 end
             end
             A1=-real(transpose(phiGq));
@@ -2191,9 +2191,9 @@ if ~isempty(ntheta) % linear constraints
         for q=1:ntheta% gridding the theta
             for j=1:2*ntot
                 if j<=ntot
-                    phiGq(j,:)= (phif(j,:)'.*Nf)';
+                    phiGq(j,:)= (phif(j,:)'.*fsf.*Mf - exp(1i*2*pi*q/ntheta)/cos(pi/ntheta)*Wfgamma(:,1).*phif(j,:)'.*fsf.*Mf)';
                 else
-                    phiGq(j,:)= (phif(j-ntot,:)'.*fsf.*Mf - exp(1i*2*pi*q/ntheta)/cos(pi/ntheta)*Wfgamma(:,1).*phif(j-ntot,:)'.*fsf.*Mf)';
+                    phiGq(j,:)= (phif(j-ntot,:)'.*Nf)';
                 end
             end
             A1=-real(transpose(phiGq));
@@ -2209,10 +2209,9 @@ if ~isempty(ntheta) % linear constraints
         for q=1:ntheta% gridding the theta
             for j=1:2*ntot
                 if j<=ntot
-                    %[[S] [T]]
-                    phiGq(j,:)= (phif(j,:)'.*Nf - exp(1i*2*pi*q/ntheta)/cos(pi/ntheta)*Wfgamma(:,2).*phif(j,:)'.*Nf)';
+                    phiGq(j,:)= (phif(j,:)'.*fsf.*Mf)';
                 else
-                    phiGq(j,:)= (phif(j-ntot,:)'.*fsf.*Mf)';
+                    phiGq(j,:)= (phif(j-ntot,:)'.*Nf - exp(1i*2*pi*q/ntheta)/cos(pi/ntheta)*Wfgamma(:,2).*phif(j-ntot,:)'.*Nf)';
                 end
             end
             A1=-real(transpose(phiGq));
@@ -2228,10 +2227,9 @@ if ~isempty(ntheta) % linear constraints
         for q=1:ntheta% gridding the theta
             for j=1:2*ntot
                 if j<=ntot
-                    %[[S] [T]]
-                    phiGq(j,:)= (phif(j,:)'.*Nf - exp(1i*2*pi*q/ntheta)/cos(pi/ntheta)*Wfgamma(:,3).*phif(j,:)'.*Mf)';
+                    phiGq(j,:)= (phif(j,:)'.*fsf.*Mf)';
                 else
-                    phiGq(j,:)= (phif(j-ntot,:)'.*fsf.*Mf)';
+                    phiGq(j,:)= (phif(j-ntot,:)'.*Nf - exp(1i*2*pi*q/ntheta)/cos(pi/ntheta)*Wfgamma(:,3).*phif(j-ntot,:)'.*Mf)';
                 end
             end
             A1=-real(transpose(phiGq));
@@ -2247,10 +2245,9 @@ if ~isempty(ntheta) % linear constraints
         for q=1:ntheta% gridding the theta
             for j=1:2*ntot
                 if j<=ntot
-                    %[[S] [T]]
-                    phiGq(j,:)= (phif(j,:)'.*Nf)';
+                    phiGq(j,:)= (phif(j,:)'.*fsf.*Mf - exp(1i*2*pi*q/ntheta)/cos(pi/ntheta)*Wfgamma(:,4).*phif(j,:)'.*fsf.*Nf)';
                 else
-                    phiGq(j,:)= (phif(j-ntot,:)'.*fsf.*Mf - exp(1i*2*pi*q/ntheta)/cos(pi/ntheta)*Wfgamma(:,4).*phif(j-ntot,:)'.*fsf.*Nf)';
+                    phiGq(j,:)= (phif(j-ntot,:)'.*Nf)';
                 end
             end
             A1=-real(transpose(phiGq));
@@ -2262,8 +2259,8 @@ if ~isempty(ntheta) % linear constraints
     end
     
 else
-    rhox = rho(1:ntot,1);
-    rhoy = [ones(2*ntot-length(rho),1); rho(ntot+1:end,1)];
+    rhox = rho(ntot:end,1);
+    rhoy = [ones(2*ntot-length(rho),1); rho(1:ntot-1,1)];
     HinfConstraint = [HinfConstraint, real(Nf.*(squeeze(phif)'*rhox) + Mf.*(squeeze(phif)'*rhoy)) >...
         abs(lambda(1)*Wfgamma(:,1).*Mf.*fsf.*(squeeze(phif)'*rhoy) + lambda(2)*Wfgamma(:,2).*Nf.*(squeeze(phif)'*rhox)...
         + lambda(3)*Wfgamma(:,3).*Mf.*(squeeze(phif)'*rhox) + lambda(4)*Wfgamma(:,4).*Nf.*fsf.*(squeeze(phif)'*rhoy))];
