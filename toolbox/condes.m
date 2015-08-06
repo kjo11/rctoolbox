@@ -74,7 +74,7 @@ m=Gdim(1); no=Gdim(2); ni=Gdim(3);
 
 
 
-if no==1 && ni==1 % check stability of SISO systems
+if no==1 && ni==1 && ~isTF% check stability of SISO systems
     check_Ld_stability(per,inG,phi);
 end
 
