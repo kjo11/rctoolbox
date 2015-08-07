@@ -101,9 +101,6 @@ Ngs=sum(delta)+1;
 
 ntot=Ngs*sum(sum(n));
 
-if isTF && Ngs~=1
-    error('''TF'' controller structure cannot be used for gain-scheduled controllers')
-end
 
 %--------------------------------------------------------------------------
 
