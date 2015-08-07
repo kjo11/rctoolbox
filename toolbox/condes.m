@@ -567,6 +567,8 @@ end
                                 for j=1:m, 
                                     Ldf{j}=transpose(phiGfreq{j})*x; 
                                 end
+                            else
+                                break;
                             end
                         else
                             break;
