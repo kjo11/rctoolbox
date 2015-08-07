@@ -684,7 +684,7 @@ end
         end
     else
         if isTF
-            K = minreal(reduced_order(rhox(n:end),phi,inphi.ConType)/reduced_order([1;rhox(1:n-1)],phi*inphi.fs,inphi.ConType));
+            K = minreal(reduced_order(rhox(n:end),phi,inphi.ConType)/reduced_order([1;rhox(1:n-1)],phi,inphi.ConType)/inphi.fs);
         else
             K = reduced_order(rhox,phi,inphi.ConType);
         end
