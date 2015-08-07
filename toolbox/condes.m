@@ -118,7 +118,7 @@ end
 if (strcmp(options.yalmip,'on') || isempty(options.nq)|| (no > 2 && strcmp(options.Gbands,'on')) || isempty(options.ntheta)) && exist('yalmip')>1 % Use YALMIP interface
         
     if isTF
-        rho = sdpvar(2*ntot-Ngs,1);
+        rho = sdpvar(ntot+n-1,1);
     else
         rho=sdpvar(ntot,1);
     end
@@ -2279,31 +2279,32 @@ if ~isempty(ntheta) % linear constraints
     end
     
 else
-    rhox = rho(ntot:end,1);
-    rhoy = [1; rho(1:ntot-1,1)];
+    rhox = rho(n:end,1);
+    rhoy = [1; rho(1:n-1,1)];
+    phiy = phif(1:n,:);
     
-    HinfConstraint = [HinfConstraint, real(Nf.*(phif'*rhox) + Mf.*fsf.*(phif'*rhoy)) >=...
-        abs(lambda(1)*Wfgamma(:,1).*Mf.*fsf.*(phif'*rhoy)) + abs(lambda(2)*Wfgamma(:,2).*Nf.*(phif'*rhox))...
-        + abs(lambda(3)*Wfgamma(:,3).*Mf.*(phif'*rhox)) + abs(lambda(4)*Wfgamma(:,4).*Nf.*fsf.*(phif'*rhoy))];
+    HinfConstraint = [HinfConstraint, real(Nf.*(phif'*rhox) + Mf.*fsf.*(phiy'*rhoy)) >=...
+        abs(lambda(1)*Wfgamma(:,1).*Mf.*fsf.*(phiy'*rhoy)) + abs(lambda(2)*Wfgamma(:,2).*Nf.*(phif'*rhox))...
+        + abs(lambda(3)*Wfgamma(:,3).*Mf.*(phif'*rhox)) + abs(lambda(4)*Wfgamma(:,4).*Nf.*fsf.*(phiy'*rhoy))];
     
     if lambda(1)==0 && max(abs(Wfgamma(:,1)))>0
-        HinfConstraint = [HinfConstraint, real(Nf.*(phif'*rhox) + Mf.*fsf.*(phif'*rhoy)) >=...
-            abs(Wfgamma(:,1).*Mf.*fsf.*(phif'*rhoy))];
+        HinfConstraint = [HinfConstraint, real(Nf.*(phif'*rhox) + Mf.*fsf.*(phiy'*rhoy)) >=...
+            abs(Wfgamma(:,1).*Mf.*fsf.*(phiy'*rhoy))];
     end
     
     if lambda(2)==0 && max(abs(Wfgamma(:,2)))>0
-        HinfConstraint = [HinfConstraint, real(Nf.*(phif'*rhox) + Mf.*fsf.*(phif'*rhoy)) >=...
+        HinfConstraint = [HinfConstraint, real(Nf.*(phif'*rhox) + Mf.*fsf.*(phiy'*rhoy)) >=...
             abs(Wfgamma(:,2).*Nf.*(phif'*rhox))];
     end
     
     if lambda(3)==0 && max(abs(Wfgamma(:,3)))>0
-        HinfConstraint = [HinfConstraint, real(Nf.*(phif'*rhox) + Mf.*fsf.*(phif'*rhoy)) >=...
+        HinfConstraint = [HinfConstraint, real(Nf.*(phif'*rhox) + Mf.*fsf.*(phiy'*rhoy)) >=...
             abs(Wfgamma(:,3).*Mf.*(phif'*rhox))];
     end
     
     if lambda(4)==0 && max(abs(Wfgamma(:,4)))>0
-        HinfConstraint = [HinfConstraint, real(Nf.*(phif'*rhox) + Mf.*fsf.*(phif'*rhoy)) >=...
-            abs(Wfgamma(:,4).*Nf.*fsf.*(phif'*rhoy))];
+        HinfConstraint = [HinfConstraint, real(Nf.*(phif'*rhox) + Mf.*fsf.*(phiy'*rhoy)) >=...
+            abs(Wfgamma(:,4).*Nf.*fsf.*(phiy'*rhoy))];
     end
     
 end
