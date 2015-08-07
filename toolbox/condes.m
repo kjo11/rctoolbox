@@ -2129,9 +2129,16 @@ for i=1:length(inG)
             if isstable(G)
                 N{i} = G;
                 M{i} = tf(1,1);
-            else
+            elseif isdt(G)
+                warning(['G{',num2str(i),'} is unstable. Generating stable, proper N and M using poles at z=0.5 such that G=N/M. This choice may cause the optimization to fail or the constraints to not be satisfied. In this case, N and M should be explicitly given in the input.'])
                 [~,den,Ts]=tfdata(G,'v');
-                F = poly(-100*ones(length(den)-1,1));
+                F = poly(-0.5*ones(length(den)-1,1));
+                N{i} = minreal(G*tf(den,F,Ts)); % keep uncertainty info etc
+                M{i} = tf(den,F,Ts);
+            else
+                warning(['G{',num2str(i),'} is unstable. Generating stable, proper N and M using poles at s=10 rad/s such that G=N/M. This choice may cause the optimization to fail or the constraints to not be satisfied. In this case, N and M should be explicitly given in the input.'])
+                [~,den,Ts]=tfdata(G,'v');
+                F = poly(-10*ones(length(den)-1,1));
                 N{i} = minreal(G*tf(den,F,Ts)); % keep uncertainty info etc
                 M{i} = tf(den,F,Ts);
             end
