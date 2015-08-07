@@ -2275,28 +2275,28 @@ else
     rhox = rho(ntot:end,1);
     rhoy = [1; rho(1:ntot-1,1)];
     
-    HinfConstraint = [HinfConstraint, real(Nf.*(squeeze(phif)'*rhox) + Mf.*fsf.*(squeeze(phif)'*rhoy)) >...
-        abs(lambda(1)*Wfgamma(:,1).*Mf.*fsf.*(squeeze(phif)'*rhoy)) + abs(lambda(2)*Wfgamma(:,2).*Nf.*(squeeze(phif)'*rhox))...
-        + abs(lambda(3)*Wfgamma(:,3).*Mf.*(squeeze(phif)'*rhox)) + abs(lambda(4)*Wfgamma(:,4).*Nf.*fsf.*(squeeze(phif)'*rhoy))];
+    HinfConstraint = [HinfConstraint, real(Nf.*(phif'*rhox) + Mf.*fsf.*(phif'*rhoy)) >=...
+        abs(lambda(1)*Wfgamma(:,1).*Mf.*fsf.*(phif'*rhoy)) + abs(lambda(2)*Wfgamma(:,2).*Nf.*(phif'*rhox))...
+        + abs(lambda(3)*Wfgamma(:,3).*Mf.*(phif'*rhox)) + abs(lambda(4)*Wfgamma(:,4).*Nf.*fsf.*(phif'*rhoy))];
     
     if lambda(1)==0 && max(abs(Wfgamma(:,1)))>0
-        HinfConstraint = [HinfConstraint, real(Nf.*(squeeze(phif)'*rhox) + Mf.*fsf.*(squeeze(phif)'*rhoy)) >...
-            abs(Wfgamma(:,1).*Mf.*fsf.*(squeeze(phif)'*rhoy))];
+        HinfConstraint = [HinfConstraint, real(Nf.*(phif'*rhox) + Mf.*fsf.*(phif'*rhoy)) >=...
+            abs(Wfgamma(:,1).*Mf.*fsf.*(phif'*rhoy))];
     end
     
     if lambda(2)==0 && max(abs(Wfgamma(:,2)))>0
-        HinfConstraint = [HinfConstraint, real(Nf.*(squeeze(phif)'*rhox) + Mf.*fsf.*(squeeze(phif)'*rhoy)) >...
-            abs(Wfgamma(:,2).*Nf.*(squeeze(phif)'*rhox))];
+        HinfConstraint = [HinfConstraint, real(Nf.*(phif'*rhox) + Mf.*fsf.*(phif'*rhoy)) >=...
+            abs(Wfgamma(:,2).*Nf.*(phif'*rhox))];
     end
     
     if lambda(3)==0 && max(abs(Wfgamma(:,3)))>0
-        HinfConstraint = [HinfConstraint, real(Nf.*(squeeze(phif)'*rhox) + Mf.*fsf.*(squeeze(phif)'*rhoy)) >...
-            abs(Wfgamma(:,3).*Mf.*(squeeze(phif)'*rhox))];
+        HinfConstraint = [HinfConstraint, real(Nf.*(phif'*rhox) + Mf.*fsf.*(phif'*rhoy)) >=...
+            abs(Wfgamma(:,3).*Mf.*(phif'*rhox))];
     end
     
     if lambda(4)==0 && max(abs(Wfgamma(:,4)))>0
-        HinfConstraint = [HinfConstraint, real(Nf.*(squeeze(phif)'*rhox) + Mf.*fsf.*(squeeze(phif)'*rhoy)) >...
-            abs(Wfgamma(:,4).*Nf.*fsf.*(squeeze(phif)'*rhoy))];
+        HinfConstraint = [HinfConstraint, real(Nf.*(phif'*rhox) + Mf.*fsf.*(phif'*rhoy)) >=...
+            abs(Wfgamma(:,4).*Nf.*fsf.*(phif'*rhoy))];
     end
     
 end
