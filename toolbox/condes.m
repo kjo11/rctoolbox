@@ -257,6 +257,10 @@ for j=1:m
         
     end
     
+    if isTF
+        phifreq{j}=kron(theta_bar(j,:)',squeeze(phif{j}));
+    end
+    
     if ~isempty(Ldf)
         H = H + real( FphiGf{j}*FphiGf{j}');
         f = f + transpose( -real(FLdf{j}.' * FphiGf{j}') );
