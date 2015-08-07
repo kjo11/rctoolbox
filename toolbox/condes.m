@@ -608,9 +608,9 @@ end
                                     end
                                 else
                                     if ~isempty(ntheta)
-                                        [A1 b1 HinfConstraint1]=tf_Ab_HinfCons(GCov{j}{k},Mf{j},squeeze(phif{j}),fsf{j},Wfgamma{j},ntheta,ntot,TFtol,lambda);
+                                        [A1 b1 HinfConstraint1]=tf_Ab_HinfCons(GCov{j}{k},Mf{j},phifreq{j},fsf{j},Wfgamma{j},ntheta,ntot,n,TFtol,lambda);
                                     else
-                                        [A1 b1 HinfConstraint1]=tf_Ab_HinfCons(GCov{j}{k},Mf{j},squeeze(phif{j}),fsf{j},Wfgamma{j},ntheta,ntot,TFtol,lambda,rho);
+                                        [A1 b1 HinfConstraint1]=tf_Ab_HinfCons(GCov{j}{k},Mf{j},phifreq{j},fsf{j},Wfgamma{j},ntheta,ntot,n,TFtol,lambda,rho);
                                     end
                                 end
                                 A=[A ; A1];
@@ -628,7 +628,7 @@ end
                             end
                             
                             % no optimization 
-                            f = zeros(2*ntot-Ngs,1);
+                            f = zeros(ntot+n-1,1);
                             H = [];
                         end
 
@@ -667,7 +667,7 @@ end
     
     
     if isTF
-        rhox=x;
+        rhox=reshape([1;x],n,Ngs+1);
     else
         for k=1:n
             rhox(k,:)=x((k-1)*Ngs+1:k*Ngs);
@@ -679,13 +679,19 @@ end
         fprintf('\n');
         disp('K{1}+theta_1 K{2}+theta_2 K{3} + ... +theta_1^2 k{n}+theta_2^2k{n+1}+...')
         fprintf('\n');
-        for k=1:Ngs
-            K{k} = reduced_order(rhox(:,k),phi,inphi.ConType);
-            disp(['K{'  int2str(k) '}=']),K{k}
+        if isTF
+            for k=1:Ngs
+                K{k} = minreal(reduced_order(rhox(:,k+1),phi,inphi.ConType)/reduced_order(rhox(:,1),phi,inphi.ConType)/inphi.fs);
+            end
+        else
+            for k=1:Ngs
+                K{k} = reduced_order(rhox(:,k),phi,inphi.ConType);
+                disp(['K{'  int2str(k) '}=']),K{k}
+            end
         end
     else
         if isTF
-            K = minreal(reduced_order(rhox(n:end),phi,inphi.ConType)/reduced_order([1;rhox(1:n-1)],phi*inphi.fs,inphi.ConType));
+            K = minreal(reduced_order(rhox(:,2),phi,inphi.ConType)/reduced_order(rhox(:,1),phi,inphi.ConType)/inphi.fs);
         else
             K = reduced_order(rhox,phi,inphi.ConType);
         end
@@ -2155,7 +2161,7 @@ end
 
 
 
-function [A, b, HinfConstraint]=tf_Ab_HinfCons(Nf,Mf,phif,fsf,Wfgamma,ntheta,ntot,realtol,lambda,rho)
+function [A, b, HinfConstraint]=tf_Ab_HinfCons(Nf,Mf,phif,fsf,Wfgamma,ntheta,ntot,n,realtol,lambda,rho)
 % Compute Hinf constraints for TF structure
 
 
@@ -2180,12 +2186,12 @@ if ~isempty(ntheta) % linear constraints
             for q2=1:nth(2)
                 for q3=1:nth(3)
                     for q4=1:nth(4)
-                        for j=1:2*ntot
-                            if j<=ntot
+                        for j=1:ntot+n
+                            if j<=n
                                 phi = phif(j,:)';
                                 phiGq(j,:)= (phi.*fsf.*Mf - exp(1i*2*pi*q1/ntheta)/cos(pi/ntheta)*(lambda(1)*Wfgamma(:,1).*phi.*fsf.*Mf) - exp(1i*2*pi*q4/ntheta)/cos(pi/ntheta)*(lambda(4)*Wfgamma(:,4).*phi.*fsf.*Nf))';
                             else
-                                phi = phif(j-ntot,:)';
+                                phi = phif(j-n,:)';
                                 phiGq(j,:)= (phi.*Nf - exp(1i*2*pi*q2/ntheta)/cos(pi/ntheta) * (lambda(2)*Wfgamma(:,2).*phi.*Nf) - exp(1i*2*pi*q3/ntheta)/cos(pi/ntheta)*(lambda(3)*Wfgamma(:,3).*phi.*Mf))';
                             end
                         end
@@ -2203,11 +2209,11 @@ if ~isempty(ntheta) % linear constraints
 
     if lambda(1)==0 && max(abs(Wfgamma(:,1)))>0
         for q=1:ntheta% gridding the theta
-            for j=1:2*ntot
-                if j<=ntot
+            for j=1:ntot+n
+                if j<=n
                     phiGq(j,:)= (phif(j,:)'.*fsf.*Mf - exp(1i*2*pi*q/ntheta)/cos(pi/ntheta)*Wfgamma(:,1).*phif(j,:)'.*fsf.*Mf)';
                 else
-                    phiGq(j,:)= (phif(j-ntot,:)'.*Nf)';
+                    phiGq(j,:)= (phif(j-n,:)'.*Nf)';
                 end
             end
             A1=-real(transpose(phiGq));
@@ -2221,11 +2227,11 @@ if ~isempty(ntheta) % linear constraints
 
     if lambda(2)==0 && max(abs(Wfgamma(:,2)))>0
         for q=1:ntheta% gridding the theta
-            for j=1:2*ntot
-                if j<=ntot
+            for j=1:n+ntot
+                if j<=n
                     phiGq(j,:)= (phif(j,:)'.*fsf.*Mf)';
                 else
-                    phiGq(j,:)= (phif(j-ntot,:)'.*Nf - exp(1i*2*pi*q/ntheta)/cos(pi/ntheta)*Wfgamma(:,2).*phif(j-ntot,:)'.*Nf)';
+                    phiGq(j,:)= (phif(j-n,:)'.*Nf - exp(1i*2*pi*q/ntheta)/cos(pi/ntheta)*Wfgamma(:,2).*phif(j-n,:)'.*Nf)';
                 end
             end
             A1=-real(transpose(phiGq));
@@ -2239,11 +2245,11 @@ if ~isempty(ntheta) % linear constraints
     
     if lambda(3)==0 && max(abs(Wfgamma(:,3)))>0
         for q=1:ntheta% gridding the theta
-            for j=1:2*ntot
-                if j<=ntot
+            for j=1:n+ntot
+                if j<=n
                     phiGq(j,:)= (phif(j,:)'.*fsf.*Mf)';
                 else
-                    phiGq(j,:)= (phif(j-ntot,:)'.*Nf - exp(1i*2*pi*q/ntheta)/cos(pi/ntheta)*Wfgamma(:,3).*phif(j-ntot,:)'.*Mf)';
+                    phiGq(j,:)= (phif(j-n,:)'.*Nf - exp(1i*2*pi*q/ntheta)/cos(pi/ntheta)*Wfgamma(:,3).*phif(j-n,:)'.*Mf)';
                 end
             end
             A1=-real(transpose(phiGq));
@@ -2257,11 +2263,11 @@ if ~isempty(ntheta) % linear constraints
     
     if lambda(4)==0 && max(abs(Wfgamma(:,4)))>0
         for q=1:ntheta% gridding the theta
-            for j=1:2*ntot
-                if j<=ntot
+            for j=1:n+ntot
+                if j<=n
                     phiGq(j,:)= (phif(j,:)'.*fsf.*Mf - exp(1i*2*pi*q/ntheta)/cos(pi/ntheta)*Wfgamma(:,4).*phif(j,:)'.*fsf.*Nf)';
                 else
-                    phiGq(j,:)= (phif(j-ntot,:)'.*Nf)';
+                    phiGq(j,:)= (phif(j-n,:)'.*Nf)';
                 end
             end
             A1=-real(transpose(phiGq));
