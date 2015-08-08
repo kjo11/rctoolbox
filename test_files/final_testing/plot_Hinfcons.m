@@ -1,4 +1,4 @@
-function [] = plot_Hinfcons(G,K,W,lambda,gamma,w)
+function [] = plot_Hinfcons(G,K,W,lambda,gamma,w,theta)
 
 if ~iscell(G)
     G = {G};
@@ -6,7 +6,15 @@ end
 figure(1); figure(2); figure(3); figure(4);
 hold all
 for i=1:length(G)
-    S = feedback(1,K*G);
+    if iscell(K)
+        K2=K{1};
+        for j=1:size(theta,2)
+            K2 = K2 + theta(i,j)*K{j+1};
+        end
+    else
+        K2=K;
+    end
+    S = feedback(1,K2*G);
     T = 1-S;
     U = K*S;
 
