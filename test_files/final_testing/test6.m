@@ -1,8 +1,8 @@
 % Test 6
 % Loop -- gain-scheduled
 
-addpath('../toolbox')
-addpath(genpath('../../matlab_tools'))
+addpath('../../toolbox')
+addpath(genpath('../../../matlab_tools'))
 clear W G phi per w
 
 
@@ -22,7 +22,7 @@ G{2}=(s+11)/((s+2)*(s+4));
 
 gs = [1; 2];
 
-w{1}=logspace(-3,3,100);
+w=logspace(-3,3,100);
 
 W{1}=2/(20*s+1)^2;
 W{2}=0.8*(1.1337*s^2+6.8857*s+9)/((s+1)*(s+10));
