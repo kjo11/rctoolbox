@@ -243,8 +243,15 @@ phiGfreq=cell(1,m);
 toto=cell(1,m);
 FphiGf=cell(1,m);
 totod=cell(1,m);
-H=zeros(ntot,ntot);
-f=zeros(ntot,1);
+if isTF
+    H = zeros(ntot+n-1,ntot+n-1);
+    f = zeros(ntot+n-1,1);
+    phifreq=cell(1,m);
+    phifreqd=cell(1,m);
+else
+    H=zeros(ntot,ntot);
+    f=zeros(ntot,1);
+end
 
 for j=1:m
     for u=1:n
@@ -263,12 +270,21 @@ for j=1:m
     end
     
     if ~isempty(Ldf)
-        H = H + real( FphiGf{j}*FphiGf{j}');
-        f = f + transpose( -real(FLdf{j}.' * FphiGf{j}') );
+        if isTF
+            H11 = transpose(repmat(FLdf{j}.*Mfd{j}.*fsfd{j},1,n)).*phifreqd{j}(1:n,:);
+            H12 = phifreqd{j}(1:n,:).*transpose(repmat(Nfd{j}.*FLdf{j}.*Mfd{j}.*fsfd{j},1,n))*transpose(phifreqd{j});
+            H22 = transpose(repmat(FGf{j},1,n)).*phifreqd{j};
+            H2 = real([H11*H11', H12; transpose(H12), H22*H22']);
+            H = H + H2(2:end,2:end);
+            f = f + H2(2:end,1) + H2(1,2:end)';
+        else
+            H = H + real( FphiGf{j}*FphiGf{j}');
+            f = f + transpose( -real(FLdf{j}.' * FphiGf{j}') );
+        end
     end
     
 end
-    
+   
     
 %--------- Compute uncertainty polygon for identified models --------------  
    
