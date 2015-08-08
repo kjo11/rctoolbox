@@ -62,13 +62,13 @@ end
 
 [Gf,Gdim,phi,n,phif,phifd,per,w,N,performance,Ldf,LDf,FGf,FLdf,FLDf,CovGf] = condesdata (inG,inphi,inper,options);
 
-if isTF
-    [Mf,fsf,CovMf]=tf_Mf_fsf(w,M,inphi.fs);
-end
 
 m=Gdim(1); no=Gdim(2); ni=Gdim(3);
 
 
+if isTF
+    [Mf,fsf,Mfd,fsfd,Nfd,CovMf]=tf_Mf_fsf(w,M,inphi.fs,inG,m);
+end
 
 
 if no==1 && ni==1 && ~isTF% check stability of SISO systems
@@ -259,6 +259,7 @@ for j=1:m
     
     if isTF
         phifreq{j}=kron(theta_bar(j,:)',squeeze(phif{j}));
+        phifreqd{j}=kron(theta_bar(j,:)',squeeze(phifd{j}));
     end
     
     if ~isempty(Ldf)
@@ -2325,11 +2326,23 @@ end
 
 
 
-function [Mf,fsf,CovMf]=tf_Mf_fsf(w,M,fs)
-for j=1:length(w)
-    Mf{j} = squeeze(freqresp(M{j},w{j}));
-    fsf{j} = squeeze(freqresp(fs,w{j}));
+function [Mf,fsf,Mfd,fsfd,Nfd,CovMf]=tf_Mf_fsf(w,M,fs,N,m)
+Mf=cell(1,m);
+fsf=Mf;
+Mfd=Mf;
+fsfd=Mf;
+CovMf=Mf;
+Nfd=Mf;
 
+for j=1:m
+    wd=linspace(min(w{j}),max(w{j}),1000)';
+    
+    Mf{j} = squeeze(freqresp(M{j},w{j}));
+    Mfd{j} = squeeze(freqresp(M{j},wd));
+    fsf{j} = squeeze(freqresp(fs,w{j}));
+    fsfd{j} = squeeze(freqresp(fs,wd));
+    Nfd{j} = squeeze(freqresp(N{j},wd));
+    
     if isa(Mf{j},'id')
         [~,~,CovMf{j}]=freqresp(M{j},w{j});
     else
@@ -2337,3 +2350,4 @@ for j=1:length(w)
     end
 end
 end
+
