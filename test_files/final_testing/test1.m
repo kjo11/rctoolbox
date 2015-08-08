@@ -1,27 +1,71 @@
-% Test 1
-% Continuous, unstable
-% Example 5
+% Test 1: Errors with TF
+
+addpath('../../toolbox')
+s = tf('s');
+
+%% rational with loopshaping -- error
+phi = conphi('gener',[0.2 6],'s',1/s,'tf');
+
+per = conper('LS',0.4,[]);
+
+G = 1/(s+2);
+
+K = condes(G,phi,per)
 
 
-disp('Continuous, unstable')
+%% rational with GPhC -- error
+phi = conphi('gener',[0.2 6],'s',1/s,'tf');
 
-s=tf('s');
-G=(s+1)*(s+10)/((s+2)*(s+4)*(s-1));
+per = conper('GPhC',[2 45 2]);
 
-Ld=2*(s+1)/s/(s-1);
+G = 1/(s+2);
 
-W{1}=2/(20*s+1)^2;
-W{2}=0.8*(1.1337*s^2+6.8857*s+9)/((s+1)*(s+10));
-W{3}=tf(0.05);
+K = condes(G,phi,per)
 
-phi=conphi('Laguerre',[20 6],'s',1/s);
-phi_tf=conphi('Laguerre',[20 6],'s',1/s,'tf');
+%% rational with Hinf -- no error
+phi = conphi('gener',[0.2 6],'s',1/s,'tf');
 
-per=conper('Hinf',W,Ld);
-opt=condesopt('gamma',[0.2 1.8 0.001],'lambda',[1 1 0 0],'nq',30);
+per = conper('Hinf',[2 45 2]);
 
-[K,sol] = condes(G,phi,per,opt);
-[K_tf,sol_tf] = condes(G,phi_tf,per,opt);
+G = 1/(s+2);
 
-sol.gamma
-sol_tf.gamma
+K = condes(G,phi,per)
+
+%% rational with MIMO -- error
+phi = conphi('gener',[0.2 6],'s',1/s,'tf');
+
+per = conper('Hinf',[2 45 2],4/s);
+
+G = [1/(s+2); 1];
+
+K = condes(G,phi,per)
+
+%% non-rational with Hinf and no Ld -- error
+phi = conphi('gener',[0.2 6],'s',1/s,'lp');
+
+per = conper('Hinf',[2 45 2]);
+
+G = 1/(s+2);
+
+K = condes(G,phi,per)
+
+%% phi and per as cells
+phi = conphi('gener',[0.2 6],'s',1/s,'lp');
+
+per = {conper('Hinf',[2 45 2],5/s);};
+
+G = [1/(s+2);1];
+
+K = condes(G,{phi},{per})
+
+
+%% phi and per as cells
+phi = conphi('gener',[0.2 6],'s',1/s,'lp');
+
+per = {conper('Hinf',[2 45 2],5/s);};
+
+G = [1/(s+2);1];
+
+K = condes(G,{phi},per)
+
+

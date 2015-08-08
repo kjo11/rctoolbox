@@ -1,69 +1,54 @@
-addpath('../../toolbox')
-s = tf('s');
+% Test 9
+% Loop -- unstable
 
-%% rational with loopshaping -- error
-phi = conphi('gener',[0.2 6],'s',1/s,'tf');
-
-per = conper('LS',0.4,[]);
-
-G = 1/(s+2);
-
-K = condes(G,phi,per)
+addpath('../toolbox')
+addpath(genpath('../../matlab_tools'))
+clear W G phi per w
 
 
-%% rational with GPhC -- error
-phi = conphi('gener',[0.2 6],'s',1/s,'tf');
 
-per = conper('GPhC',[2 45 2]);
+%% Constants
+nq=20;
+realtol=10e-8;
 
-G = 1/(s+2);
+n=4;% order
+xi=0;% Pole
 
-K = condes(G,phi,per)
+s=tf('s');
 
-%% rational with Hinf -- no error
-phi = conphi('gener',[0.2 6],'s',1/s,'tf');
+%% Model and options
+G=(s+10)*(s+1)/((s+2)*(s+4)*(s-1));
+w{1}=logspace(-3,3,100);
 
-per = conper('Hinf',[2 45 2]);
+W{1}=2/(20*s+1)^2;
+W{2}=0.8*(1.1337*s^2+6.8857*s+9)/((s+1)*(s+10));
+W{3}=tf(0.05);
 
-G = 1/(s+2);
+lambda_mat=[1 1 1 0; 0 1 0 0; 0 0 0 0];
 
-K = condes(G,phi,per)
+g_max=1; g_min=0.5; g_tol = 0.01;
+phi = conphi('lag',[2 n],'s',1/s,'tf');
 
-%% rational with MIMO -- error
-phi = conphi('gener',[0.2 6],'s',1/s,'tf');
-
-per = conper('Hinf',[2 45 2],4/s);
-
-G = [1/(s+2); 1];
-
-K = condes(G,phi,per)
-
-%% non-rational with Hinf and no Ld -- error
-phi = conphi('gener',[0.2 6],'s',1/s,'lp');
-
-per = conper('Hinf',[2 45 2]);
-
-G = 1/(s+2);
-
-K = condes(G,phi,per)
-
-%% phi and per as cells
-phi = conphi('gener',[0.2 6],'s',1/s,'lp');
-
-per = {conper('Hinf',[2 45 2],5/s);};
-
-G = [1/(s+2);1];
-
-K = condes(G,{phi},{per})
-
-
-%% phi and per as cells
-phi = conphi('gener',[0.2 6],'s',1/s,'lp');
-
-per = {conper('Hinf',[2 45 2],5/s);};
-
-G = [1/(s+2);1];
-
-K = condes(G,{phi},per)
-
-
+%% Loop
+for j=1:2
+    if j==1
+        yalmipstr='on';
+        ntheta=[];
+        fprintf('yalmip\n');
+    else
+        yalmipstr='off';
+        ntheta=5;
+        fprintf('no yalmip\n')
+    end
+    
+    for k=1:size(lambda_mat,1)
+        lambda=lambda_mat(k,:);
+        fprintf('lambda %i\n',k)
+        
+        opts = condesopt('nq',nq,'ntheta',ntheta,'TFtol',realtol,'w',w,'gamma',[g_min g_max g_tol],'lambda',lambda);
+        per = conper('Hinf',W);
+        [K,sol] = condes(G,phi,per,opts);
+        
+        plot_Hinfcons(G,K,W,lambda,sol.gamma,w)
+    end     
+end

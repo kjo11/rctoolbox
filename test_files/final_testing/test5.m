@@ -1,51 +1,57 @@
-% Test 5
-% Discrete, unstable
-% Example 5
+% Test 10
+% Loop -- FRD
+
+addpath('../toolbox')
+addpath(genpath('../../matlab_tools'))
+clear W G phi per w
 
 
-disp('Discrete, unstable')
-Ts = 0.005;
-s = tf('s');
-z = tf('z',Ts);
 
-G=c2d((s+1)*(s+10)/((s+2)*(s+4)*(s-1)),Ts);
+%% Constants
+nq=20;
+realtol=10e-8;
 
-Ld=2*(s+1)/s/(s-1);
+n=4;% order
+xi=0;% Pole
 
-W{1}=2/(20*s+1)^2;
-W{2}=0.8*(1.1337*s^2+6.8857*s+9)/((s+1)*(s+10));
-W{3}=tf(0.05);
+s=tf('s');
 
-per=conper('Hinf',W,Ld);
+load data_ex10
 
+%% Model and options
+Gdata = iddata(y,u,Ts); % FR data with uncertainty
+w{1}=linspace(10e-4,78.539816339744830,128);% frequency points
+G= spa(Gdata,200,w{1});    
 
-for y=1:2
-    if y==1
-        opt=condesopt('gamma',[0.2 1.8 0.001],'lambda',[1 1 0 0],'nq',30);
+Wc=tf(1+1/s);%weighted function
+W{1}=c2d(Wc,Ts);
+W{2}=tf(0);
+W{3}=tf(0);
+lambda_mat=[1 0 0 0];
+
+g_max=4; g_min=2.7; g_tol = 0.01;
+phi = conphi('lag',[Ts 0 n],'z',[],'tf');
+
+%% Loop
+for j=1:2
+    if j==1
+        yalmipstr='on';
+        ntheta=[];
+        fprintf('yalmip\n');
     else
-        opt=condesopt('gamma',[0.2 1.8 0.001],'lambda',[1 1 0 0],'nq',30,'yalmip','on');
+        yalmipstr='off';
+        ntheta=20;
+        fprintf('no yalmip\n')
     end
-for i=1:4
-    switch i
-        case 1
-            phi=conphi('Laguerre',[Ts 20 6],'z');
-            phi_tf=conphi('Laguerre',[Ts 20 6],'z',[],'tf');
-        case 2
-            phi=conphi('Laguerre',[Ts 20 6],'z',z/(z-1));
-            phi_tf=conphi('Laguerre',[Ts 20 6],'z',z/(z-1),'tf');
-        case 3
-            phi=conphi('generalized',[Ts linspace(10,25,5)],'z');
-            phi_tf=conphi('generalized',[Ts linspace(10,25,5)],'z',[],'tf');
-        case 4
-            phi=conphi('generalized',[Ts linspace(10,25,5)],'z',z/(z-1));
-            phi_tf=conphi('generalized',[Ts linspace(10,25,5)],'z',z/(z-1),'tf');
-    end
-    [K,sol] = condes(G,phi,per,opt);
-    [K_tf,sol_tf] = condes(G,phi_tf,per,opt);
     
-
-    sol.gamma
-    sol_tf.gamma
-    figure; bode(feedback(K*G,1),feedback(K_tf*G,1))
-end
+    for k=1:size(lambda_mat,1)
+        lambda=lambda_mat(k,:);
+        fprintf('lambda %i\n',k)
+        
+        opts = condesopt('nq',nq,'ntheta',ntheta,'TFtol',realtol,'w',w,'gamma',[g_min g_max g_tol],'lambda',lambda);
+        per = conper('Hinf',W);
+        [K,sol] = condes(G,phi,per,opts);
+        
+        plot_Hinfcons(G,K,W,lambda,sol.gamma,w)
+    end     
 end
