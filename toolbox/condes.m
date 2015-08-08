@@ -620,7 +620,7 @@ end
                         end
                         
                         if isTF
-                            if ~YesYalmip
+                            if ~isempty(ntheta)
                                 % force y to be monic
                                 b = b - A(:,1);
                                 A = A(:,2:end);
