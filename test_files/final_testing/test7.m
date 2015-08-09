@@ -1,8 +1,8 @@
-% Test 6
-% Loop -- gain-scheduled
+% Test 7
+% gain-scheduled -- multiple theta
 
-addpath('../toolbox')
-addpath(genpath('../../matlab_tools'))
+addpath('../../toolbox')
+addpath(genpath('../../../matlab_tools'))
 clear W G phi per w
 
 
@@ -20,7 +20,8 @@ s=tf('s');
 G{1}=(s+10)/((s+2)*(s+4));
 G{2}=(s+11)/((s+2)*(s+4));
 
-gs = [1; 2];
+gs = [1 1; 2 0];
+np = [1 2];
 
 w=logspace(-3,3,100);
 
@@ -28,20 +29,22 @@ W{1}=2/(20*s+1)^2;
 W{2}=0.8*(1.1337*s^2+6.8857*s+9)/((s+1)*(s+10));
 W{3}=tf(0.05);
 
-lambda_mat=[1 1 1 0;
-            1 1 0 0;
-            1 0 1 0;
-            0 1 1 0;
-            1 0 0 0;
-            0 1 0 0;
-            0 0 1 0;
-            0 0 0 0];
+% lambda_mat=[1 1 1 0;
+%             1 1 0 0;
+%             1 0 1 0;
+%             0 1 1 0;
+%             1 0 0 0;
+%             0 1 0 0;
+%             0 0 1 0;
+%             0 0 0 0];
+
+lambda_mat = [1 0 0 0; 0 1 0 0];
 g_max=1; g_min=0.5; g_tol = 0.01;
 phi = conphi('lag',[2 n],'s',1/s,'tf');
 
 
 %% Loop
-for j=1:2
+for j=1:1
     if j==1
         yalmipstr='on';
         ntheta=[];
@@ -56,10 +59,11 @@ for j=1:2
         lambda=lambda_mat(k,:);
         fprintf('lambda %i\n',k)
         
-        opts = condesopt('nq',nq,'ntheta',ntheta,'TFtol',realtol,'w',w,'gamma',[g_min g_max g_tol],'lambda',lambda,'np',1,'gs',gs);
+        opts = condesopt('nq',nq,'ntheta',ntheta,'TFtol',realtol,'w',w,'gamma',[g_min g_max g_tol],'lambda',lambda,'np',np,'gs',gs);
         per = conper('Hinf',W);
         [K,sol] = condes(G,phi,per,opts);
         
-        plot_Hinfcons(G,K,W,lambda,sol.gamma,w,gs)
+        plot_Hinfcons(G,K,W,lambda,sol.gamma,w,gs,np)
+        pause
     end     
 end
