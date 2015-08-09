@@ -258,7 +258,11 @@ for j=1:m
     end
     
     if isTF
-        phifreq{j}=kron(theta_bar(j,:)',squeeze(phif{j}));
+        if n==1
+            phifreq{j}=kron(theta_bar(j,:)',transpose(squeeze(phif{j})));
+        else
+            phifreq{j}=kron(theta_bar(j,:)',squeeze(phif{j}));
+        end
     end
     
     if ~isempty(Ldf)
