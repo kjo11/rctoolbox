@@ -59,9 +59,6 @@ if no==1 && ni==1 % check stability of SISO systems
     check_Ld_stability(per,inG,phi);
 end
 
-K = [];
-sol_info = [];
-return;
 
 %------- Gain scheduled vector construction -------------------------------
 theta=options.gs;
