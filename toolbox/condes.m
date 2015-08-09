@@ -278,8 +278,10 @@ end
 
 if isempty(nq)
     nqq=8;
+    nqm=8;
 else
     nqq=nq;
+    nqm=nq;
 end
 
 
@@ -303,11 +305,16 @@ for j=1:m
                  for k=1:N(j)
                     Sigma(k,:,:)=sqrtm((squeeze(CovGf{j}(1,1,k,:,:))));
                     Pxy{j}(k)=[1 i]*squeeze(Sigma(k,:,:))*[x0;y0];
+                    if isTF
+                        SigmaM(k,:,:)=sqrtm((squeeze(CovMf{j}(1,1,k,:,:))));
+                        PxyM{j}(k)=[1 i]*squeeze(SigmaM(k,:,:))*[x0;y0];
+                    end
                 end
                 phiCov{j}{q}(p,:)=phiGfreq{j}(p,:).*(1+Pxy{j}./squeeze(Gf{j})');
             end
             if isTF
                 GCov{j}{q} = Gf{j}(:)+Pxy{j}(:);    
+                MCov{j}{q} = Mf{j}(:)+PxyM{j}(:);
             end
         end
         
@@ -315,6 +322,8 @@ for j=1:m
         phiCov{j}{1}=phiGfreq{j};
         if isTF
             GCov{j}{1}=Gf{j}(:);
+            Mcov{j}{1}=Mf{j}(:);
+            nqm=1;
         end
         nqq=1;
     end
@@ -611,10 +620,14 @@ end
                                         [A1 b1 HinfConstraint1]=Ab_HinfCons(phiCov{j}{k},Wfgamma{j},Ldf{j},nq,lambda,rho);
                                     end
                                 else
-                                    if ~isempty(ntheta)
-                                        [A1 b1 HinfConstraint1]=tf_Ab_HinfCons(GCov{j}{k},Mf{j},phifreq{j},fsf{j},Wfgamma{j},ntheta,ntot,n,TFtol,lambda);
-                                    else
-                                        [A1 b1 HinfConstraint1]=tf_Ab_HinfCons(GCov{j}{k},Mf{j},phifreq{j},fsf{j},Wfgamma{j},ntheta,ntot,n,TFtol,lambda,rho);
+                                    for kk=1:nqm
+                                        if ~isempty(ntheta)
+                                            [A1 b1 HinfConstraint1]=tf_Ab_HinfCons(GCov{j}{k},MCov{j}{kk},phifreq{j},fsf{j},Wfgamma{j},ntheta,ntot,n,TFtol,lambda);
+%                                             [A1 b1 HinfConstraint1]=tf_Ab_HinfCons(GCov{j}{k},Mf{j},phifreq{j},fsf{j},Wfgamma{j},ntheta,ntot,n,TFtol,lambda);
+                                        else
+                                            [A1 b1 HinfConstraint1]=tf_Ab_HinfCons(GCov{j}{k},MCov{j}{kk},phifreq{j},fsf{j},Wfgamma{j},ntheta,ntot,n,TFtol,lambda,rho);
+%                                             [A1 b1 HinfConstraint1]=tf_Ab_HinfCons(GCov{j}{k},Mf{j},phifreq{j},fsf{j},Wfgamma{j},ntheta,ntot,n,TFtol,lambda,rho);
+                                        end
                                     end
                                 end
                                 A=[A ; A1];
@@ -677,7 +690,6 @@ end
             rhox(k,:)=x((k-1)*Ngs+1:k*Ngs);
         end
     end
-    
     
     if ~isempty(theta)
         fprintf('\n');
@@ -2334,7 +2346,7 @@ for j=1:length(w)
     Mf{j} = squeeze(freqresp(M{j},w{j}));
     fsf{j} = squeeze(freqresp(fs,w{j}));
 
-    if isa(Mf{j},'id')
+    if strncmp(class(M{j}),'id',2)
         [~,~,CovMf{j}]=freqresp(M{j},w{j});
     else
         CovMf{j}=[];
