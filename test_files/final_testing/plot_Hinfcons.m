@@ -8,14 +8,19 @@ if ~iscell(w)
     w2(1,:)={w};
     w=w2;
 end
-figure(1); figure(2); figure(3); figure(4);
-hold all
+
+
 for i=1:length(G)
+    n=1;
     if iscell(K)
         K2=K{1};
-        for j=1:size(theta,2)
-            for k=1:np(j)
-                K2 = K2 + theta(i,j)*K{j+1}^(k);
+        for j=1:max(np)
+            for k=1:size(theta,2)
+                if np(k)<j
+                    continue;
+                end
+                n = n+1;
+                K2 = K2 + theta(i,k)^j*K{n};
             end
         end
     else
@@ -27,19 +32,19 @@ for i=1:length(G)
 
 
     if sum(lambda)==0
-        figure(1); bode(W{i}*S,tf(gamma),w{i})
-        figure(2); bode(W{2}*T,tf(gamma),w{i})
-        figure(3); bode(W{3}*U,tf(gamma),w{i})
+        figure; bode(W{1}*S,tf(gamma),w{i})
+        figure; bode(W{2}*T,tf(gamma),w{i})
+        figure; bode(W{3}*U,tf(gamma),w{i})
     else
-        figure(1); bode(lambda(1)*W{i}*S + lambda(2)*W{2}*T + lambda(3)*W{3}*U,tf(gamma),w{i})
+        figure; bode(lambda(1)*W{1}*S + lambda(2)*W{2}*T + lambda(3)*W{3}*U,tf(gamma),w{i})
         if lambda(1)==0
-            figure(2); bode(W{i}*S,tf(1),w{i})
+            figure; bode(W{1}*S,tf(1),w{i})
         end
         if lambda(2)==0
-            figure(3); bode(W{2}*T,tf(1),w{i})
+            figure; bode(W{2}*T,tf(1),w{i})
         end
         if lambda(3)==0
-            figure(4); bode(W{3}*U,tf(1),w{i})
+            figure; bode(W{3}*U,tf(1),w{i})
         end
     end
 end

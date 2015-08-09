@@ -19,32 +19,25 @@ s=tf('s');
 %% Model and options
 G{1}=(s+10)/((s+2)*(s+4));
 G{2}=(s+11)/((s+2)*(s+4));
+G{3}=(s+12)/((s+2.1)*(s+4));
 
-gs = [1 1; 2 0];
+gs = [1 1; 2 0; 2 2];
 np = [1 2];
 
-w=logspace(-3,3,100);
+w=logspace(-3,3,10);
 
 W{1}=2/(20*s+1)^2;
 W{2}=0.8*(1.1337*s^2+6.8857*s+9)/((s+1)*(s+10));
 W{3}=tf(0.05);
 
-% lambda_mat=[1 1 1 0;
-%             1 1 0 0;
-%             1 0 1 0;
-%             0 1 1 0;
-%             1 0 0 0;
-%             0 1 0 0;
-%             0 0 1 0;
-%             0 0 0 0];
 
-lambda_mat = [1 0 0 0; 0 1 0 0];
+lambda_mat = [1 1 1 0; 1 0 0 0; 0 1 0 0];
 g_max=1; g_min=0.5; g_tol = 0.01;
 phi = conphi('lag',[2 n],'s',1/s,'tf');
 
 
 %% Loop
-for j=1:1
+for j=1:2
     if j==1
         yalmipstr='on';
         ntheta=[];
@@ -63,7 +56,9 @@ for j=1:1
         per = conper('Hinf',W);
         [K,sol] = condes(G,phi,per,opts);
         
+        
         plot_Hinfcons(G,K,W,lambda,sol.gamma,w,gs,np)
         pause
     end     
 end
+
