@@ -62,19 +62,16 @@ end
 
 [Gf,Gdim,phi,n,phif,phifd,per,w,N,performance,Ldf,LDf,FGf,FLdf,FLDf,CovGf] = condesdata (inG,inphi,inper,options);
 
-if isTF
-    [Mf,fsf,CovMf]=tf_Mf_fsf(w,M,inphi.fs);
-end
+
 
 m=Gdim(1); no=Gdim(2); ni=Gdim(3);
 
 
-
-
-if no==1 && ni==1 && ~isTF% check stability of SISO systems
+if isTF
+    [Mf,fsf,CovMf]=tf_Mf_fsf(w,M,inphi.fs);
+elseif no==1 && ni==1
     check_Ld_stability(per,inG,phi);
 end
-
 
 
 
@@ -233,35 +230,42 @@ A=[];
 b=[];
 
 
-if ni==1 & no==1  % SISO model
+if ni==1 && no==1  % SISO model
     
     
 %--------- Compute phi*G and the quadratic criterion |F(L-Ld)|--------------  
 
 
-phiGfreq=cell(1,m);
-toto=cell(1,m);
-FphiGf=cell(1,m);
-totod=cell(1,m);
-H=zeros(ntot,ntot);
-f=zeros(ntot,1);
 
-for j=1:m
-    for u=1:n
-        toto{j}(u,:)=phif{j}(u,1,:).*Gf{j}(:,:,:);
-        phiGfreq{j}((u-1)*Ngs+1:u*Ngs,:)=kron(theta_bar(j,:)',toto{j}(u,:));
-        if ~isempty(Ldf)
-            totod{j}(u,:)=squeeze(phifd{j}(u,1,:)).*FGf{j};
-            FphiGf{j}((u-1)*Ngs+1:u*Ngs,:)=kron(theta_bar(j,:)',totod{j}(u,:));
+
+if isTF
+    % no optimization 
+    f = zeros(ntot+n-1,1);
+    H = [];
+else
+    phiGfreq=cell(1,m);
+    toto=cell(1,m);
+    FphiGf=cell(1,m);
+    totod=cell(1,m);
+    H=zeros(ntot,ntot);
+    f=zeros(ntot,1);
+    for j=1:m
+        for u=1:n
+            toto{j}(u,:)=phif{j}(u,1,:).*Gf{j}(:,:,:);
+            phiGfreq{j}((u-1)*Ngs+1:u*Ngs,:)=kron(theta_bar(j,:)',toto{j}(u,:));
+            if ~isempty(Ldf)
+                totod{j}(u,:)=squeeze(phifd{j}(u,1,:)).*FGf{j};
+                FphiGf{j}((u-1)*Ngs+1:u*Ngs,:)=kron(theta_bar(j,:)',totod{j}(u,:));
+            end
+
         end
-        
+
+        if ~isempty(Ldf)
+            H = H + real( FphiGf{j}*FphiGf{j}');
+            f = f + transpose( -real(FLdf{j}.' * FphiGf{j}') );
+        end
+
     end
-    
-    if ~isempty(Ldf)
-        H = H + real( FphiGf{j}*FphiGf{j}');
-        f = f + transpose( -real(FLdf{j}.' * FphiGf{j}') );
-    end
-    
 end
     
     
@@ -521,10 +525,8 @@ end
                     end
                 end                
 
-                if ~isTF
-                    a{j}(:,1)=real(Ldf{j})+1;
-                    a{j}(:,2)=imag(Ldf{j});
-                end
+                a{j}(:,1)=real(Ldf{j})+1;
+                a{j}(:,2)=imag(Ldf{j});
 
 
 
@@ -566,16 +568,15 @@ end
 
                     nit = nit+1;
                     if nit ~= 1
+                        if isTF
+                            break;
+                        end
                         if gamma_opt~=0
                             gamma_opt_old = gamma_opt;
                             g_min=options.gamma(1);
                             g_max=gamma_opt;
-                            if ~isTF
-                                for j=1:m, 
-                                    Ldf{j}=transpose(phiGfreq{j})*x; 
-                                end
-                            else
-                                break;
+                            for j=1:m, 
+                                Ldf{j}=transpose(phiGfreq{j})*x; 
                             end
                         else
                             break;
@@ -616,10 +617,11 @@ end
                                     for kk=1:nqm
                                         if ~isempty(ntheta)
                                             [A1 b1 HinfConstraint1]=tf_Ab_HinfCons(GCov{j}{k},MCov{j}{kk},phifreq{j},fsf{j},Wfgamma{j},ntheta,ntot,n,TFtol,lambda);
-%                                             [A1 b1 HinfConstraint1]=tf_Ab_HinfCons(GCov{j}{k},Mf{j},phifreq{j},fsf{j},Wfgamma{j},ntheta,ntot,n,TFtol,lambda);
+                                            % force y to be monic
+                                            b1=b1-A1(:,1);
+                                            A1=A1(:,2:end);
                                         else
                                             [A1 b1 HinfConstraint1]=tf_Ab_HinfCons(GCov{j}{k},MCov{j}{kk},phifreq{j},fsf{j},Wfgamma{j},ntheta,ntot,n,TFtol,lambda,rho);
-%                                             [A1 b1 HinfConstraint1]=tf_Ab_HinfCons(GCov{j}{k},Mf{j},phifreq{j},fsf{j},Wfgamma{j},ntheta,ntot,n,TFtol,lambda,rho);
                                         end
                                     end
                                 end
@@ -630,17 +632,7 @@ end
 
                         end
                         
-                        if isTF
-                            if ~isempty(ntheta)
-                                % force y to be monic
-                                b = b - A(:,1);
-                                A = A(:,2:end);
-                            end
-                            
-                            % no optimization 
-                            f = zeros(ntot+n-1,1);
-                            H = [];
-                        end
+                        
 
                         [x,optval,xflag] = solveopt(H,f,A,b,HinfConstraint,YesYalmip,rho,ops);
 
@@ -691,6 +683,7 @@ end
         if isTF
             for k=1:Ngs
                 K{k} = minreal(reduced_order(rhox(:,k+1),phi,inphi.ConType)/reduced_order(rhox(:,1),phi,inphi.ConType)/inphi.fs);
+                disp(['K{'  int2str(k) '}=']),K{k}
             end
         else
             for k=1:Ngs
