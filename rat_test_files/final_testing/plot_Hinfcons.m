@@ -8,7 +8,9 @@ if ~iscell(w)
     w2(1,:)={w};
     w=w2;
 end
-
+if length(W)<4
+    W(length(W)+1:4) = {tf(0)};
+end
 
 for i=1:length(G)
     n=1;
@@ -29,23 +31,22 @@ for i=1:length(G)
     S = feedback(1,K2*G{i});
     T = 1-S;
     U = K2*S;
-
+    V = G{i}*S;
+    
+    Sfns = {S,T,U,V};
 
     if sum(lambda)==0
-        figure; bode(W{1}*S,tf(gamma),w{i})
-        figure; bode(W{2}*T,tf(gamma),w{i})
-        figure; bode(W{3}*U,tf(gamma),w{i})
+        for k=1:4
+            figure; bode(W{k}*Sfns{k},tf(gamma),w{i})
+        end
     else
-        figure; bode(lambda(1)*W{1}*S + lambda(2)*W{2}*T + lambda(3)*W{3}*U,tf(gamma),w{i})
-        if lambda(1)==0
-            figure; bode(W{1}*S,tf(1),w{i})
+        figure; bode(lambda(1)*W{1}*S + lambda(2)*W{2}*T + lambda(3)*W{3}*U + lambda(4)*W{4}*V,tf(gamma),w{i})
+        for k=1:4
+            if lambda(k)==0
+                figure; bode(W{k}*Sfns{k},tf(1),w{i})
+            end
         end
-        if lambda(2)==0
-            figure; bode(W{2}*T,tf(1),w{i})
-        end
-        if lambda(3)==0
-            figure; bode(W{3}*U,tf(1),w{i})
-        end
+
     end
 end
             
