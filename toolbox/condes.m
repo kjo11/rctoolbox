@@ -680,7 +680,7 @@ else % if MIMO
                     end
                 end
                 
-                if no==2 && ni==2 && ~isempty(nq)
+                if no==2 && ~isempty(nq)
                     
                     for q=1:no
                         
@@ -693,7 +693,11 @@ else % if MIMO
                     for k=1:nq
                         Gphif_r1 = [Gphi{1,1};exp(i*2*pi*k/nq)/cos(pi/nq) * Gphi{1,2}];
                         
-                        Gphif_x=[Gphif_r1(rhoIndex{1,1},:);Gphif_r1(rhoIndex{2,1},:);Gphif_r1(rhoIndex{1,2},:);Gphif_r1(rhoIndex{2,2},:)];
+                        if ni==1
+                            Gphif_x=[Gphif_r1(rhoIndex{1,1},:);Gphif_r1(rhoIndex{1,2},:)];
+                        else
+                            Gphif_x=[Gphif_r1(rhoIndex{1,1},:);Gphif_r1(rhoIndex{2,1},:);Gphif_r1(rhoIndex{1,2},:);Gphif_r1(rhoIndex{2,2},:)];
+                        end
                         [Aq , bq] = Ab_construct (Gphif_x,a{j,1},d{j,1});  % right side of ax=d
                         
                         A=[A;Aq];
@@ -701,7 +705,13 @@ else % if MIMO
                         
                         Gphif_r2 = [exp(i*2*pi*k/nq)/cos(pi/nq)* Gphi{2,1}; Gphi{2,2}];
                         
-                        Gphif_x=[Gphif_r2(rhoIndex{1,1},:);Gphif_r2(rhoIndex{2,1},:);Gphif_r2(rhoIndex{1,2},:);Gphif_r2(rhoIndex{2,2},:)];
+                        if ni==1
+                            Gphif_x=[Gphif_r2(rhoIndex{1,1},:);Gphif_r2(rhoIndex{1,2},:)];
+                        else
+                            Gphif_x=[Gphif_r2(rhoIndex{1,1},:);Gphif_r2(rhoIndex{2,1},:);Gphif_r2(rhoIndex{1,2},:);Gphif_r2(rhoIndex{2,2},:)];
+                        end
+                        
+                        
                         [Aq , bq] = Ab_construct (Gphif_x,a{j,2},d{j,2});  % right side of ax=d
                         
                         A=[A;Aq];
