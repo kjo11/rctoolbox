@@ -257,14 +257,6 @@ for j=1:m
         
     end
     
-    if isTF
-        if n==1
-            phifreq{j}=kron(theta_bar(j,:)',transpose(squeeze(phif{j})));
-        else
-            phifreq{j}=kron(theta_bar(j,:)',squeeze(phif{j}));
-        end
-    end
-    
     if ~isempty(Ldf)
         H = H + real( FphiGf{j}*FphiGf{j}');
         f = f + transpose( -real(FLdf{j}.' * FphiGf{j}') );
@@ -295,37 +287,38 @@ end
 
 i=sqrt(-1);
 
-for j=1:m
+if isTF
+    GCov=cell(1,m);
+    MCov=cell(1,m);
+    phifreq=cell(1,m);
+    for j=1:m
+        [GCov{j},nqq] = tf_covariance(CovGf{j},nqq,ntot,N(j),Gf{j});
+        [MCov{j},nqm] = tf_covariance(CovMf{j},nqm,ntot,N(j),Mf{j});
+    end
     
-    if ~isempty(CovGf{j})
-        for q=1:nqq
-                x0=real(2.4474 * exp(i*2*pi*q/nqq)/cos(pi/nqq));
-                y0=imag(2.4474 * exp(i*2*pi*q/nqq)/cos(pi/nqq));
-            for p=1:ntot
-                 for k=1:N(j)
-                    Sigma(k,:,:)=sqrtm((squeeze(CovGf{j}(1,1,k,:,:))));
-                    Pxy{j}(k)=[1 i]*squeeze(Sigma(k,:,:))*[x0;y0];
-                    if isTF
-                        SigmaM(k,:,:)=sqrtm((squeeze(CovMf{j}(1,1,k,:,:))));
-                        PxyM{j}(k)=[1 i]*squeeze(SigmaM(k,:,:))*[x0;y0];
-                    end
-                end
-                phiCov{j}{q}(p,:)=phiGfreq{j}(p,:).*(1+Pxy{j}./squeeze(Gf{j})');
-            end
-            if isTF
-                GCov{j}{q} = Gf{j}(:)+Pxy{j}(:);    
-                MCov{j}{q} = Mf{j}(:)+PxyM{j}(:);
-            end
-        end
-        
+    if n==1
+        phifreq{j}=kron(theta_bar(j,:)',transpose(squeeze(phif{j})));
     else
-        phiCov{j}{1}=phiGfreq{j};
-        if isTF
-            GCov{j}{1}=Gf{j}(:);
-            Mcov{j}{1}=Mf{j}(:);
-            nqm=1;
+        phifreq{j}=kron(theta_bar(j,:)',squeeze(phif{j}));
+    end
+else
+    for j=1:m
+        if ~isempty(CovGf{j})
+            for q=1:nqq
+                    x0=real(2.4474 * exp(i*2*pi*q/nqq)/cos(pi/nqq));
+                    y0=imag(2.4474 * exp(i*2*pi*q/nqq)/cos(pi/nqq));
+                for p=1:ntot
+                     for k=1:N(j)
+                        Sigma(k,:,:)=sqrtm((squeeze(CovGf{j}(1,1,k,:,:))));
+                        Pxy{j}(k)=[1 i]*squeeze(Sigma(k,:,:))*[x0;y0];
+                    end
+                    phiCov{j}{q}(p,:)=phiGfreq{j}(p,:).*(1+Pxy{j}./squeeze(Gf{j})');
+                end
+            end
+        else
+            phiCov{j}{1}=phiGfreq{j};
+            nqq=1;
         end
-        nqq=1;
     end
 end
 
@@ -2352,4 +2345,27 @@ for j=1:length(w)
         CovMf{j}=[];
     end
 end
+end
+
+
+function [GCov,nqq] = tf_covariance(CovGf,nqq,ntot,N,Gf)
+i=sqrt(-1);
+if isempty(CovGf)
+    GCov{1}=Gf(:);
+    nqq=1;
+else
+    GCov=cell(1,nqq);
+    for q=1:nqq
+        x0=real(2.4474 * exp(i*2*pi*q/nqq)/cos(pi/nqq));
+        y0=imag(2.4474 * exp(i*2*pi*q/nqq)/cos(pi/nqq));
+        for p=1:ntot
+             for k=1:N
+                Sigma(k,:,:)=sqrtm((squeeze(CovGf(1,1,k,:,:))));
+                Pxy(k)=[1 i]*squeeze(Sigma(k,:,:))*[x0;y0];
+             end
+        end
+        GCov{q} = Gf(:)+Pxy(:);    
+    end
+end
+
 end
