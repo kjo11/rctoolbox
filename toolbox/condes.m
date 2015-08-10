@@ -55,11 +55,21 @@ end
 
 isTF = tf_sanity_check(inG,inphi,inper);
 
-if isTF
-    [inG,M] = tf_getMN(inG);
+if iscell(inphi)
+    isStateSpace = strncmp(inphi{1,1}.ConStruc,'ss',2);
+else
+    isStateSpace = strncmp(inphi.ConStruc,'ss',2);
+    if isStateSpace && inphi.par.flag
+        inphi = ss_add_tau(inphi,inG);
+    end
 end
 
-
+if isTF
+    [inG,M] = tf_getMN(inG);
+elseif isStateSpace
+    [A_ss,B_ss,C_ss,nss,inphi] = ss_data(inphi,inG);
+end
+    
 [Gf,Gdim,phi,n,phif,phifd,per,w,N,performance,Ldf,LDf,FGf,FLdf,FLDf,CovGf] = condesdata (inG,inphi,inper,options);
 
 
@@ -72,7 +82,6 @@ if isTF
 elseif no==1 && ni==1
     check_Ld_stability(per,inG,phi);
 end
-
 
 
 
@@ -116,9 +125,17 @@ if (strcmp(options.yalmip,'on') || isempty(options.nq)|| (no > 2 && strcmp(optio
         
     if isTF
         rho = sdpvar(ntot+n-1,1);
+    elseif isStateSpace
+        if isempty(B_ss)
+            rho_ss = sdpvar(nss*Ngs*no+Ngs*no*ni,1);
+        else
+            rho_ss = sdpvar(nss*Ngs*ni+Ngs*no*ni,1);
+        end
+        rho = ss_reshape_x(rho_ss,B_ss,Ngs,nss,no,ni);
     else
         rho=sdpvar(ntot,1);
     end
+        
     YesYalmip=1;
                    
                 % Here we put the controller parameters of q-th column of
@@ -145,6 +162,9 @@ else  % Use optimization toolbox
     
     YesYalmip=0;
     rho=zeros(ntot,1);
+    if isStateSpace
+        rho_ss = zeros(nss*Ngs*no+Ngs*no*ni,1);
+    end
     
     if isTF
         ops = optimset ('Largescale', 'on','MaxIter',100000,'TolFun',1e-8);
@@ -680,20 +700,29 @@ end
         fprintf('\n');
         disp('K{1}+theta_1 K{2}+theta_2 K{3} + ... +theta_1^2 k{n}+theta_2^2k{n+1}+...')
         fprintf('\n');
-        if isTF
-            for k=1:Ngs
+        for k=1:Ngs
+            if isTF
                 K{k} = minreal(reduced_order(rhox(:,k+1),phi,inphi.ConType)/reduced_order(rhox(:,1),phi,inphi.ConType)/inphi.fs);
-                disp(['K{'  int2str(k) '}=']),K{k}
-            end
-        else
-            for k=1:Ngs
+            elseif isStateSpace
+                if isempty(B_ss)
+                    K{k} = ss(A_ss,rhox(1:end-1,k),C_ss,rhox(end,k),phi.Ts);
+                else
+                    K{k} = ss(A_ss,B_ss,rhox(1:end-1,k)',rhox(end,k),phi.Ts);
+                end
+            else
                 K{k} = reduced_order(rhox(:,k),phi,inphi.ConType);
-                disp(['K{'  int2str(k) '}=']),K{k}
             end
+            disp(['K{'  int2str(k) '}=']),K{k}
         end
     else
         if isTF
             K = minreal(reduced_order(rhox(:,2),phi,inphi.ConType)/reduced_order(rhox(:,1),phi,inphi.ConType)/inphi.fs);
+        elseif isStateSpace
+            if isempty(B_ss)
+                K = ss(A_ss,rhox(1:end-1),C_ss,rhox(end),phi.Ts);
+            else
+                K = ss(A_ss,B_ss,rhox(1:end-1)',rhox(end),phi.Ts);
+            end
         else
             K = reduced_order(rhox,phi,inphi.ConType);
         end
@@ -752,8 +781,12 @@ else % if MIMO
         f=f+f2;
     end
     
+
+    if isStateSpace
+        [H,f] = ss_reshape_Hf(H,f,B_ss,Ngs,ntot,no,ni);
+    end
     
-    StabCons=[];    
+    StabCons = [];
     
     if strcmp(options.Gbands,'on')
         
@@ -841,6 +874,7 @@ else % if MIMO
         
     end
     
+    
     switch performance
         
         
@@ -922,8 +956,13 @@ else % if MIMO
                 A= [A ; A_b];
                 b= [b ; b_b];
             end           
-                                    
-            [x,optval,xflag]=solveopt(H,f,A,b,StabCons,YesYalmip,rho,ops);
+            if isStateSpace 
+                A = ss_reshape_A(A,B_ss,Ngs,ntot,no,ni);
+                rho2 = rho_ss;
+            else
+                rho2 = rho;
+            end
+            [x,optval,xflag]=solveopt(H,f,A,b,StabCons,YesYalmip,rho2,ops);
                         
             
         case 'LS'
@@ -966,7 +1005,13 @@ else % if MIMO
                 
             end
             
-            [x,optval,xflag]=solveopt(H,f,A,b,StabCons,YesYalmip,rho,ops);
+            if isStateSpace 
+                A = ss_reshape_A(A,B_ss,Ngs,ntot,no,ni);
+                rho2 = rho_ss;
+            else
+                rho2 = rho;
+            end
+            [x,optval,xflag]=solveopt(H,f,A,b,StabCons,YesYalmip,rho2,ops);
     
 
           
@@ -1020,8 +1065,13 @@ else % if MIMO
             
             if isempty(gamma),
                 Convcons = [HinfConstraint, StabCons ];
-
-                [x,optval,xflag]=solveopt(H,f,A,b,Convcons,YesYalmip,rho,ops);
+                if isStateSpace 
+                    A = ss_reshape_A(A,B_ss,Ngs,ntot,no,ni);
+                    rho2 = rho_ss;
+                else
+                    rho2 = rho;
+                end
+                [x,optval,xflag]=solveopt(H,f,A,b,Convcons,YesYalmip,rho2,ops);
             else
                % gamma iteration using bisection algorithm
                
@@ -1044,8 +1094,13 @@ else % if MIMO
                             g_min=options.gamma(1);
                             g_max=gamma_opt;
                             for j=1:m,
-                               for q=1:no                              
-                                   Ldf_mat{j}(:,q)=transpose(Gphif{j,q})*x;
+                               for q=1:no
+                                   if isStateSpace 
+                                       xnew = ss_reshape_x(x,B_ss,Ngs,nss,no,ni);
+                                   else
+                                       xnew = x;
+                                   end
+                                   Ldf_mat{j}(:,q)=transpose(Gphif{j,q})*xnew;
                                end
                            end
                         else
@@ -1087,7 +1142,13 @@ else % if MIMO
                        end
                        Ag=[A;Ag];
                        bg=[b;bg];
-                       [x,optval,xflag] = solveopt(H,f,Ag,bg,[],YesYalmip,rho,ops);
+                       if isStateSpace 
+                            Ag = ss_reshape_A(Ag,B_ss,Ngs,ntot,no,ni);
+                            rho2 = rho_ss;
+                       else
+                           rho2 = rho;
+                        end
+                       [x,optval,xflag] = solveopt(H,f,Ag,bg,[],YesYalmip,rho2,ops);
 
                        if xflag==1,
 
@@ -1127,15 +1188,22 @@ else % if MIMO
     %----------------------------------------------------------------------
             
     K1=cell(1,Ngs);
-    for p=1:ni
-        for q=1:no
-            
-            nn=Ngs*(sum(sum(n(1:p-1,:)))+sum(n(p,1:q-1)));
-            for k=1:Ngs
-                K1{k}(p,q) = minreal(transpose(x(nn+k:Ngs:nn+Ngs*n(p,q))) * phi{p,q});
+    
+    if isStateSpace
+        K1 = ss_compute_controller(x,A_ss,B_ss,C_ss,nss,Ngs,no,ni,phi{1,1}.Ts);
+    else
+
+        for p=1:ni
+            for q=1:no
+
+                nn=Ngs*(sum(sum(n(1:p-1,:)))+sum(n(p,1:q-1)));
+                for k=1:Ngs
+                    K1{k}(p,q) = minreal(transpose(x(nn+k:Ngs:nn+Ngs*n(p,q))) * phi{p,q});
+                end
             end
         end
     end
+    
     if Ngs==1,
         K=K1{1};
     else
@@ -1158,6 +1226,7 @@ sol_info.gamma=gamma;
 sol_info.xflag=xflag;
 
 end
+
 
 %=============================================================================================
 %=============================================================================================
@@ -1481,6 +1550,9 @@ if no==1 & ni==1  % SISO system
             inphi.phi(2)=tf(num,den);
         end
     end
+    
+    
+    
       
     
     phi=inphi.phi;
@@ -2037,6 +2109,12 @@ end
 end
 
 
+
+
+% ------------------------------------------------------------------------
+%                           TF FUNCTIONS
+% ------------------------------------------------------------------------
+
 function isTF = tf_sanity_check(inG,inphi,inper)
 % Function to test for errors related to TF ConStruc
 if iscell(inG)
@@ -2321,10 +2399,7 @@ else
 
     
 end
-        
-
 end
-
 
 
 function [Mf,fsf,CovMf]=tf_Mf_fsf(w,M,fs)
@@ -2362,3 +2437,281 @@ else
 end
 
 end
+
+
+
+
+
+
+% ------------------------------------------------------------------------
+%                       STATE SPACE FUNCTIONS
+% ------------------------------------------------------------------------
+
+function phi = ss_add_tau(inphi,inG)
+% Function to compute the time constant for the derivative part of a PID/PD
+% controller and create the correct phi and A matrix for state space
+C = inphi.par.C;
+B = inphi.par.B;
+if ~iscell(inG)
+    G = {inG};
+else
+    G = inG;
+end
+wmax = 0;
+for i=1:length(G)
+    [~,~,w] = bode(G{i});
+    wmax = max([wmax; w(:)]);
+end
+
+tau = 1.2/wmax; % default value for tau
+
+if strncmpi(inphi.ConType,'pid',3)
+    a = poly([0 -1/tau]);
+    a = a(2:end);
+    ns = 2;
+    A = full(spdiags(ones(2,1),1,[zeros(1,2); -flipud(a(:))']));
+else
+    A = -1/tau;
+    ns = 1;
+end
+
+var = zpk('s');
+
+if ~isempty(C) % If C matrix given
+    if size(C,1) > 1 % If multiple outputs given
+        phi = cell(size(C,1),1);
+        for i=1:size(C,1)
+            phi{i,1}.phi = minreal(transpose(C(i,:)/(var*eye(ns)-A)));
+        end
+    else
+        phi.phi = minreal(transpose(C/(var*eye(ns)-A)));
+    end
+else % If B matrix given
+    A = A';
+    if size(B,2) > 1 % if multiple inputs given
+        phi = cell(1,size(B,2));
+        for i=1:size(B,2)
+            phi{1,i}.phi = minreal((var*eye(ns)-A)\B(:,i));
+        end
+    else
+        phi.phi = minreal((var*eye(ns)-A)\B);
+    end
+end
+
+if iscell(phi)
+    phi{1,1}.par.A = A;
+    phi{1,1}.par.B = B;
+    phi{1,1}.par.C = C;
+    for i=1:length(phi)
+        phi{i}.phi(end+1) = zpk([],[],1);
+        phi{i}.ConStruc = 'ss';
+        phi{i}.ConType = 'ss';
+    end
+else
+    phi.par.A = A;
+    phi.par.B = B;
+    phi.par.C = C;
+    phi.phi(end+1) = zpk([],[],1);
+    phi.ConStruc = 'ss';
+    phi.ConType = 'ss';
+end
+
+end
+
+
+function [A,B,C,nss,inphi] = ss_data(inphi,inG)
+% Function to get A, B, C matrices for state space and to make inphi the
+% right size for the given model
+
+if ~iscell(inG)
+    G{1}=inG;
+else
+    G=inG;
+end
+
+[no, ni]=size(G{1});
+
+if iscell(inphi)
+    A = inphi{1,1}.par.A;
+    C = inphi{1,1}.par.C;
+    B = inphi{1,1}.par.B;
+else
+    A = inphi.par.A;
+    C = inphi.par.C;
+    B = inphi.par.B;
+end
+
+nss = length(A);
+
+if isempty(B)
+    if size(C,1)~=ni
+        if size(C,1)==1
+            C = repmat(C,ni,1); % repeat same rows for C
+        else
+            error('C must have the same number of rows as inputs in G')
+        end
+    end
+
+    if iscell(inphi)
+        inphi = repmat(inphi,1,no); % repeat same phi for each output
+    end
+else
+    if size(B,2)~=no
+        if size(B,2)==1
+            B = repmat(B,1,no); % repeat same columns for B
+        else
+            error('B must have the same number of columns as outputs in G')
+        end
+    end
+    
+    if iscell(inphi)
+        inphi = repmat(inphi,ni,1); % repeat same phi for each input
+    end
+end
+
+end
+
+function [Aout] = ss_reshape_A(A,B_ss,Ngs,ntot,no,ni)
+% Reshape A matrix for MIMO state space
+nl = ntot/no/ni; % number of total parameters per input/output
+nbc = nl - Ngs; % number of B/C parameters per input/output
+
+alpha = size(A,1);
+
+if isempty(B_ss)
+    ndim = 4;
+    n = no;
+else
+    ndim = 3;
+    n = ni;
+end
+
+% reshape A
+A2 = reshape(A,alpha,nl,no,ni);
+
+Ab = A2(:,1:nbc,:,:);
+Ab = sum(Ab,ndim);
+Ab = reshape(Ab,alpha,nbc*n);
+
+Ad = A2(:,nbc+1:end,:,:);
+Ad = reshape(Ad,alpha,Ngs*no*ni);
+
+Aout = [Ab, Ad];
+end
+
+function [Hout,fout] = ss_reshape_Hf(H,f,B_ss,Ngs,ntot,no,ni)
+% function to reshape H, f matrices for MIMO state space
+
+nl = ntot/no/ni; % number of total parameters per input/output
+nbc = nl - Ngs; % number of B/C parameters per input/output
+
+
+if isempty(B_ss)
+    ndim = 4;
+    n = no;
+else
+    ndim = 3;
+    n = ni;
+end
+
+% reshape H
+H2 = reshape(H,ntot,nl,no,ni);
+Hb = H2(:,1:nbc,:,:);
+Hd = H2(:,nbc+1:end,:,:);
+
+Hd = reshape(Hd,ntot,Ngs*no*ni)';
+Hd = reshape(Hd,Ngs*no*ni,nl,no,ni);
+
+Hdd = Hd(:,nbc+1:end,:,:);
+Hdd = reshape(Hdd,Ngs*no*ni,Ngs*no*ni)';
+
+
+Hb = sum(Hb,ndim);
+Hb = reshape(Hb,ntot,nbc*n)';
+Hb = reshape(Hb,nbc*n,nl,no,ni);
+
+Hbb = Hb(:,1:nbc,:,:);
+Hbb = sum(Hbb,ndim);
+Hbb = reshape(Hbb,nbc*n,nbc*n)';
+
+Hbd = Hb(:,nbc+1:end,:,:);
+Hbd = reshape(Hbd,nbc*n,Ngs*no*ni)';
+
+Hdb = Hd(:,1:nbc,:,:);
+Hdb = sum(Hdb,ndim);
+Hdb = reshape(Hdb,Ngs*no*ni,nbc*n)';
+
+Hout = [Hbb, Hdb; Hbd, Hdd];
+
+Hout = (Hout + Hout')/2; % to remove numerical errors
+
+
+% reshape f
+f2 = reshape(f,1,nl,no,ni);
+
+fb = f2(1,1:nbc,:,:);
+fb = sum(fb,ndim);
+fb = reshape(fb,nbc*n,1);
+
+fd = f2(1,nbc+1:end,:,:);
+fd = reshape(fd,Ngs*no*ni,1);
+
+fout = [fb; fd];
+
+end
+
+
+function xnew = ss_reshape_x(x,B_ss,Ngs,nss,no,ni)
+% Reshape x vector from state space to original configuration
+xnew = [];
+
+
+if isempty(B_ss)
+    Bvec = x(1:nss*no*Ngs);
+    Dvec = x(nss*no*Ngs+1:end);
+    B = reshape(Bvec(:),nss*Ngs,no);
+    D = reshape(Dvec(:),no*Ngs,ni)';
+    
+    for i=1:ni
+        for j=1:no
+            xnew = [xnew; B(:,j); D(i,j)];
+        end
+    end
+else
+    Cvec = x(1:nss*ni*Ngs);
+    Dvec = x(nss*ni*Ngs+1:end);
+    C = reshape(Cvec(:),nss*Ngs,ni)';
+    D = reshape(Dvec(:),no*Ngs,ni)';
+    
+    for i=1:ni
+        for j=1:no
+            xnew = [xnew; C(i,:)'; D(i,j)];
+        end
+    end
+end
+
+end
+
+
+function K = ss_compute_controller(x,A_ss,B_ss,C_ss,nss,Ngs,no,ni,Ts)
+% Compute output controller for state space
+
+K=cell(1,Ngs);
+    
+for k=1:Ngs
+    if isempty(B_ss)
+        Bvec = x(1:nss*no*Ngs);
+        Dvec = x(nss*no*Ngs+1:end);
+        B_ss = reshape(Bvec(k:Ngs:end),nss,no);
+        D_ss = reshape(Dvec(k:Ngs:end),no,ni)';
+    else
+        Cvec = x(1:nss*ni*Ngs);
+        Dvec = x(nss*ni*Ngs+1:end);
+        C_ss = reshape(Cvec(k:Ngs:end),nss,ni)';
+        D_ss = reshape(Dvec(k:Ngs:end),no,ni)';
+    end
+
+    K{k} = ss(A_ss,B_ss,C_ss,D_ss,Ts);
+end
+end
+        
