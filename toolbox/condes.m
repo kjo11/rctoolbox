@@ -2076,10 +2076,21 @@ if ~isempty(ntheta)
         end
         
         for q1=1:nth(1)
+            ex1 = lambda(1)*exp(1i*2*pi*q1/ntheta)/cos(pi/ntheta);
             for q2=1:nth(2)
+                ex2 = lambda(2)*exp(1i*2*pi*q2/ntheta)/cos(pi/ntheta);
                 for q3=1:nth(3)
+                    ex3 = lambda(3)*exp(1i*2*pi*q3/ntheta)/cos(pi/ntheta);
                     for q4=1:nth(4)
-                        
+                        ex4 = lambda(4)*exp(1i*2*pi*q4/ntheta)/cos(pi/ntheta);
+                        for j=1:ntot
+                            phi = transpose(phif(j,:));
+                            phiGq(:,j) = phi.*(abs(1+Ldf) .* (ex1*Wfgamma(:,1).*Hf + ex2*Wfgamma(:,2).*Pf + ex3*Wfgamma(:,3) + ex4*Wfgamma(:,4).*Pf.*Hf) - (1+conj(Ldf)).*(Hf+Pf));
+                        end
+                        A1 = real(phiGq);
+                        b1 = real(1+conj(Ldf) - ex1*Wfgamma(:,1) - ex4*Wfgamma(:,4).*Pf);
+                        A = [A; A1];
+                        b = [b; b1];
                     end
                 end
             end
