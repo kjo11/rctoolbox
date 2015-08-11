@@ -255,25 +255,40 @@ end
 
 i=sqrt(-1);
 
-for j=1:m
+
+if isSP
+    PCov=cell(1,m);
+    phifreq=cell(1,m);
+    for j=1:m
+        [PCov{j},nqq] = sp_covariance(CovGf{j},nqq,ntot,N(j),Gf{j});
+    end
     
-    if ~isempty(CovGf{j})
-        for q=1:nqq
-                x0=real(2.4474 * exp(i*2*pi*q/nqq)/cos(pi/nqq));
-                y0=imag(2.4474 * exp(i*2*pi*q/nqq)/cos(pi/nqq));
-            for p=1:ntot
-                 for k=1:N(j)
-                    Sigma(k,:,:)=sqrtm((squeeze(CovGf{j}(1,1,k,:,:))));
-                    Pxy{j}(k)=[1 i]*squeeze(Sigma(k,:,:))*[x0;y0];
-                end
-                phiCov{j}{q}(p,:)=phiGfreq{j}(p,:).*(1+Pxy{j}./squeeze(Gf{j})');
-            end
-            
-        end
-        
+    if n==1
+        phifreq{j}=kron(theta_bar(j,:)',transpose(squeeze(phif{j})));
     else
-        phiCov{j}{1}=phiGfreq{j};
-        nqq=1;
+        phifreq{j}=kron(theta_bar(j,:)',squeeze(phif{j}));
+    end
+else
+    for j=1:m
+
+        if ~isempty(CovGf{j})
+            for q=1:nqq
+                    x0=real(2.4474 * exp(i*2*pi*q/nqq)/cos(pi/nqq));
+                    y0=imag(2.4474 * exp(i*2*pi*q/nqq)/cos(pi/nqq));
+                for p=1:ntot
+                     for k=1:N(j)
+                        Sigma(k,:,:)=sqrtm((squeeze(CovGf{j}(1,1,k,:,:))));
+                        Pxy{j}(k)=[1 i]*squeeze(Sigma(k,:,:))*[x0;y0];
+                    end
+                    phiCov{j}{q}(p,:)=phiGfreq{j}(p,:).*(1+Pxy{j}./squeeze(Gf{j})');
+                end
+
+            end
+
+        else
+            phiCov{j}{1}=phiGfreq{j};
+            nqq=1;
+        end
     end
 end
 
@@ -2006,3 +2021,34 @@ for i=1:length(inG)
 end
 
 end
+
+
+
+
+
+
+function [GCov,nqq] = sp_covariance(CovGf,nqq,ntot,N,Gf)
+i=sqrt(-1);
+if isempty(CovGf)
+    GCov{1}=Gf(:);
+    nqq=1;
+else
+    GCov=cell(1,nqq);
+    for q=1:nqq
+        x0=real(2.4474 * exp(i*2*pi*q/nqq)/cos(pi/nqq));
+        y0=imag(2.4474 * exp(i*2*pi*q/nqq)/cos(pi/nqq));
+        for p=1:ntot
+             for k=1:N
+                Sigma(k,:,:)=sqrtm((squeeze(CovGf(1,1,k,:,:))));
+                Pxy(k)=[1 i]*squeeze(Sigma(k,:,:))*[x0;y0];
+             end
+        end
+        GCov{q} = Gf(:) + Pxy(:);
+
+    end
+end
+        
+
+end
+        
+        
