@@ -1,6 +1,6 @@
 % Test 1: Errors with TF
 
-addpath('../../toolbox')
+addpath('../toolbox')
 s = tf('s');
 
 %% rational with loopshaping -- error
@@ -24,8 +24,8 @@ K = condes(G,phi,per)
 
 %% rational with Hinf -- no error
 phi = conphi('gener',[0.2 6],'s',1/s,'tf');
-
-per = conper('Hinf',[2 45 2]);
+W{1}=tf(0.01);
+per = conper('Hinf',W);
 
 G = 1/(s+2);
 
@@ -50,22 +50,18 @@ G = 1/(s+2);
 K = condes(G,phi,per)
 
 %% phi and per as cells
-phi = conphi('gener',[0.2 6],'s',1/s,'lp');
+clear phi
+phi{1,1} = conphi('gener',[0.2 6],'s',1/s,'lp');
+phi{1,2} = phi{1,1};
 
-per = {conper('Hinf',[2 45 2],5/s);};
+per{1} = conper('Hinf',[2 45 2],5/s);
+per{2} = per{1};
 
-G = [1/(s+2);1];
-
-K = condes(G,{phi},{per})
-
-
-%% phi and per as cells
-phi = conphi('gener',[0.2 6],'s',1/s,'lp');
-
-per = {conper('Hinf',[2 45 2],5/s);};
 
 G = [1/(s+2);1];
 
-K = condes(G,{phi},per)
+K = condes(G,phi,per)
+
+
 
 

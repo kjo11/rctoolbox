@@ -1,4 +1,4 @@
-% Test 8
+% Test 3
 % Loop -- stable
 
 addpath('../toolbox')
@@ -57,5 +57,6 @@ for j=1:2
         [K,sol] = condes(G,phi,per,opts);
         
         plot_Hinfcons(G,K,W,lambda,sol.gamma,w)
+        pause
     end     
 end

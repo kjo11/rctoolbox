@@ -1,6 +1,8 @@
 % Test 3
 % Reproduce results from IFAC2014_Ex3
 
+clear all
+
 s=tf('s');
 G(1,1)=2/(s-2);%nominal system
 Pnom=G;
@@ -56,3 +58,7 @@ opts = condesopt('ntheta',ntheta,'w',w,'gamma',[g_min,g_max,g_tol]);
 phi = conphi('lag',[xi n],'s',[],'tf');
 per = conper('Hinf',W);
 [K,sol] = condes(inG,phi,per,opts);
+%%
+plot_Hinfcons(G,K,W,[0 0 0 0],sol.gamma,w)
+Ktb=K; soltb=sol;
+save('test2.mat','Ktb','soltb')

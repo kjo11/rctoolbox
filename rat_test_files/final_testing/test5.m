@@ -1,4 +1,4 @@
-% Test 10
+% Test 5
 % Loop -- FRD
 
 addpath('../toolbox')
@@ -10,7 +10,7 @@ clear W G phi per w
 %% Constants
 nq=20;
 realtol=10e-8;
-
+Ts=0.04;
 n=4;% order
 xi=0;% Pole
 
@@ -53,5 +53,6 @@ for j=1:2
         [K,sol] = condes(G,phi,per,opts);
         
         plot_Hinfcons(G,K,W,lambda,sol.gamma,w)
+        pause
     end     
 end

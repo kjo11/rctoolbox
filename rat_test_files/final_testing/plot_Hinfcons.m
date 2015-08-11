@@ -37,12 +37,14 @@ for i=1:length(G)
 
     if sum(lambda)==0
         for k=1:4
+            if sum(W{k}.num{1}~=0)
             figure; bode(W{k}*Sfns{k},tf(gamma),w{i})
+            end
         end
     else
         figure; bode(lambda(1)*W{1}*S + lambda(2)*W{2}*T + lambda(3)*W{3}*U + lambda(4)*W{4}*V,tf(gamma),w{i})
         for k=1:4
-            if lambda(k)==0
+            if lambda(k)==0 && sum(W{k}.num{1}~=0)
                 figure; bode(W{k}*Sfns{k},tf(1),w{i})
             end
         end
