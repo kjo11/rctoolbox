@@ -38,11 +38,9 @@ function options = condesopt (varargin)
 %               gamma is defined as an upper bound for all weighted sensitivity functions 
 %               and will be minimized. For multimodel case the
 %               maximum of gamma{i} is minimized for all models.'gamma' is a 
-%               vector containing [g_min, g_max, tol, n_it] where g_min and g_max 
-%               are the minimum and maximum value of gamma, tol is a small positive
-%               number that indicates the tolerance of optimal gamma and
-%               n_it is the number of times the bisection algorithm should
-%               be performed with an updated Ld.
+%               vector containing [g_min, g_max, tol] where g_min and g_max 
+%               are the minimum and maximum value of gamma and tol is a small positive
+%               number that indicates the tolerance of optimal gamma.
 % 
 %   'np':       This option is used if a gain-scheduled controller should
 %               be designed. 'np' is a vector that indicates the degree of 
@@ -56,6 +54,19 @@ function options = condesopt (varargin)
 %               of scheduling parameters and m the number of operating points.
 %               The i-th row of 'gs' contains the values of n scheduling
 %               parameters that corresponds to the i-th model G{i}.
+%
+%   'ntheta':   This option is used for controllers with TF (transfer
+%               function) structure. It is an integer greater than 2 
+%               (default: 8) that determines the number of vertices used
+%               to approximate the circle that determines the performance
+%               constraints in the Nyquist diagram. If it is empty, the
+%               the circle will not be approximated and a convex constraint
+%               will be defined (YALMIP should therefore be used).
+%
+%   'TFtol':    This option is used for controllers with TF (transfer
+%               function) structure. It should be a small, positive number.
+%               The linear constraints are of the form Ax <= 0 and are 
+%               replaced by Ax <= TFtol. Default: 1e-7.
 %
 %   'Gbands':   This option is used only for MIMO controller design. It
 %               indicates whether the Gershgorin bands should be used for 
@@ -94,10 +105,12 @@ if (nargin == 0) && (nargout == 0)
     fprintf('                 w: []         (A cell object. w{i} is a vector of frequecy points of model G{i}) \n');
     fprintf('                 F: []         (A weighting filter for L-L_d) \n');
     fprintf('                nq: 8          (Number of vertices of a polygon that approximates the uncertainty circles) \n');      
-    fprintf('             gamma: []         (a vector containing [g_min, g_max, tol, n_it] for bisection algorith in H infinity control) \n');
+    fprintf('             gamma: []         (a vector containing [g_min, g_max, tol] for bisection algorith in H infinity control) \n');
     fprintf('            lambda: [0 0 0 0]  ([1 1 0 0] means that the infinity norm of |W1S|+|W2T|  will be minimized in H infinity control) \n');
     fprintf('                np: []         (degree of polynomials describing the gain-scheduled controller parameters)\n');
     fprintf('                gs: []         (A vector (or matrix for more than one scheduling parameter) of the scheduling parameter values) \n');
+    fprintf('            ntheta: 8          (Number of vertices of a polygon that approximates the performance constraints for controllers with TF structure\n');
+    fprintf('             TFtol: 1e-7       (Tolerance for performance constraints for controllers with TF structure)\n');
 %    fprintf('              beta: []         (the angle of line d_2 with real axis in degrees) \n');
     fprintf('            Gbands: on         (MIMO stablity conditions using Gershgorin bands on or off) \n');
     fprintf('            yalmip: off        (a string to choose between optimization toolbox of matlab or YALMIP) \n');
@@ -114,6 +127,8 @@ options.gamma=[];
 options.lambda=[0 0 0 0];
 options.np=[];
 options.gs=[];
+options.ntheta = 8;
+options.TFtol = 1e-7;
 options.Gbands='on'; % means taking into account Gershgorin's stablity conditions for MIMO systems
 options.beta=[]; %degree
 options.yalmip='off';
@@ -122,7 +137,7 @@ options.solveroptions=[];
 
 
 
-allfields = {'w','Gbands','beta','np','gs','nq','gamma','lambda','yalmip','F'};
+allfields = {'w','Gbands','beta','np','gs','nq','ntheta','TFtol','gamma','lambda','yalmip','F'};
 
 if mod(nargin,2) ~= 0
     
