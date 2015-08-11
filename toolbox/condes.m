@@ -64,6 +64,9 @@ if isSP
     for j=1:length(Gf)
         Hf{j} = freqresp(H,w{j});
         Pf{j} = freqresp(P{j},w{j});
+        if strcmpn(class(P{j}),'id') % compute covariance of G since it is lost when we took G = G + H
+            [~,~,CovGf{j}] = freqresp(P{j},w{j});
+        end
     end
 end
 
