@@ -373,12 +373,16 @@ end
                 
                 Ku=per{1}.par(4);
                 wh=per{1}.par(5);
-                for j=1:m
-                    
-                    [A_b b_b] = Ab_for_bounded_K (phif{j}, w{j}, Ku, wh, theta_bar(j,:));
-                    
-                    A = [A ; A_b];
-                    b = [b ; b_b];
+                if isSP
+                    disp('GPhC constraints not implement for Smith predictor yet')
+                else
+                    for j=1:m
+
+                        [A_b b_b] = Ab_for_bounded_K (phif{j}, w{j}, Ku, wh, theta_bar(j,:));
+
+                        A = [A ; A_b];
+                        b = [b ; b_b];
+                    end
                 end
             end
             
@@ -434,6 +438,10 @@ end
             Mm=zeros(1,m);
             a=cell(1,m); d=cell(1,m);        
             
+            if isSP
+                error('LS constraints for Smith predictor structure not yet implemented')
+            end
+            
             for j=1:m
                 
                 Mm(j)=per{j}.par(1);
@@ -486,8 +494,10 @@ end
                     else
                         Wf{j}(:,k)=freqresp(W{j}{k},w{j});
                     end
-                    if k==3, Wf{j}(:,3)=Wf{j}(:,3)./squeeze(Gf{j}); end
-                    if k==4, Wf{j}(:,4)=Wf{j}(:,4).*squeeze(Gf{j}); end
+                    if ~isSP
+                        if k==3, Wf{j}(:,3)=Wf{j}(:,3)./squeeze(Gf{j}); end
+                        if k==4, Wf{j}(:,4)=Wf{j}(:,4).*squeeze(Gf{j}); end
+                    end
                 end                
                                 
                 
@@ -499,10 +509,18 @@ end
                 
                 if isempty(gamma),
                     for k=1:nqq
-                        if ~isempty(nq)
-                            [A1 b1 HinfConstraint1]=Ab_HinfCons(phiCov{j}{k},Wf{j},Ldf{j},nq,lambda);
+                        if isSP
+                            if ~isempty(ntheta)
+                                [A1 b1 HinfConstraint1]=sp_HinfCons(PCov{j}{k},Hf{j},phifreq{j},Ldf{j},Wf{j},ntheta,ntot,realtol,lambda);
+                            else
+                                [A1 b1 HinfConstraint1]=sp_HinfCons(PCov{j}{k},Hf{j},phifreq{j},Ldf{j},Wf{j},ntheta,ntot,realtol,lambda);
+                            end
                         else
-                            [A1 b1 HinfConstraint1]=Ab_HinfCons(phiCov{j}{k},Wf{j},Ldf{j},nq,lambda,rho);
+                            if ~isempty(nq)
+                                [A1 b1 HinfConstraint1]=Ab_HinfCons(phiCov{j}{k},Wf{j},Ldf{j},nq,lambda);
+                            else
+                                [A1 b1 HinfConstraint1]=Ab_HinfCons(phiCov{j}{k},Wf{j},Ldf{j},nq,lambda,rho);
+                            end
                         end
                         A=[A ; A1];
                         b=[b ; b1];
