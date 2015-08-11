@@ -62,9 +62,9 @@ if isSP
     Hf=cell(1,m);
     Pf=cell(1,m);
     for j=1:length(Gf)
-        Hf{j} = freqresp(H,w{j});
-        Pf{j} = freqresp(P{j},w{j});
-        if strcmpn(class(P{j}),'id') % compute covariance of G since it is lost when we took G = G + H
+        Hf{j} = squeeze(freqresp(H,w{j}));
+        Pf{j} = squeeze(freqresp(P{j},w{j}));
+        if strncmp(class(P{j}),'id',2) % compute covariance of G since it is lost when we took G = G + H
             [~,~,CovGf{j}] = freqresp(P{j},w{j});
         end
     end
@@ -196,6 +196,18 @@ if ~isempty(nq)
     end
 end
 
+
+ntheta=options.ntheta;
+if ~isempty(ntheta)
+    if ntheta < 3
+        error('ntheta should be an integer greater than 3');
+    end
+end
+
+realtol = options.TFtol;
+if realtol < 0
+    error('TFtol should be a small, positive number');
+end
 %--------------------------------------------------------------------------
 
 HinfConstraint=[]; 
@@ -513,7 +525,7 @@ end
                             if ~isempty(ntheta)
                                 [A1 b1 HinfConstraint1]=sp_HinfCons(PCov{j}{k},Hf{j},phifreq{j},Ldf{j},Wf{j},ntheta,ntot,realtol,lambda);
                             else
-                                [A1 b1 HinfConstraint1]=sp_HinfCons(PCov{j}{k},Hf{j},phifreq{j},Ldf{j},Wf{j},ntheta,ntot,realtol,lambda);
+                                [A1 b1 HinfConstraint1]=sp_HinfCons(PCov{j}{k},Hf{j},phifreq{j},Ldf{j},Wf{j},ntheta,ntot,realtol,lambda,rho);
                             end
                         else
                             if ~isempty(nq)
@@ -586,10 +598,18 @@ end
 
 
                             for k=1:nqq
-                                if ~isempty(nq)
-                                    [A1 b1 HinfConstraint1]=Ab_HinfCons(phiCov{j}{k},Wfgamma{j},Ldf{j},nq,lambda);
+                                if isSP
+                                    if ~isempty(ntheta)
+                                        [A1 b1 HinfConstraint1]=sp_HinfCons(PCov{j}{k},Hf{j},phifreq{j},Ldf{j},Wf{j},ntheta,ntot,realtol,lambda);
+                                    else
+                                        [A1 b1 HinfConstraint1]=sp_HinfCons(PCov{j}{k},Hf{j},phifreq{j},Ldf{j},Wf{j},ntheta,ntot,realtol,lambda,rho);
+                                    end
                                 else
-                                    [A1 b1 HinfConstraint1]=Ab_HinfCons(phiCov{j}{k},Wfgamma{j},Ldf{j},nq,lambda,rho);
+                                    if ~isempty(nq)
+                                        [A1 b1 HinfConstraint1]=Ab_HinfCons(phiCov{j}{k},Wfgamma{j},Ldf{j},nq,lambda);
+                                    else
+                                        [A1 b1 HinfConstraint1]=Ab_HinfCons(phiCov{j}{k},Wfgamma{j},Ldf{j},nq,lambda,rho);
+                                    end
                                 end
                                 A=[A ; A1];
                                 b=[b ; b1];
