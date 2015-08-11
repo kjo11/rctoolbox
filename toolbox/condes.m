@@ -2042,7 +2042,65 @@ end
 
 
 
+function [A,b,HinfConstraint] = sp_HinfCons(Pf,Hf,phif,Ldf,Wfgamma,ntheta,ntot,realtol,lambda,rho)
 
+A = [];
+b = [];
+HinfConstraint = [];
+
+if ~isempty(ntheta)
+    
+    if sum(lambda)>0
+        nth = ones(4,1);
+        for i=1:4
+            if lambda(i)>0
+                nth(i)=ntheta;
+            end
+        end
+        
+        for q1=1:nth(1)
+            for q2=1:nth(2)
+                for q3=1:nth(3)
+                    for q4=1:nth(4)
+                        
+                    end
+                end
+            end
+        end
+    end
+else
+    Cf = transpose(phif)*rho;
+    
+    HinfConstraint = [HinfConstraint, (abs(lambda(1)*Wfgamma(:,1).*(1+Cf.*Hf)) + ...
+        abs(lambda(2)*Wfgamma(:,2).*Cf.*Pf) + abs(lambda(3)*Wfgamma(:,3).*Cf) + ...
+        abs(lambda(4)*Wfgamma(:,4).*Pf.*(1+Cf.*Hf))) .* abs(1+Ldf) <= ...
+        real((1+conj(Ldf)).*(1+Cf.*(Hf+Pf)))];
+    
+    if lambda(1)==0 && max(abs(Wfgamma(:,1)))~=0
+        HinfConstraint = [HinfConstraint, abs(Wfgamma(:,1).*(1+Cf.*Hf)) .* abs(1+Ldf) <= ...
+            real((1+conj(Ldf)).*(1+Cf.*(Hf+Pf)))];
+    end
+    
+    if lambda(2)==0 && max(abs(Wfgamma(:,2)))~=0
+        HinfConstraint = [HinfConstraint, abs(Wfgamma(:,2).*Cf.*Pf) .* abs(1+Ldf) <= ...
+            real((1+conj(Ldf)).*(1+Cf.*(Hf+Pf)))];
+    end
+    
+    if lambda(3)==0 && max(abs(Wfgamma(:,3)))~=0
+        HinfConstraint = [HinfConstraint, abs(Wfgamma(:,1).*Cf) .* abs(1+Ldf) <= ...
+            real((1+conj(Ldf)).*(1+Cf.*(Hf+Pf)))];
+    end
+    
+    if lambda(4)==0 && max(abs(Wfgamma(:,4)))~=0
+        HinfConstraint = [HinfConstraint, abs(Wfgamma(:,1).*Pf.*(1+Cf.*Hf)) .* abs(1+Ldf) <= ...
+            real((1+conj(Ldf)).*(1+Cf.*(Hf+Pf)))];
+    end
+    
+    
+end
+
+
+end
 
 
 function [GCov,nqq] = sp_covariance(CovGf,nqq,ntot,N,Gf)
