@@ -50,10 +50,23 @@ if nargin < 4
     options = condesopt;
 end
 
+[isSP,H,P,inG] = sp_data(inphi,inG);
+
+
 [Gf,Gdim,phi,n,phif,phifd,per,w,N,performance,Ldf,LDf,FGf,FLdf,FLDf,CovGf] = condesdata (inG,inphi,inper,options);
 
 
 m=Gdim(1); no=Gdim(2); ni=Gdim(3);
+
+if isSP
+    Hf=cell(1,m);
+    Pf=cell(1,m);
+    for j=1:length(Gf)
+        Hf{j} = freqresp(H,w{j});
+        Pf{j} = freqresp(P{j},w{j});
+    end
+end
+
 
 if no==1 && ni==1 % check stability of SISO systems
     check_Ld_stability(per,inG,phi);
@@ -1949,3 +1962,44 @@ end
 
 
 
+function [isSP,H,P,inG] = sp_data(inphi,inG)
+H = [];
+P = [];
+if iscell(inphi)
+    isSP = strcmpi(inphi{1,1}.ConStruc,'sp');
+    if isSP
+        H = inphi{1,1}.H;
+    else return; 
+    end
+else
+    isSP = strcmpi(inphi.ConStruc,'sp');
+    if isSP
+        H = inphi.H;
+    else return;
+    end
+end
+
+% check that H is stable
+if isa(H,'frd')
+    x=1;
+elseif isdt(H)
+    x = isstable(absorbDelay(H));
+elseif isa(H,'ss') && ~isempty(H.InternalDelay) && H.InternalDelay ~= 0
+    x = isstable(pade(H,10));
+else
+    x = isstable(H);
+end
+if x==0
+    warning('H appears to be unstable.')
+end
+
+if ~iscell(inG)
+    inG={inG};
+end
+
+P = inG;
+for i=1:length(inG)
+    inG{i} = P{i} + H;
+end
+
+end
