@@ -1,4 +1,4 @@
-function phi = conphi(ConType,ConPar,CorD,F)
+function phi = conphi(ConType,ConPar,CorD,F,ConStruc,ConOpt)
 
 % In this command the controller structure is determined.
 %
@@ -37,6 +37,17 @@ function phi = conphi(ConType,ConPar,CorD,F)
 %
 % F: is a transfer function that is fixed in the controller (e.g. an integrator)
 %
+% ConStruc: is a string that can be 'LP' for a linearly parameterized
+%           controller (default) or 'SP' for a Smith predictor structure. 
+%
+% ConOpt: for Smith predictor structure, is an LTI model H = G_n - P_n,
+%         where P_n is the nominal plant model, and G_n is the nominal,
+%         delay-free plant model. For unstable SISO systems, H should be
+%         modified such that it is stable. For example, take H = G_m - P_n
+%         G_m = N_m/D_n and P_n = N_n/D_n*exp(-tau_n*s). H is then
+%         (N_m - N_n*exp(-tau_n*s)) / D_n, and N_m should be tuned such
+%         that the unstable poles of D_n are cancelled.
+%
 % Examples:
 %   phi=conphi('PID');  % defines a continuous-time PID controller
 %   phi=conphi('PD',0.01,'z');
@@ -60,6 +71,12 @@ end
 if (nargin < 3)
     CorD='s';
 end
+%-------------------------
+
+if nargin < 5
+    ConStruc = 'lp';
+end
+
 %-------------------------
 
 if strcmp(CorD,'s')
@@ -213,7 +230,7 @@ switch ConType(1:3)
         end
         
     case 'ud '
-        [ntoto,n]=size(ConPar);
+        [~,n]=size(ConPar);
         if n >1, error('phi should be a column transfer function vector'); end 
         phi.phi=ConPar;
         phi.ConType='ud';
@@ -226,9 +243,26 @@ switch ConType(1:3)
 end
 
 
-if nargin > 3
+if nargin > 3 && ~isempty(F)
     phi.phi=minreal(F*phi.phi);
     phi.ConType =['Ftimes' phi.ConType];
+end
+
+if strcmpi(ConStruc,'sp')
+    if nargin < 6
+        error('H should be specified for Smith predictor structure')
+    end
+    if ~isa(ConOpt,'lti')
+        error('H should be an LTI system')
+    end
+    phi.H = ConOpt;
+    phi.ConStruc = 'sp';
+    
+elseif strcmpi(ConStruc,'lp')
+    phi.ConStruc = 'lp';
+else
+    warning('This is not a supported controller structure. Assuming a linearly parameterized controller.')
+    phi.ConStruc = 'lp';
 end
 
 
