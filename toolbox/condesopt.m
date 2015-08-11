@@ -110,7 +110,6 @@ if (nargin == 0) && (nargout == 0)
     fprintf('                np: []         (degree of polynomials describing the gain-scheduled controller parameters)\n');
     fprintf('                gs: []         (A vector (or matrix for more than one scheduling parameter) of the scheduling parameter values) \n');
     fprintf('            ntheta: 8          (Number of vertices of a polygon that approximates the performance constraints for controllers with TF structure\n');
-    fprintf('             TFtol: 1e-7       (Tolerance for performance constraints for controllers with TF structure)\n');
 %    fprintf('              beta: []         (the angle of line d_2 with real axis in degrees) \n');
     fprintf('            Gbands: on         (MIMO stablity conditions using Gershgorin bands on or off) \n');
     fprintf('            yalmip: off        (a string to choose between optimization toolbox of matlab or YALMIP) \n');
@@ -128,7 +127,6 @@ options.lambda=[0 0 0 0];
 options.np=[];
 options.gs=[];
 options.ntheta = 8;
-options.TFtol = 1e-7;
 options.Gbands='on'; % means taking into account Gershgorin's stablity conditions for MIMO systems
 options.beta=[]; %degree
 options.yalmip='off';
@@ -137,7 +135,7 @@ options.solveroptions=[];
 
 
 
-allfields = {'w','Gbands','beta','np','gs','nq','ntheta','TFtol','gamma','lambda','yalmip','F'};
+allfields = {'w','Gbands','beta','np','gs','nq','ntheta','gamma','lambda','yalmip','F'};
 
 if mod(nargin,2) ~= 0
     

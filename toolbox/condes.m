@@ -204,10 +204,7 @@ if ~isempty(ntheta)
     end
 end
 
-realtol = options.TFtol;
-if realtol < 0
-    error('TFtol should be a small, positive number');
-end
+
 %--------------------------------------------------------------------------
 
 HinfConstraint=[]; 
@@ -523,9 +520,9 @@ end
                     for k=1:nqq
                         if isSP
                             if ~isempty(ntheta)
-                                [A1 b1 HinfConstraint1]=sp_HinfCons(PCov{j}{k},Hf{j},phifreq{j},Ldf{j},Wf{j},ntheta,ntot,realtol,lambda);
+                                [A1 b1 HinfConstraint1]=sp_HinfCons(PCov{j}{k},Hf{j},phifreq{j},Ldf{j},Wf{j},ntheta,ntot,lambda);
                             else
-                                [A1 b1 HinfConstraint1]=sp_HinfCons(PCov{j}{k},Hf{j},phifreq{j},Ldf{j},Wf{j},ntheta,ntot,realtol,lambda,rho);
+                                [A1 b1 HinfConstraint1]=sp_HinfCons(PCov{j}{k},Hf{j},phifreq{j},Ldf{j},Wf{j},ntheta,ntot,lambda,rho);
                             end
                         else
                             if ~isempty(nq)
@@ -600,9 +597,9 @@ end
                             for k=1:nqq
                                 if isSP
                                     if ~isempty(ntheta)
-                                        [A1 b1 HinfConstraint1]=sp_HinfCons(PCov{j}{k},Hf{j},phifreq{j},Ldf{j},Wf{j},ntheta,ntot,realtol,lambda);
+                                        [A1 b1 HinfConstraint1]=sp_HinfCons(PCov{j}{k},Hf{j},phifreq{j},Ldf{j},Wf{j},ntheta,ntot,lambda);
                                     else
-                                        [A1 b1 HinfConstraint1]=sp_HinfCons(PCov{j}{k},Hf{j},phifreq{j},Ldf{j},Wf{j},ntheta,ntot,realtol,lambda,rho);
+                                        [A1 b1 HinfConstraint1]=sp_HinfCons(PCov{j}{k},Hf{j},phifreq{j},Ldf{j},Wf{j},ntheta,ntot,lambda,rho);
                                     end
                                 else
                                     if ~isempty(nq)
@@ -2062,7 +2059,7 @@ end
 
 
 
-function [A,b,HinfConstraint] = sp_HinfCons(Pf,Hf,phif,Ldf,Wfgamma,ntheta,ntot,realtol,lambda,rho)
+function [A,b,HinfConstraint] = sp_HinfCons(Pf,Hf,phif,Ldf,Wfgamma,ntheta,ntot,lambda,rho)
 
 A = [];
 b = [];
