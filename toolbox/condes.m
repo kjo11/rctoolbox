@@ -2035,7 +2035,7 @@ if isdt(G)
     n_uns = sum(abs(p)-1>delta);
     p_bd = p(abs(abs(p)-1)<delta);
 else
-    if isa(G,'ss') && ~isempty(G.InternalDelay) && G.InternalDelay ~= 0
+    if isa(G,'ss') && ~isempty(G.InternalDelay) && sum(G.InternalDelay) ~= 0
 %         disp('Model has internal delays. Using a 10th order Pade approximation to check stability.');
         p = pole(pade(G,10));
     else
