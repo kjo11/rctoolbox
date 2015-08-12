@@ -111,7 +111,7 @@ end
 
 %-----------------------Solver choice- ------------------------------------
 
-if (strcmp(options.yalmip,'on') | isempty(options.nq)| (no > 2 & strcmp(options.Gbands,'on'))) & exist('yalmip')>1 % Use YALMIP interface
+if (strcmp(options.yalmip,'on') || isempty(options.nq) || isempty(options.ntheta) || (no > 2 && strcmp(options.Gbands,'on'))) && exist('yalmip')>1 % Use YALMIP interface
         
     rho=sdpvar(ntot,1);
     YesYalmip=1;
