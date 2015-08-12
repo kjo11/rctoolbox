@@ -50,7 +50,7 @@ if nargin < 4
     options = condesopt;
 end
 
-[isSP,H,P,inG] = sp_data(inphi,inG);
+[isSP,H_SP,P,inG] = sp_data(inphi,inG);
 
 
 [Gf,Gdim,phi,n,phif,phifd,per,w,N,performance,Ldf,LDf,FGf,FLdf,FLDf,CovGf] = condesdata (inG,inphi,inper,options);
@@ -62,7 +62,7 @@ if isSP
     Hf=cell(1,m);
     Pf=cell(1,m);
     for j=1:length(Gf)
-        Hf{j} = squeeze(freqresp(H,w{j}));
+        Hf{j} = squeeze(freqresp(H_SP,w{j}));
         Pf{j} = squeeze(freqresp(P{j},w{j}));
         if strncmp(class(P{j}),'id',2) % compute covariance of G since it is lost when we took G = G + H
             [~,~,CovGf{j}] = freqresp(P{j},w{j});
