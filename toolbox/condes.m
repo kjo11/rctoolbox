@@ -616,7 +616,8 @@ end
                         end
 
                         [x,optval,xflag] = solveopt(H,f,A,b,HinfConstraint,YesYalmip,rho,ops);
-
+                        
+                        
                         if xflag==1,
 
                             x_opt=x;gamma_opt=gamma;optval_opt=optval;xflag_opt=xflag;
@@ -2066,6 +2067,10 @@ b = [];
 HinfConstraint = [];
 
 if ~isempty(ntheta)
+    ex=zeros(ntheta,1);
+    for q=1:ntheta
+        ex(q) = exp(1i*2*pi*q/ntheta)/cos(pi/ntheta);
+    end
     
     if sum(lambda)>0
         nth = ones(4,1);
@@ -2076,19 +2081,15 @@ if ~isempty(ntheta)
         end
         
         for q1=1:nth(1)
-            ex1 = lambda(1)*exp(1i*2*pi*q1/ntheta)/cos(pi/ntheta);
             for q2=1:nth(2)
-                ex2 = lambda(2)*exp(1i*2*pi*q2/ntheta)/cos(pi/ntheta);
                 for q3=1:nth(3)
-                    ex3 = lambda(3)*exp(1i*2*pi*q3/ntheta)/cos(pi/ntheta);
                     for q4=1:nth(4)
-                        ex4 = lambda(4)*exp(1i*2*pi*q4/ntheta)/cos(pi/ntheta);
                         for j=1:ntot
                             phi = transpose(phif(j,:));
-                            phiGq(:,j) = phi.*(abs(1+Ldf) .* (ex1*Wfgamma(:,1).*Hf + ex2*Wfgamma(:,2).*Pf + ex3*Wfgamma(:,3) + ex4*Wfgamma(:,4).*Pf.*Hf) - (1+conj(Ldf)).*(Hf+Pf));
+                            phiGq(:,j) = phi.*(abs(1+Ldf) .* (lambda(1)*ex(q1)*Wfgamma(:,1).*Hf + lambda(2)*ex(q2)*Wfgamma(:,2).*Pf + lambda(3)*ex(q3)*Wfgamma(:,3) + lambda(4)*ex(q4)*Wfgamma(:,4).*Pf.*Hf) - (1+conj(Ldf)).*(Hf+Pf));
                         end
                         A1 = real(phiGq);
-                        b1 = real(1+conj(Ldf) - ex1*Wfgamma(:,1) - ex4*Wfgamma(:,4).*Pf);
+                        b1 = real(1+conj(Ldf) - lambda(1)*ex(q1)*Wfgamma(:,1) - lambda(4)*ex(q4)*Wfgamma(:,4).*Pf);
                         A = [A; A1];
                         b = [b; b1];
                     end
@@ -2096,6 +2097,62 @@ if ~isempty(ntheta)
             end
         end
     end
+    
+    if lambda(1)==0 && max(abs(Wfgamma(:,1)))>0
+        for q=1:ntheta
+            for j=1:ntot
+                phi=transpose(phif(j,:));
+                phiGq(:,j) = phi.*(abs(1+Ldf) .* (ex(q)*Wfgamma(:,1).*Hf) - (1+conj(Ldf)).*(Hf+Pf));
+            end
+            A1 = real(phiGq);
+            b1 = real(1+conj(Ldf) - ex(q)*Wfgamma(:,1));
+            A = [A; A1];
+            b = [b; b1];
+        end
+    end
+    
+    if lambda(2)==0 && max(abs(Wfgamma(:,2)))>0
+        for q=1:ntheta
+            for j=1:ntot
+                phi=transpose(phif(j,:));
+                phiGq(:,j) = phi.*(abs(1+Ldf) .* (ex(q)*Wfgamma(:,2).*Pf) - (1+conj(Ldf)).*(Hf+Pf));
+            end
+            A1 = real(phiGq);
+            b1 = real(1+conj(Ldf));
+            A = [A; A1];
+            b = [b; b1];
+        end
+    end
+    
+    if lambda(3)==0 && max(abs(Wfgamma(:,3)))>0
+        for q=1:ntheta
+            for j=1:ntot
+                phi=transpose(phif(j,:));
+                phiGq(:,j) = phi.*(abs(1+Ldf) .* (ex(q)*Wfgamma(:,3)) - (1+conj(Ldf)).*(Hf+Pf));
+            end
+            A1 = real(phiGq);
+            b1 = real(1+conj(Ldf));
+            A = [A; A1];
+            b = [b; b1];            
+        end
+    end
+    
+    if lambda(4)==0 && max(abs(Wfgamma(:,4)))>0
+        for q=1:ntheta
+            for j=1:ntot
+                phi=transpose(phif(j,:));
+                phiGq(:,j) = phi.*(abs(1+Ldf) .* (ex(q)*Wfgamma(:,4).*Pf.*Hf) - (1+conj(Ldf)).*(Hf+Pf));
+            end
+            A1 = real(phiGq);
+            b1 = real(1+conj(Ldf) - ex(q)*Wfgamma(:,4).*Pf);
+            A = [A; A1];
+            b = [b; b1];
+        end
+    end
+    
+    
+    
+    
 else
     Cf = transpose(phif)*rho;
     
@@ -2115,12 +2172,12 @@ else
     end
     
     if lambda(3)==0 && max(abs(Wfgamma(:,3)))~=0
-        HinfConstraint = [HinfConstraint, abs(Wfgamma(:,1).*Cf) .* abs(1+Ldf) <= ...
+        HinfConstraint = [HinfConstraint, abs(Wfgamma(:,3).*Cf) .* abs(1+Ldf) <= ...
             real((1+conj(Ldf)).*(1+Cf.*(Hf+Pf)))];
     end
     
     if lambda(4)==0 && max(abs(Wfgamma(:,4)))~=0
-        HinfConstraint = [HinfConstraint, abs(Wfgamma(:,1).*Pf.*(1+Cf.*Hf)) .* abs(1+Ldf) <= ...
+        HinfConstraint = [HinfConstraint, abs(Wfgamma(:,4).*Pf.*(1+Cf.*Hf)) .* abs(1+Ldf) <= ...
             real((1+conj(Ldf)).*(1+Cf.*(Hf+Pf)))];
     end
     
@@ -2129,6 +2186,7 @@ end
 
 
 end
+
 
 
 function [GCov,nqq] = sp_covariance(CovGf,nqq,ntot,N,Gf)
