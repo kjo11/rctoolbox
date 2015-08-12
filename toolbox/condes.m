@@ -597,9 +597,9 @@ end
                             for k=1:nqq
                                 if isSP
                                     if ~isempty(ntheta)
-                                        [A1 b1 HinfConstraint1]=sp_HinfCons(PCov{j}{k},Hf{j},phifreq{j},Ldf{j},Wf{j},ntheta,ntot,lambda);
+                                        [A1 b1 HinfConstraint1]=sp_HinfCons(PCov{j}{k},Hf{j},phifreq{j},Ldf{j},Wfgamma{j},ntheta,ntot,lambda);
                                     else
-                                        [A1 b1 HinfConstraint1]=sp_HinfCons(PCov{j}{k},Hf{j},phifreq{j},Ldf{j},Wf{j},ntheta,ntot,lambda,rho);
+                                        [A1 b1 HinfConstraint1]=sp_HinfCons(PCov{j}{k},Hf{j},phifreq{j},Ldf{j},Wfgamma{j},ntheta,ntot,lambda,rho);
                                     end
                                 else
                                     if ~isempty(nq)
