@@ -269,7 +269,7 @@ if isSP
     PCov=cell(1,m);
     phifreq=cell(1,m);
     for j=1:m
-        [PCov{j},nqq] = sp_covariance(CovGf{j},nqq,ntot,N(j),Gf{j});
+        [PCov{j},nqq] = sp_covariance(CovGf{j},nqq,ntot,N(j),Pf{j});
     end
     
     if n==1
