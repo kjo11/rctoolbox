@@ -981,14 +981,28 @@ else % if MIMO
                     end
                     
                     Gphif{j,q}= Gphif_construct_MIMO (Gf{j},phif{j},w{j},w{j},q,n,theta_bar(j,:));
-                    
+                    if isSP
+                        dummy=phif{j}; dummy2=ones(size(Gf{j}));
+                        for k=1:size(dummy,1); for l=1:size(dummy,2); dummy{k,l}(:,:)=1; end; end
+                        Hf2= Gphif_construct_MIMO (Hf{j},dummy,w{j},w{j},q,n,theta_bar(j,:));
+                        Pf2= Gphif_construct_MIMO (Pf{j},dummy,w{j},w{j},q,n,theta_bar(j,:));
+                        phifreq= Gphif_construct_MIMO (dummy2,phif{j},w{j},w{j},q,n,theta_bar(j,:));
+                    end
                     if isempty(gamma),
-                        
-                        if ~isempty(nq)
-                            [A1 b1]=Ab_HinfCons(Gphif{j,q},Wf{j},Ldf_mat{j}(:,q),nq,lambda);
+                        if isSP
+                            if ~isempty(ntheta)
+                                [A1 b1 HinfConstraint1]=sp_MIMO_HinfCons(transpose(Pf2),transpose(Hf2),transpose(phifreq),Ldf_mat{j}(:,q),Wf{j},ntheta,ntot,lambda);
+                            else
+                                [A1 b1 HinfConstraint1]=sp_MIMO_HinfCons(transpose(Pf2),transpose(Hf2),transpose(phifreq),Ldf_mat{j}(:,q),Wf{j},ntheta,ntot,lambda,rho);
+                                HinfConstraint=[HinfConstraint HinfConstraint1];
+                            end
                         else
-                            [A1 b1 HinfConstraint1]=Ab_HinfCons(Gphif{j,q},Wf{j},Ldf_mat{j}(:,q),nq,lambda,rho);
-                            HinfConstraint=[HinfConstraint HinfConstraint1];                       
+                            if ~isempty(nq)
+                                [A1 b1]=Ab_HinfCons(Gphif{j,q},Wf{j},Ldf_mat{j}(:,q),nq,lambda);
+                            else
+                                [A1 b1 HinfConstraint1]=Ab_HinfCons(Gphif{j,q},Wf{j},Ldf_mat{j}(:,q),nq,lambda,rho);
+                                HinfConstraint=[HinfConstraint HinfConstraint1];
+                            end
                         end
                         
                         A=[A ; A1];
@@ -1062,7 +1076,16 @@ else % if MIMO
                        for j=1:m
 
                            for q=1:no
-                               [A1 b1]=Ab_HinfCons(Gphif{j,q},Wfgamma{j},Ldf_mat{j}(:,q),nq,lambda);
+                               if isSP
+                                    if ~isempty(ntheta)
+                                        [A1, b1]=sp_MIMO_HinfCons(transpose(Pf2),transpose(Hf2),transpose(phifreq),Ldf_mat{j}(:,q),Wfgamma{j},ntheta,ntot,lambda);
+                                    else
+                                        [A1, b1, HinfConstraint1]=sp_MIMO_HinfCons(transpose(Pf2),transpose(Hf2),transpose(phifreq),Ldf_mat{j}(:,q),Wfgamma{j},ntheta,ntot,lambda,rho);
+                                        HinfConstraint=[HinfConstraint HinfConstraint1];
+                                    end
+                               else
+                                   [A1 b1]=Ab_HinfCons(Gphif{j,q},Wfgamma{j},Ldf_mat{j}(:,q),nq,lambda);
+                               end
                                Ag=[Ag ; A1];
                                bg=[bg ; b1];
                            end
@@ -1070,7 +1093,7 @@ else % if MIMO
                        end
                        Ag=[A;Ag];
                        bg=[b;bg];
-                       [x,optval,xflag] = solveopt(H,f,Ag,bg,[],YesYalmip,rho,ops);
+                       [x,optval,xflag] = solveopt(H,f,Ag,bg,HinfConstraint,YesYalmip,rho,ops);
 
                        if xflag==1,
 
@@ -2218,4 +2241,125 @@ end
 
 end
         
+
+
+
+
+function [A, b, HinfConstraint]=sp_MIMO_HinfCons(Pf,Hf,phif,Ldf,Wfgamma,ntheta,ntot,lambda,rho)
+HinfConstraint=[];
+A=[];
+b=[];
+n=size(phif,2);
+
+
+
+if ~isempty(ntheta)
+    for i=1:4
+        Wf{i}=repmat(Wfgamma(:,i),1,n);
+    end
+    Ldf=repmat(Ldf,1,n);
+    if size(Pf,2)==1
+        Pf=repmat(Pf,1,n);
+        Hf=repmat(Hf,1,n);
+    end
+    
+    
+    ex=zeros(ntheta,1);
+    for q=1:ntheta
+        ex(q) = exp(1i*2*pi*q/ntheta)/cos(pi/ntheta);
+    end
+    
+    if sum(lambda)>0
+        nth = ones(4,1);
+        for i=1:4
+            if lambda(i)>0
+                nth(i)=ntheta;
+            end
+        end
         
+        for q1=1:nth(1)
+            for q2=1:nth(2)
+                for q3=1:nth(3)
+                    for q4=1:nth(4)
+                        phiGq = phif.*(abs(1+Ldf) .* (lambda(1)*ex(q1)*Wf{1}.*Hf + lambda(2)*ex(q2)*Wf{2}.*Pf + lambda(3)*ex(q3)*Wf{3} + lambda(4)*ex(q4)*Wf{4}.*Pf.*Hf) - (1+conj(Ldf)).*(Hf+Pf));
+                        A1 = real(phiGq);
+                        b1 = real(1+conj(Ldf(:,1)) - lambda(1)*ex(q1)*Wfgamma(:,1) - lambda(4)*ex(q4)*Wfgamma(:,4).*sum(Pf,2));
+                        A = [A; A1];
+                        b = [b; b1];
+                    end
+                end
+            end
+        end
+    end
+    
+    
+    if lambda(1)==0 && max(abs(Wfgamma(:,1)))>0
+        for q=1:ntheta
+            phiGq = phif.*(abs(1+Ldf) .* (ex(q)*Wf{1}.*Hf) - (1+conj(Ldf)).*(Hf+Pf));
+            A1 = real(phiGq);
+            b1 = real(1+conj(Ldf(:,1)) - ex(q)*Wfgamma(:,1));
+            A = [A; A1];
+            b = [b; b1];
+        end
+    end
+    
+    if lambda(2)==0 && max(abs(Wfgamma(:,2)))>0
+        for q=1:ntheta
+            phiGq = phif.*(abs(1+Ldf) .* (ex(q)*Wf{2}.*Pf) - (1+conj(Ldf)).*(Hf+Pf));
+            A1 = real(phiGq);
+            b1 = real(1+conj(Ldf(:,1)));
+            A = [A; A1];
+            b = [b; b1];
+        end
+    end
+    
+    if lambda(3)==0 && max(abs(Wfgamma(:,3)))>0
+        for q=1:ntheta
+            phiGq = phif.*(abs(1+Ldf) .* (ex(q)*Wf{3}) - (1+conj(Ldf)).*(Hf+Pf));
+            A1 = real(phiGq);
+            b1 = real(1+conj(Ldf(:,1)));
+            A = [A; A1];
+            b = [b; b1];            
+        end
+    end
+    
+    if lambda(4)==0 && max(abs(Wfgamma(:,4)))>0
+        for q=1:ntheta
+            phiGq = phif.*(abs(1+Ldf) .* (ex(q)*Wf{4}.*Pf.*Hf) - (1+conj(Ldf)).*(Hf+Pf));
+            A1 = real(phiGq);
+            b1 = real(1+conj(Ldf(:,1)) - ex(q)*Wfgamma(:,4).*sum(Pf,2));
+            A = [A; A1];
+            b = [b; b1];
+        end
+    end
+    
+    
+    
+else
+    
+    HinfConstraint = [HinfConstraint, (abs(lambda(1)*Wfgamma(:,1).*(1+phif.*Hf*rho)) + ...
+        abs(lambda(2)*Wfgamma(:,2).*(phif.*Pf*rho)) + abs(lambda(3)*Wfgamma(:,3).*(phif*rho)) + ...
+        abs(lambda(4)*Wfgamma(:,4).*(sum(Pf,2)+Pf.*phif.*Hf*rho))) .* abs(1+Ldf) <= ...
+        real((1+conj(Ldf)).*(1+phif.*(Hf+Pf)*rho))];
+    
+    if lambda(1)==0 && max(abs(Wfgamma(:,1)))~=0
+        HinfConstraint = [HinfConstraint, abs(Wfgamma(:,1).*(1+phif.*Hf*rho)) .* abs(1+Ldf) <= ...
+            real((1+conj(Ldf)).*(1+phif.*(Hf+Pf)*rho))];
+    end
+    
+    if lambda(2)==0 && max(abs(Wfgamma(:,2)))~=0
+        HinfConstraint = [HinfConstraint, abs(Wfgamma(:,2).*(phif.*Pf*rho)) .* abs(1+Ldf) <= ...
+            real((1+conj(Ldf)).*(1+phif.*(Hf+Pf)*rho))];
+    end
+    
+    if lambda(3)==0 && max(abs(Wfgamma(:,3)))~=0
+        HinfConstraint = [HinfConstraint, abs(Wfgamma(:,3).*(phif*rho)) .* abs(1+Ldf) <= ...
+            real((1+conj(Ldf)).*(1+phif.*(Hf+Pf)*rho))];
+    end
+    
+    if lambda(4)==0 && max(abs(Wfgamma(:,4)))~=0
+        HinfConstraint = [HinfConstraint, abs(Wfgamma(:,4).*(sum(Pf,2) + Pf.*phif.*Hf*rho)) .* abs(1+Ldf) <= ...
+            real((1+conj(Ldf)).*(1+phif.*(Hf+Pf)*rho))];
+    end
+end
+end
