@@ -2038,7 +2038,7 @@ if isa(H,'frd')
     x=1;
 elseif isdt(H)
     x = isstable(absorbDelay(H));
-elseif isa(H,'ss') && ~isempty(H.InternalDelay) && H.InternalDelay ~= 0
+elseif isa(H,'ss') && ~isempty(H.InternalDelay) && sum(H.InternalDelay ~= 0)
     x = isstable(pade(H,10));
 else
     x = isstable(H);
