@@ -54,7 +54,7 @@ May 2012}
 \tableofcontents
 
 \chapter{Introduction}
-The Frequency-Domain Robust Controller Design Toolbox is a tool for designing robust linearly parameterized controllers and SISO rational controllers in the Nyquist diagram. It can be used to design controllers of any order for parametric models or nonparametric models obtained for example by the identification toolbox of MATLAB. The robust controllers are designed in terms of $H_\infty$ performance or classical robustness margins such as the gain and phase margin, for single/multi-model, SISO/MIMO systems.  The toolbox also supports designing gain-scheduled controllers. 
+The Frequency-Domain Robust Controller Design Toolbox is a tool for designing robust linearly parameterized controllers or SISO rational controllers in the Nyquist diagram. It can be used to design controllers of any order for parametric models or nonparametric models obtained for example by the identification toolbox of MATLAB. The robust controllers are designed in terms of $H_\infty$ performance or classical robustness margins such as the gain and phase margin, for single/multi-model, SISO/MIMO systems.  The toolbox also supports designing gain-scheduled controllers. 
 
 In all of design cases, linear or convex optimization problems are solved. For linear and quadratic optimization the well-known \texttt{linprog} or \texttt{quadprog} (depending on the problem) commands of the Optimization toolbox of MATLAB are used. While convex optimization problems are formulated with YALMIP and can be solved with all available solvers (e.g. \texttt{sdpt3} is used as a default solver) . Many commands of the Control toolbox of MATLAB are used as well.
 
@@ -121,26 +121,6 @@ for continuous-time systems and
 \end{equation}
 for discrete-time systems,
 where $\xi_1, \ldots, \xi_n$ are complex numbers, $R_e$ denotes the real part of a complex number, and $\bar{\xi_k}$ is the complex conjugate of $\xi_k$.
-
-\subsubsection{State space:}
-A state space controller has the following form:
-
-\begin{equation}
-    K(s) = C \left(s I - A\right)^{-1} B + D
-\end{equation}
-for continuous-time systems and 
-
-\begin{equation}
-    K(z) = C \left(z I - A\right)^{-1} B + D
-\end{equation}
-for discrete-time systems.
-
-In the toolbox, the eigenvalues of the A matrix (equivalent to the poles of the system) and the B or C matrix are specified. $\rho$ represents the entries of the B or C matrix (whichever was not specified) and of the D matrix.
-
-A state space representation of any of the previous controller types (PID, Laguerre etc.) is possible by setting the eigenvalues of the A matrix accordingly.
-
-
-
 
 
 As stated earlier, one can define one's own vector of basis functions, $\phi$, of any desired order as well as the above listed types.
@@ -627,7 +607,7 @@ stands for the case when one wants to determine desired values for gain margin, 
 
 
 \item{\texttt{`Hinf'}} In this method the distance between $L=GK$ and $L_d$ is minimized under 
-             some $H_\infty$ constraints on the weighted closed-loop sensitivity functions. For rational controllers, $L_d$ is not used $\gamma$ is minimized. 
+             some $H_\infty$ constraints on the weighted closed-loop sensitivity functions. For rational controllers, $L_d$ is not used when $\gamma$ is minimized. 
              
  \end{description}            
              
