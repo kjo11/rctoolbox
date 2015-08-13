@@ -383,15 +383,14 @@ end
                 Ku=per{1}.par(4);
                 wh=per{1}.par(5);
                 if isSP
-                    disp('GPhC constraints not implement for Smith predictor yet')
-                else
-                    for j=1:m
+                    warning('Gain bound constraints for SP not fixed yet')
+                end
+                for j=1:m
 
-                        [A_b b_b] = Ab_for_bounded_K (phif{j}, w{j}, Ku, wh, theta_bar(j,:));
+                    [A_b b_b] = Ab_for_bounded_K (phif{j}, w{j}, Ku, wh, theta_bar(j,:));
 
-                        A = [A ; A_b];
-                        b = [b ; b_b];
-                    end
+                    A = [A ; A_b];
+                    b = [b ; b_b];
                 end
             end
             
@@ -448,7 +447,7 @@ end
             a=cell(1,m); d=cell(1,m);        
             
             if isSP
-                error('LS constraints for Smith predictor structure not yet implemented')
+                warning('Gain bound constraints for SP not fixed yet')
             end
             
             for j=1:m
@@ -895,7 +894,11 @@ else % if MIMO
                 Ku=per{1}{1}.par(4);
                 wh=per{1}{1}.par(5);
                 
-                [A_b,b_b]=gain_bound_MIMO(phif,w,Ku,wh,theta_bar,Gdim,ntot)               
+                if isSP
+                    warning('Gain bound constraints for SP not fixed yet')
+                end
+                    
+                [A_b,b_b]=gain_bound_MIMO(phif,w,Ku,wh,theta_bar,Gdim,ntot);
                                 
                 A= [A ; A_b];
                 b= [b ; b_b];
@@ -932,7 +935,9 @@ else % if MIMO
             
             
             if length(per{1}{1}.par) > 1
-                
+                if isSP
+                    warning('Gain bound constraints for SP not fixed yet')
+                end
                 Ku=per{1}{1}.par(2);
                 wh=per{1}{1}.par(3);
                 
