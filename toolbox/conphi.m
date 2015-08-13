@@ -30,8 +30,8 @@ function phi = conphi(ConType,ConPar,CorD,F,ConStruc,ConOpt)
 %
 %       For user defined structure, ConPar is a column vector of stable
 %       transfer functions. For state space, ConPar can also be a vector
-%       Aeigs giving the eigenvalues of the A matrix. For discrete time,
-%       ConPar is [Ts Aeigs].
+%       Aeigs giving the eigenvalues of the A matrix (in discrete time:
+%       [Ts Aeigs]).
 %
 % CorD : is a string that can be 's' or 'z' to define continuous-time or
 %       discrete-time controller. If it is not assigned a continuous-time 

@@ -127,7 +127,7 @@ for discrete-time systems.
 
 In the toolbox, the eigenvalues of the A matrix (equivalent to the poles of the system) and the B or C matrix are specified. $\rho$ represents the entries of the B or C matrix (whichever was not specified) and of the D matrix.
 
-A state space representation of any of the previous controller types (PID, Laguerre etc.) is possible by setting the eigenvalues of the A matrix accordingly. 
+A state space representation of any of the previous controller types (PID, Laguerre etc.) is possible by setting the eigenvalues of the A matrix accordingly. For SISO controllers, the optimization and the controller are not changed when using a state space structure, the controller is just expressed in state space. For MIMO systems, the number of parameters in a state space controller is generally lower than the number in an equivalent linearly parameterized controller. A higher order may therefore need to be used to obtain the same performance. 
 
 As stated earlier, one can define one's own vector of basis functions, $\phi$, of any desired order as well as the above listed types.
 
@@ -421,7 +421,7 @@ For continuous-time  Laguerre basis function, {\tt ConPar} is $[\xi \quad n]$ wh
 
 \item[\texttt{ConStruc}] is either \texttt{'LP'} for a linearly parameterized controller (default) or \texttt{'SS'} for a state-space controller.
 
-\item[\texttt{ConOpt}] for a state space controller: is a cell containing a string \texttt{'B'} or \texttt{'C'} and the desired B or C matrix of the controller. By default, C = [1 0 0 0 ...].
+\item[\texttt{ConOpt}] for a state space controller: is a cell containing a string \texttt{'B'} or \texttt{'C'} and the desired B or C matrix of the controller. By default, C = [1 0 0 0 ...] and B is determined by the optimization.
     
 
 \end{description}
