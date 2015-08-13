@@ -54,7 +54,7 @@ May 2012}
 \tableofcontents
 
 \chapter{Introduction}
-The Frequency-Domain Robust Controller Design Toolbox is a tool for designing robust linearly parameterized controllers or SISO rational controllers in the Nyquist diagram. It can be used to design controllers of any order for parametric models or nonparametric models obtained for example by the identification toolbox of MATLAB. The robust controllers are designed in terms of $H_\infty$ performance or classical robustness margins such as the gain and phase margin, for single/multi-model, SISO/MIMO systems.  The toolbox also supports designing gain-scheduled controllers. 
+The Frequency-Domain Robust Controller Design Toolbox is a tool for designing robust linearly parameterized controllers in the Nyquist diagram. It can be used to design linearly parameterized controllers of any order for parametric models or nonparametric models obtained for example by the identification toolbox of MATLAB. The robust controllers are designed in terms of $H_\infty$ performance or classical robustness margins such as the gain and phase margin, for single/multi-model, SISO/MIMO systems.  The toolbox also supports designing gain-scheduled controllers. 
 
 In all of design cases, linear or convex optimization problems are solved. For linear and quadratic optimization the well-known \texttt{linprog} or \texttt{quadprog} (depending on the problem) commands of the Optimization toolbox of MATLAB are used. While convex optimization problems are formulated with YALMIP and can be solved with all available solvers (e.g. \texttt{sdpt3} is used as a default solver) . Many commands of the Control toolbox of MATLAB are used as well.
 
@@ -68,14 +68,14 @@ In this chapter, the theoretical bases of the design methods used in the toolbox
 
 Models can be parametric or nonparametric. The design method, in fact, needs the frequency response of the plant model in a finite number of frequencies which can be obtained directly from data by spectral analysis (for example by the identification toolbox of Matlab) or computed from a parametric model. Therefore, high order models with pure time delay and non minimum phase zeros can be considered with no approximation. Thus, we define the set of models:  $\textsl{M}=\{G_i(j\omega), \: i=1,\ldots,m \}$ where $G_i(j\omega)$ can be a scalar or a matrix function representing the frequency response of a SISO or MIMO model, respectively, over a vector of frequency points $\omega_i=[\omega_{i_1}, \omega_{i_2}, \ldots, \omega_{i_{N_i}}]$. $N_i$ is large enough to give a good approximation of the frequency response of the system $G_i$. The methods are described on a SISO system. It will also be explained how these methods can be applied in designing multivariable decoupling controllers for MIMO systems.  
 
-\subsection{Linearly Parameterized Controllers}
+\subsection{Controllers}
 
-A linearly parameterized controller has the following form:
+The toolbox designs linearly parameterized controllers. A linearly parameterized controller has the following form:
 \begin{equation}
 \label{linparcon}
 \rho^T \phi(s)=[\rho_1 \: \: \rho_2 \: \: \ldots \:\: \rho_n]\times [\phi_1(s) \: \: \phi_2(s) \:\: \ldots \:\: \phi_n(s)]^T
 \end{equation}
-where $\rho_1$, $\rho_2$, $\ldots$, $\rho_n$ are controller parameters and $\phi_1(s)$, $\phi_2(s)$, $\ldots$, $\phi_n(s)$ are basis transfer functions. These transfer functions must be stable, i.e. with no right half plane poles.
+where $\rho_1$, $\rho_2$, $\ldots$, $\rho_n$ are controller parameters and $\phi_1(s)$, $\phi_2(s)$, $\ldots$, $\phi_n(s)$ are basis transfer functions. These transfer functions must be stable, i.e. with no right half plane poles. 
 
 \subsubsection{PID, PI, PD:}
 
@@ -113,35 +113,6 @@ for discrete-time systems,
 where $\xi_1, \ldots, \xi_n$ are complex numbers, $R_e$ denotes the real part of a complex number, and $\bar{\xi_k}$ is the complex conjugate of $\xi_k$.
 
 As stated earlier, one can define one's own vector of basis functions, $\phi$, of any desired order as well as the above listed types.
-
-\subsection{State Space Controllers}
-A state space controller has the following form:
-
-\begin{equation}
-    K(s) = C \left(s I - A\right)^{-1} B + D
-\end{equation}
-for continuous-time systems and 
-
-\begin{equation}
-    K(z) = C \left(z I - A\right)^{-1} B + D
-\end{equation}
-for discrete-time systems.
-
-In the toolbox, the eigenvalues of the A matrix (equivalent to the poles of the system) and either the B or C matrix are specified. $\rho$ represents the entries of the B or C matrix (whichever was not specified) and of the D matrix.
-
-A state space representation of any of the previous controller types (PID, Laguerre etc.) is possible by setting the eigenvalues of the A matrix accordingly. For SISO controllers, the optimization and the controller are not changed when using a state space structure, the controller is just expressed in state space. For MIMO systems, the number of parameters in a state space controller is generally lower than the number in an equivalent linearly parameterized controller. A higher order may therefore need to be used to obtain the same performance. 
-
-\subsection{SISO Rational Controllers}
-For SISO systems, a rational controller with the following form can be defined:
-
-\begin{equation}
-    K(j\omega) = \frac{X(j\omega)}{Y(j\omega)} = \frac{\rho_x^T \phi (s)}{f(s) \ \rho_y^T \phi (s)}
-\end{equation}
-
-$\phi$ is a vector of Laguerre or generalized basis functions, described above, and $f(s)$ is a fixed part of the controller. $\rho_x$ and $\rho_y$ are vectors of controller parameters.
-
-
-
 
 \begin{figure}
 \centering
@@ -373,8 +344,7 @@ The procedure of design comprises three steps. First the type (or structure) of 
 \section{Determining controller structure}
 The first step of design is determining the desired controller type. By defining the controller type in fact the vector of basis transfer functions $\phi$ is specified. In the following command the controller type and subsequently the vector $\phi$ are specified by the user.
 \begin{lstlisting}
-phi = conphi (ConType , ConPar , CorD , F, ConStruc, ConOpt) 
-
+phi = conphi (ConType , ConPar , CorD , F) 
 \end{lstlisting}
 %\begin{table}
 %\centering
@@ -407,7 +377,7 @@ phi = conphi (ConType , ConPar , CorD , F, ConStruc, ConOpt)
        {\tt `PI' }        &  For PI controller\\
       {\tt  `Laguerre' }  &  For Laguerre basis function\\
       {\tt  `Generalized' }  & For Generalized basis function\\
-    {\tt `UD'}        &   For user defined structure 
+       {\tt `UD'}        &   For user defined structure
 \end{tabular}
 
 \item[\texttt{ConPar}]  is a scalar or a vector of parameters for the chosen controller type.
@@ -430,14 +400,7 @@ For continuous-time  Laguerre basis function, {\tt ConPar} is $[\xi \quad n]$ wh
 
 \item[\texttt{CorD}] is either \texttt{`s'} or \texttt{`z'} showing, respectively, that the controller is in continuous- or discrete-time. If not mentioned, the continuous-time case will be considered. 
 
-\item[\texttt{F}] is a transfer function by which the vector $\phi$ is multiplied. For example one can multiply a factor of integral $\frac{1}{s}$ to PID basis functions to get: $\phi=\frac{1}{s} \times [1\:\: \frac{1}{s} \:\: \frac{s}{1+\tau s}]^T$.
-
-
-\item[\texttt{ConStruc}] is either \texttt{'LP'} for a linearly parameterized controller (default), \texttt{'TF'} for a transfer function (rational) controller, or \texttt{'SS'} for a state-space controller.
-
-\item[\texttt{ConOpt}] for a state space controller: is a cell containing a string \texttt{'B'} or \texttt{'C'} and the desired B or C matrix of the controller. By default, C = [1 0 0 0 ...] and B is determined by the optimization.
-
-    
+\item[\texttt{F}] is a transfer function by which the vector $\phi$ is multiplied. For example one can multiply a factor of integral $\frac{1}{s}$ to PID basis functions to get: $\phi=\frac{1}{s} \times [1\:\: \frac{1}{s} \:\: \frac{s}{1+\tau s}]^T$. 
 
 \end{description}
 
@@ -543,125 +506,7 @@ Transfer function from input to output...
             s
  #3:  -------------
       s^2 + 2 s + 1
-  \end{lstlisting}
-
-
-  \subsection{Example 6} A continuous-time 4th order Laguerre basis with $\xi=20$ in a transfer function structure, with an integrator (phi.fs is the inverse of the fixed part of the controller)
-
-  \begin{lstlisting}
-s = tf('s'); xi = 20; n = 4;
-phi = conphi('Lag',[xi n],'s',1/s,'tf');
-
-
-phi.phi
-
-ans =
- 
-  From input to output...
-   1:  1
- 
-       6.3246
-   2:  ------
-       (s+20)
- 
-       6.3246 (s-20)
-   3:  -------------
-         (s+20)^2
- 
-       6.3246 (s-20)^2
-   4:  ---------------
-          (s+20)^3
- 
-       6.3246 (s-20)^3
-   5:  ---------------
-          (s+20)^4
- 
-Continuous-time zero/pole/gain model.
-
-
-phi.fs
-
-ans =
- 
-  s
- 
-Continuous-time transfer function.
-
-  \subsection{Example 7} A continuous time PID controller defined in state space
-
-\begin{lstlisting}
-tau = 0.1;
-phi = conphi('PID',tau,'s',[],'SS');
-
-phi.phi
-
- 
-From input to output...
-    1
-1:  -
-    s
- 
-        1
-2:  --------
-     s (s+10)
- 
-3:  1
-
-
-phi.par.A
-
-         0    1.0000
-         0  -10.0000
-
-
-phi.par.C
-
-     1     0
-         
-
 \end{lstlisting}
-
-
-\subsection{Example 8} A discrete time Laguerre controller defined in state space with the B matrix given
-
-\begin{lstlisting}
-Ts = 0.02; n = 4;
-z = tf('z');
-
-phi = conphi('Laguerre',[Ts 0.1 n],'z',[],'SS',{'B',[1 0; 1 0; 0 1; 0 1]});
-
-
-phi
-
-	[1x1 struct]    [1x1 struct]
-
-    
-phi{1}.phi
-    
-  From input to output...
-       (z-0.2048) (z^2 - 0.1952z + 0.02002)
-   1:  ------------------------------------
-                    (z-0.1)^4
- 
-       (z+1) (z^2 - 0.4z + 0.06)
-   2:  -------------------------
-               (z-0.1)^4
- 
-       (z-0.4) (z+1)
-   3:  -------------
-         (z-0.1)^4
- 
-         (z+1)
-   4:  ---------
-       (z-0.1)^4
- 
-   5:  1
- 
-Sample time: 0.02 seconds
-Discrete-time zero/pole/gain model.
-
-\end{lstlisting}
-
 
 After defining our desired controller structure, we shall proceed to the next step: specifying performance characteristics.
 
@@ -690,7 +535,7 @@ per = conper (PerType , par , Ld)
 %\end{table}
 
 \begin{description}
-\item[\texttt{PerType}] is a string specifying the desired performance of the system. It can be \texttt{`GPhC'}, \texttt{`LS'} or \texttt{`Hinf'}. For rational controllers (with \texttt{`TF'} structure), only \texttt{`Hinf'} can be used.
+\item[\texttt{PerType}] is a string specifying the desired performance of the system. It can be \texttt{`GPhC'}, \texttt{`LS'} or \texttt{`Hinf'}. 
 
 \begin{description}
 \item{\texttt{`GPhC'}} 
@@ -705,7 +550,7 @@ stands for the case when one wants to determine desired values for gain margin, 
 
 
 \item{\texttt{`Hinf'}} In this method the distance between $L=GK$ and $L_d$ is minimized under 
-             some $H_\infty$ constraints on the weighted closed-loop sensitivity functions. For rational controllers, $L_d$ is not used when $\gamma$ is minimized. 
+             some $H_\infty$ constraints on the weighted closed-loop sensitivity functions.
              
  \end{description}            
              
@@ -796,8 +641,7 @@ K = condes (G , phi , per , options)
 \end{lstlisting}
 
 \begin{description}
-\item[\texttt{G}] is a cell, i. e., \texttt{G\{1\}}, \texttt{G\{2\}}, \dots, \texttt{G\{m\}} represent SISO or MIMO models $G_1$, $G_2$, $\ldots$, $G_m$. In case there is just one model, define it as \texttt{G\{1\}} or simply \texttt{G}.
-    For a \texttt{`TF'} (transfer function/rational) controller structure, G can be given as a cell of cells where \texttt{N\{j\}=G\{j\}\{1\}} and \texttt{M\{j\}=G\{j\}\{2\}}. The j-th plant model is equal to \texttt{N\{j\} M\{j\}$^{-1}$}.
+\item[\texttt{G}] is a cell, i. e., \texttt{G\{1\}}, \texttt{G\{2\}}, \dots, \texttt{G\{m\}} represent SISO or MIMO models $G_1$, $G_2$, $\ldots$, $G_m$. In case there is just one model, define it as \texttt{G\{1\}} or simply \texttt{G}. 
 Nonparametric models should be defined as an \texttt{frd} or  \texttt{idfrd} object (type \texttt{doc frd} to see details about creating or converting your model to an \texttt{frd} object).
 
 \item[\texttt{phi}] is the output of the first command. The command \texttt{condes} designs a controller of the specified type to meet the performance criteria implied by \texttt{per}. For MIMO systems \texttt{phi} is an $n_i \times n_o$ cell where $n_i$ is the number of inputs and $n_o$ is the number of outputs of the system. For example \texttt{phi\{p,q\}} is the vector of basis functions $\phi_{pq}$ for the element of row \texttt{p} and column \texttt{q} of the controller matrix $K$. So each element of the controller matrix may have a different vector of basis functions, or different structure. They should be defined separately by the first command, for example in a loop. Should you specify one controller type or structure for all the elements of the controller matrix, just simply enter one \texttt{phi} (not a cell) in the \texttt{condes} command. 
@@ -927,47 +771,6 @@ Zero/pole/gain from input 2 to output...
                s
 \end{lstlisting}
 
-\subsubsection{Controller design in state space with {\tt LS} performance for a multivariable system}
-Consider the same MIMO model as in the previous example.
-The objective is to design a MIMO PID controller in state space to achieve the same performance as in the previous example (modulus margin of 0.5, open-loop transfer function of $\frac{1}{30s}$).
-
-\begin{lstlisting}
-s=tf('s');
-G=[5*exp(-3*s)/(4*s+1) 2.5*exp(-5*s)/(15*s+1); -4*exp(-6*s)/(20*s+1) exp(-4*s)/(5*s+1)];
-
-phi=conphi('pid',[],'s',[],'ss'); 
-per=conper('LS',0.5,1/(30*s)); 
-opts = condesopt('yalmip','off','gbands','off');
-
-K=condes(G,phi,per,opts)
-
-
-K =
- 
-  a = 
-           x1      x2
-   x1       0       1
-   x2       0  -8.333
- 
-  b = 
-             u1        u2
-   x1  -0.07789   -0.2858
-   x2    0.6801      2.37
- 
-  c = 
-       x1  x2
-   y1   1   0
-   y2   1   0
- 
-  d = 
-            u1       u2
-   y1  0.03529  0.01411
-   y2  0.03274   0.1328
- 
-Continuous-time state-space model.
-
-\end{lstlisting}
-
 \subsubsection{Controller design with {\tt Hinf} performance}
 Consider the following system:
 $$G(z)=\frac{z-0.2}{z^3-1.2z^2+0.5z-0.1}$$
@@ -996,35 +799,6 @@ K=condes(G,phi,per)
 
 
 \end{lstlisting}
-
-
-\subsubsection{Rational controller design}
-Consider the following system:
-$G(z) = \frac{z-0.186}{z^3 - 1.116z^2 + 0.465 z - 0.093}$
-with sampling period $Ts = 1 s$. Compute a fourth-order stabilizing controller with an integrator that minimizes $\| W_1 S\|_\infty$, where
-$W_1(z) = \frac{0.4902 \left( z^2 - 1.0431 z + 0.3263\right)}{(z-1)(z-0.282)}$
-
-We proceed as follows:
-\begin{lstlisting}
-Ts = 1; n = 4; xi = 0;
-s = tf('s');
-z = tf('z',Ts);
-
-G = (z-0.186)/(z^3 - 1.116*z^2 + 0.465*z - 0.093);
-W{1} = 0.4902 *( z^2 - 1.0431* z + 0.3263)/((z-1)*(z-0.282));
-
-phi = conphi('Laguerre',[Ts xi n],'z',z/(z-1),'TF');
-per = conper('Hinf',W);
-opts = condesopt('gamma',[0.1 1 1e-3]);
-
-K = condes(G,phi,per,opts)
-
-  0.56039 z (z-0.5241) (z+0.215) (z^2 - 0.1235z + 0.3811)
-  -------------------------------------------------------
-   (z+0.4187) (z+0.8764) (z-1) (z^2 - 0.006408z + 0.365)
- 
-\end{lstlisting}
-
 
 \section{Controller design options}
 
@@ -1088,20 +862,6 @@ parameters. The first one is described by a second-order polynomial and the seco
 \item[\texttt{gs :}] This option is used if a gain-scheduled controller should be designed. \texttt{gs} is a $m$ by $n$ matrix, where $n$ is the number 
 of scheduling parameters and $m$ the number of operating points. The $i$-th row of {\tt gs} contains the values of $n$ scheduling
 parameters that corresponds to the $i$-th model $G_i$. The default value of \texttt{gs} is \texttt{[]}.
-
-\item[\texttt{ntheta :}] This option is used for controllers with TF (transfer
-function) structure. It is an integer greater than 2 
-(default: 8) that determines the number of vertices used
-to approximate the circle that determines the performance
-constraints in the Nyquist diagram. If it is empty, the
-the circle will not be approximated and a convex constraint
-will be defined (YALMIP should therefore be used).
-
-
-\item[\texttt{TFtol :}] This option is used for controllers with TF (transfer
-function) structure. It should be a small, positive number.
-The linear constraints are of the form Ax <= 0 and are 
-replaced by Ax <= TFtol. Default: 1e-7.
 
  \item[{\tt yalmip :}]   is a string that can be set to {\tt `on'} to activate the YALMIP interface. It should be activated when  Gbands='on' for multivariable controller design of more than 2 inputs. It will be automatically activated if YALMIP has already been installed and {\tt nq} is empty. As  the default solver SDPT3 is used  but can be changed by 'solver' option, e.g. options=condesopt('yalmip','on','solver','sedumi').
 
@@ -1498,9 +1258,3 @@ Disturbance response of the 6-th order controller
 \bibliographystyle{plain}
 \bibliography{/Users/akarimi/Documents/Karimi/papers/bibfiles/linear}
 \end{document}
-
-
-%%% Local Variables:
-%%% mode: latex
-%%% TeX-master: t
-%%% End:

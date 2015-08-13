@@ -42,7 +42,7 @@ function phi = conphi(ConType,ConPar,CorD,F,ConStruc,ConOpt)
 % ConStruc: is a string that can be:
 %           'LP': linearly parameterized controller (default)
 %           'TF': for a rational controller expressed as a transfer 
-%                 function (only for ConType 'Laguerre' or 'Generalized').
+%                 function (only for ConType 'Laguerre' or 'Generalized')
 %           'SS': for a state space representation
 %
 % ConOpt: for state space, is a cell with two entries: a string 'B' or 'C'
