@@ -453,51 +453,29 @@ end
             for j=1:m
                 
                 Mm(j)=per{j}.par(1);
-                if isSP
-                    lambda=[0 0 0 0];
-                    Wf=cell(1,4);
-                    Wf(:)={zeros(size(w{j}))};
-                    if length(per{1}.par) > 1
-                        Ku=per{1}.par(2);
-                        wh=per{1}.par(3);
-                        Wf{3}(w{j}>=wh)=Ku;
-                    end
-                    for k=1:nqq
-                        Wf{1}=Mm(j)*ones(size(w{j}));
-                        if ~isempty(ntheta)
-                            [A1, b1, HinfConstraint1]=sp_HinfCons(PCov{j}{k},Hf{j},phifreq{j},Ldf{j},Wf{j},ntheta,ntot,lambda);
-                        else
-                            [A1, b1, HinfConstraint1]=sp_HinfCons(PCov{j}{k},Hf{j},phifreq{j},Ldf{j},Wf{j},ntheta,ntot,lambda,rho);
-                        end
-                        A=[A;A1];
-                        b=[b;b1];
-                        HinfConstraint=[HinfConstraint, HinfConstraint1];
-                    end
-                else
-                    a{j}(:,1)=real(Ldf{j})+1;
-                    a{j}(:,2)=imag(Ldf{j});
-                    d{j}=-a{j}(:,1)+Mm(j)*abs(Ldf{j}+1);
-                    for k=1:nqq             
-                        [A1 b1]= Ab_construct (phiCov{j}{k} , a{j} , d{j});  % right side of the line a(w).x = d(w)
-                        A=[A;A1];
-                        b=[b;b1];
-                    end
-                    
-                    if length(per{1}.par) > 1
-                        Ku=per{1}.par(2);
-                        wh=per{1}.par(3);
-                        [A_b b_b] = Ab_for_bounded_K (phif{j}, w{j}, Ku, wh, theta_bar(j,:));
-
-                        A = [A ; A_b];
-                        b = [b ; b_b];
-                    end
-                    
+                a{j}(:,1)=real(Ldf{j})+1;
+                a{j}(:,2)=imag(Ldf{j});
+                d{j}=-a{j}(:,1)+Mm(j)*abs(Ldf{j}+1);
+                for k=1:nqq             
+                    [A1 b1]= Ab_construct (phiCov{j}{k} , a{j} , d{j});  % right side of the line a(w).x = d(w)
+                    A=[A;A1];
+                    b=[b;b1];
                 end
              end
             
             
             
-            
+            if length(per{1}.par) > 1
+                
+                Ku=per{1}.par(2);
+                wh=per{1}.par(3);
+                for j=1:m
+                    [A_b b_b] = Ab_for_bounded_K (phif{j}, w{j}, Ku, wh, theta_bar(j,:));
+                    
+                    A = [A ; A_b];
+                    b = [b ; b_b];
+                end
+            end
                        
             [x,optval,xflag] = solveopt(H,f,A,b,[],YesYalmip,rho,ops);
              
