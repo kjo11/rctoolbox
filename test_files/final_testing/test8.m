@@ -6,8 +6,8 @@ phitype = 2; % 0: pid, 1: pi, 2: laguerre (4), 3: generalized (5)
 ctype = 2; % 0: default, 1: given c, 2: given b
 pertype = 0; % 0: LS, 1: Hinf
 
-addpath('../../toolbox')
-addpath(genpath('../../../matlab_tools'))
+addpath('../toolbox')
+addpath(genpath('../../matlab_tools'))
 clear G phi per
 
 disp('MIMO (3x3), continuous')
