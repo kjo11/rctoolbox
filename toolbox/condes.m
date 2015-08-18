@@ -270,12 +270,12 @@ if isSP
     phifreq=cell(1,m);
     for j=1:m
         [PCov{j},nqq] = sp_covariance(CovGf{j},nqq,ntot,N(j),Pf{j});
-    end
-    
-    if n==1
-        phifreq{j}=transpose(kron(theta_bar(j,:)',transpose(squeeze(phif{j}))));
-    else
-        phifreq{j}=transpose(kron(theta_bar(j,:)',squeeze(phif{j})));
+
+        if n==1
+            phifreq{j}=transpose(kron(theta_bar(j,:)',transpose(squeeze(phif{j}))));
+        else
+            phifreq{j}=transpose(kron(theta_bar(j,:)',squeeze(phif{j})));
+        end
     end
 else
     for j=1:m
@@ -2336,7 +2336,6 @@ if ~isempty(ntheta)
     
     
 else
-%     Ldf=repmat(Ldf,1,n);
     if size(Pf,2)==1
         Pf=repmat(Pf,1,n);
         Hf=repmat(Hf,1,n);
