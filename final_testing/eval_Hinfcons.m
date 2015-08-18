@@ -1,4 +1,4 @@
-function [] = plot_Hinfcons(G,K,W,lambda,gamma,w,theta,np,H)
+function [] = eval_Hinfcons(G,K,W,lambda,gamma,w,theta,np,H)
 
 if ~iscell(G)
     G = {G};
@@ -41,18 +41,27 @@ for i=1:length(G)
     if sum(lambda)==0
         for k=1:4
             if sum(W{k}.num{1}~=0)
-            figure; bode(W{k}*Sfns{k},ones(size(W{k}*Sfns{k}))*tf(gamma),w{i})
+                x = freqresp(W{k}*Sfns{k},w{i});
+                if max(max(max(abs(x)))) > gamma
+                    error('Constraints violated: k=%i, lambda=0',k)
+                end
             end
         end
     else
-        figure; bode(lambda(1)*W{1}*S + lambda(2)*W{2}*T + lambda(3)*W{3}*U + lambda(4)*W{4}*V,ones(size(W{k}*Sfns{k}))*tf(gamma),w{i})
+        x = freqresp(lambda(1)*W{1}*S + lambda(2)*W{2}*T + lambda(3)*W{3}*U + lambda(4)*W{4}*V,w{i});
+        if max(max(max(abs(x)))) > gamma
+            error('Constraints violated: sum')
+        end
         for k=1:4
             if lambda(k)==0 && sum(W{k}.num{1}~=0)
-                figure; bode(W{k}*Sfns{k},ones(size(W{k}*Sfns{k}))*tf(1),w{i})
+                x = freqresp(W{k}*Sfns{k},w{i});
+                if max(max(max(abs(x)))) > 1
+                    error('Constraints violated: k=%i, lambda=0',k)
+                end
             end
         end
 
     end
 end
-            
+disp('All good!')     
 end

@@ -42,12 +42,12 @@ lambda_mat=[1 1 1 0;
             0 1 0 0;
             0 0 1 0;
             0 0 0 0];
-g_max=1; g_min=0.5; g_tol = 0.01;
+g_max=1; g_min=0.5; g_tol = 0.1;
 phi = conphi('lag',[2 n],'s',1/s,'sp',H);
 
 
 %% Loop
-for j=1:2
+for j=2:2
     if j==1
         yalmipstr='on';
         ntheta=[];
@@ -65,9 +65,8 @@ for j=1:2
         opts = condesopt('nq',nq,'ntheta',ntheta,'w',w,'gamma',[g_min g_max g_tol],'lambda',lambda,'np',1,'gs',gs);
         per = conper('Hinf',W,Ld);
         [C,sol] = condes(P,phi,per,opts);
-        K=feedback(C,H);
         
-        plot_Hinfcons(P,K,W,lambda,sol.gamma,w,gs,1)
-        pause
+        
+        eval_Hinfcons(P,C,W,lambda,sol.gamma,w,gs,1,H)
     end     
 end
