@@ -273,9 +273,9 @@ if isSP
     end
     
     if n==1
-        phifreq{j}=kron(theta_bar(j,:)',transpose(squeeze(phif{j})));
+        phifreq{j}=transpose(kron(theta_bar(j,:)',transpose(squeeze(phif{j}))));
     else
-        phifreq{j}=kron(theta_bar(j,:)',squeeze(phif{j}));
+        phifreq{j}=transpose(kron(theta_bar(j,:)',squeeze(phif{j})));
     end
 else
     for j=1:m
@@ -519,9 +519,9 @@ end
                     for k=1:nqq
                         if isSP
                             if ~isempty(ntheta)
-                                [A1 b1 HinfConstraint1]=sp_HinfCons(PCov{j}{k},Hf{j},phifreq{j},Ldf{j},Wf{j},ntheta,ntot,lambda);
+                                [A1 b1 HinfConstraint1]=sp_MIMO_HinfCons(PCov{j}{k},Hf{j},phifreq{j},Ldf{j},Wf{j},ntheta,ntot,lambda);
                             else
-                                [A1 b1 HinfConstraint1]=sp_HinfCons(PCov{j}{k},Hf{j},phifreq{j},Ldf{j},Wf{j},ntheta,ntot,lambda,rho);
+                                [A1 b1 HinfConstraint1]=sp_MIMO_HinfCons(PCov{j}{k},Hf{j},phifreq{j},Ldf{j},Wf{j},ntheta,ntot,lambda,rho);
                             end
                         else
                             if ~isempty(nq)
@@ -596,9 +596,9 @@ end
                             for k=1:nqq
                                 if isSP
                                     if ~isempty(ntheta)
-                                        [A1 b1 HinfConstraint1]=sp_HinfCons(PCov{j}{k},Hf{j},phifreq{j},Ldf{j},Wfgamma{j},ntheta,ntot,lambda);
+                                        [A1 b1 HinfConstraint1]=sp_MIMO_HinfCons(PCov{j}{k},Hf{j},phifreq{j},Ldf{j},Wfgamma{j},ntheta,ntot,lambda);
                                     else
-                                        [A1 b1 HinfConstraint1]=sp_HinfCons(PCov{j}{k},Hf{j},phifreq{j},Ldf{j},Wfgamma{j},ntheta,ntot,lambda,rho);
+                                        [A1 b1 HinfConstraint1]=sp_MIMO_HinfCons(PCov{j}{k},Hf{j},phifreq{j},Ldf{j},Wfgamma{j},ntheta,ntot,lambda,rho);
                                     end
                                 else
                                     if ~isempty(nq)
@@ -2336,6 +2336,11 @@ if ~isempty(ntheta)
     
     
 else
+%     Ldf=repmat(Ldf,1,n);
+    if size(Pf,2)==1
+        Pf=repmat(Pf,1,n);
+        Hf=repmat(Hf,1,n);
+    end
     
     HinfConstraint = [HinfConstraint, (abs(lambda(1)*Wfgamma(:,1).*(1+phif.*Hf*rho)) + ...
         abs(lambda(2)*Wfgamma(:,2).*(phif.*Pf*rho)) + abs(lambda(3)*Wfgamma(:,3).*(phif*rho)) + ...
