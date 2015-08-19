@@ -148,7 +148,7 @@ else  % Use optimization toolbox
     
     if isempty(options.nq)
         warning('Yalmip not found. Setting nq to 8')
-        options.ntheta=8;
+        options.nq=8;
     end
     
     if isTF
