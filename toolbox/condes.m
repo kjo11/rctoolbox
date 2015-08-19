@@ -1930,7 +1930,7 @@ function [n_uns,p_bd] = getpoles(G)
 % Function to return the number of unstable poles of sys G and the location
 % of poles on the stability boundary. If model has internal delays, use
 % 10th order Pade approximation to check stability.
-delta = 1e-6;
+delta = eps; % numerical tolerance of MATLAB
 if isdt(G)
     p = pole(absorbDelay(G));
     n_uns = sum(abs(p)-1>delta);
