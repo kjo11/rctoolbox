@@ -111,7 +111,7 @@ end
 
 %-----------------------Solver choice- ------------------------------------
 
-if (strcmp(options.yalmip,'on') || isempty(options.nq) || isempty(options.ntheta) || (no > 2 && strcmp(options.Gbands,'on'))) && exist('yalmip')>1 % Use YALMIP interface
+if (strcmp(options.yalmip,'on') || isempty(options.nq) || (no > 2 && strcmp(options.Gbands,'on'))) && exist('yalmip')>1 % Use YALMIP interface
         
     rho=sdpvar(ntot,1);
     YesYalmip=1;
@@ -140,6 +140,11 @@ else  % Use optimization toolbox
     
     YesYalmip=0;
     rho=zeros(ntot,1);
+    
+    if isempty(options.nq)
+        warning('Yalmip not found. Setting nq to 8.')
+        options.nq = 8;
+    end
     
     ops = optimset ('Largescale', 'off');
     if ~isempty (options.solveroptions)
@@ -193,14 +198,6 @@ nq=options.nq;
 if ~isempty(nq)
     if nq < 3,
         error('nq should be an integer greater than 2');
-    end
-end
-
-
-ntheta=options.ntheta;
-if ~isempty(ntheta)
-    if ntheta < 3
-        error('ntheta should be an integer greater than 3');
     end
 end
 
@@ -516,10 +513,10 @@ end
                 if isempty(gamma),
                     for k=1:nqq
                         if isSP
-                            if ~isempty(ntheta)
-                                [A1 b1 HinfConstraint1]=sp_MIMO_HinfCons(PCov{j}{k},Hf{j},phifreq{j},Ldf{j},Wf{j},ntheta,ntot,lambda);
+                            if ~isempty(nq)
+                                [A1 b1 HinfConstraint1]=sp_MIMO_HinfCons(PCov{j}{k},Hf{j},phifreq{j},Ldf{j},Wf{j},nq,ntot,lambda);
                             else
-                                [A1 b1 HinfConstraint1]=sp_MIMO_HinfCons(PCov{j}{k},Hf{j},phifreq{j},Ldf{j},Wf{j},ntheta,ntot,lambda,rho);
+                                [A1 b1 HinfConstraint1]=sp_MIMO_HinfCons(PCov{j}{k},Hf{j},phifreq{j},Ldf{j},Wf{j},nq,ntot,lambda,rho);
                             end
                         else
                             if ~isempty(nq)
@@ -593,10 +590,10 @@ end
 
                             for k=1:nqq
                                 if isSP
-                                    if ~isempty(ntheta)
-                                        [A1 b1 HinfConstraint1]=sp_MIMO_HinfCons(PCov{j}{k},Hf{j},phifreq{j},Ldf{j},Wfgamma{j},ntheta,ntot,lambda);
+                                    if ~isempty(nq)
+                                        [A1 b1 HinfConstraint1]=sp_MIMO_HinfCons(PCov{j}{k},Hf{j},phifreq{j},Ldf{j},Wfgamma{j},nq,ntot,lambda);
                                     else
-                                        [A1 b1 HinfConstraint1]=sp_MIMO_HinfCons(PCov{j}{k},Hf{j},phifreq{j},Ldf{j},Wfgamma{j},ntheta,ntot,lambda,rho);
+                                        [A1 b1 HinfConstraint1]=sp_MIMO_HinfCons(PCov{j}{k},Hf{j},phifreq{j},Ldf{j},Wfgamma{j},nq,ntot,lambda,rho);
                                     end
                                 else
                                     if ~isempty(nq)
@@ -988,10 +985,10 @@ else % if MIMO
                     end
                     if isempty(gamma),
                         if isSP
-                            if ~isempty(ntheta)
-                                [A1 b1 HinfConstraint1]=sp_MIMO_HinfCons(transpose(Pf2),transpose(Hf2),transpose(phifreq),Ldf_mat{j}(:,q),Wf{j},ntheta,ntot,lambda);
+                            if ~isempty(nq)
+                                [A1 b1 HinfConstraint1]=sp_MIMO_HinfCons(transpose(Pf2),transpose(Hf2),transpose(phifreq),Ldf_mat{j}(:,q),Wf{j},nq,ntot,lambda);
                             else
-                                [A1 b1 HinfConstraint1]=sp_MIMO_HinfCons(transpose(Pf2),transpose(Hf2),transpose(phifreq),Ldf_mat{j}(:,q),Wf{j},ntheta,ntot,lambda,rho);
+                                [A1 b1 HinfConstraint1]=sp_MIMO_HinfCons(transpose(Pf2),transpose(Hf2),transpose(phifreq),Ldf_mat{j}(:,q),Wf{j},nq,ntot,lambda,rho);
                                 HinfConstraint=[HinfConstraint HinfConstraint1];
                             end
                         else
@@ -1075,10 +1072,10 @@ else % if MIMO
 
                            for q=1:no
                                if isSP
-                                    if ~isempty(ntheta)
-                                        [A1, b1]=sp_MIMO_HinfCons(transpose(Pf2),transpose(Hf2),transpose(phifreq),Ldf_mat{j}(:,q),Wfgamma{j},ntheta,ntot,lambda);
+                                    if ~isempty(nq)
+                                        [A1, b1]=sp_MIMO_HinfCons(transpose(Pf2),transpose(Hf2),transpose(phifreq),Ldf_mat{j}(:,q),Wfgamma{j},nq,ntot,lambda);
                                     else
-                                        [A1, b1, HinfConstraint1]=sp_MIMO_HinfCons(transpose(Pf2),transpose(Hf2),transpose(phifreq),Ldf_mat{j}(:,q),Wfgamma{j},ntheta,ntot,lambda,rho);
+                                        [A1, b1, HinfConstraint1]=sp_MIMO_HinfCons(transpose(Pf2),transpose(Hf2),transpose(phifreq),Ldf_mat{j}(:,q),Wfgamma{j},nq,ntot,lambda,rho);
                                         HinfConstraint=[HinfConstraint HinfConstraint1];
                                     end
                                else
