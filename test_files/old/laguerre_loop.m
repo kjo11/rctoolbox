@@ -19,7 +19,7 @@ per = conper('LS',[Mm,Ku,wc],Ld);
 
 %% Continuous
 for n=1:10
-    for a=0:0.1:1
+    for a=1:0.1:2
         phi = conphi('Laguerre',[a, n],'s',Fc);
         K = condes(Gc,phi,per);
         Ktf = tf(K);
