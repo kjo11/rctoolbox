@@ -112,7 +112,7 @@ end
 
 %-----------------------Solver choice- ------------------------------------
 
-if (strcmp(options.yalmip,'on') || isempty(options.nq)|| (no > 2 && strcmp(options.Gbands,'on')) || isempty(options.ntheta)) && exist('yalmip')>1 % Use YALMIP interface
+if (strcmp(options.yalmip,'on') || isempty(options.nq)|| (no > 2 && strcmp(options.Gbands,'on'))) && exist('yalmip')>1 % Use YALMIP interface
         
     if isTF
         rho = sdpvar(ntot+n-1,1);
@@ -146,8 +146,8 @@ else  % Use optimization toolbox
     YesYalmip=0;
     rho=zeros(ntot,1);
     
-    if isempty(options.ntheta)
-        warning('Yalmip not found. Setting ntheta to 8')
+    if isempty(options.nq)
+        warning('Yalmip not found. Setting nq to 8')
         options.ntheta=8;
     end
     
@@ -208,23 +208,6 @@ if ~isempty(nq)
     if nq < 3,
         error('nq should be an integer greater than 2');
     end
-end
-
-%--------------------------------------------------------------------------
-
-
-%----- linear constraint parameters for TF controllers --------------------
-
-ntheta=options.ntheta;
-if ~isempty(ntheta)
-    if ntheta < 3
-        error('ntheta should be an integer greater than 2');
-    end
-end
-
-TFtol=options.TFtol;
-if TFtol < 0
-    error('TFtol should be a small, positive number');
 end
 
 
@@ -620,13 +603,13 @@ end
                                     end
                                 else
                                     for kk=1:nqm
-                                        if ~isempty(ntheta)
-                                            [A1 b1 HinfConstraint1]=tf_Ab_HinfCons(GCov{j}{k},MCov{j}{kk},phifreq{j},fsf{j},Wfgamma{j},ntheta,ntot,n,TFtol,lambda);
+                                        if ~isempty(nq)
+                                            [A1 b1 HinfConstraint1]=tf_Ab_HinfCons(GCov{j}{k},MCov{j}{kk},phifreq{j},fsf{j},Wfgamma{j},nq,ntot,n,lambda);
                                             % force y to be monic
                                             b1=b1-A1(:,1);
                                             A1=A1(:,2:end);
                                         else
-                                            [A1 b1 HinfConstraint1]=tf_Ab_HinfCons(GCov{j}{k},MCov{j}{kk},phifreq{j},fsf{j},Wfgamma{j},ntheta,ntot,n,TFtol,lambda,rho);
+                                            [A1 b1 HinfConstraint1]=tf_Ab_HinfCons(GCov{j}{k},MCov{j}{kk},phifreq{j},fsf{j},Wfgamma{j},nq,ntot,n,lambda,rho);
                                         end
                                     end
                                 end
@@ -2193,7 +2176,7 @@ end
 
 
 
-function [A, b, HinfConstraint]=tf_Ab_HinfCons(Nf,Mf,phif,fsf,Wfgamma,ntheta,ntot,n,realtol,lambda,rho)
+function [A, b, HinfConstraint]=tf_Ab_HinfCons(Nf,Mf,phif,fsf,Wfgamma,ntheta,ntot,n,lambda,rho)
 % Compute Hinf constraints for TF structure
 
 
@@ -2229,7 +2212,7 @@ if ~isempty(ntheta) % linear constraints
                         end
                         A1=-real(transpose(phiGq));
                         h=size(A1);
-                        b1=-realtol*ones(h(1),1);
+                        b1=zeros(h(1),1);
                         A = [A ; A1];
                         b = [b ; b1];
                     end
@@ -2252,7 +2235,7 @@ if ~isempty(ntheta) % linear constraints
             end
             A1=-real(transpose(phiGq));
             h=size(A1);
-            b1=-realtol*ones(h(1),1);
+            b1=zeros(h(1),1);
             A = [A ; A1];
             b = [b ; b1];
         end 
@@ -2272,7 +2255,7 @@ if ~isempty(ntheta) % linear constraints
             end
             A1=-real(transpose(phiGq));
             h=size(A1);
-            b1=-realtol*ones(h(1),1);
+            b1=zeros(h(1),1);
             A = [A ; A1];
             b = [b ; b1];
         end 
@@ -2292,7 +2275,7 @@ if ~isempty(ntheta) % linear constraints
             end
             A1=-real(transpose(phiGq));
             h=size(A1);
-            b1=-realtol*ones(h(1),1);
+            b1=zeros(h(1),1);
             A = [A ; A1];
             b = [b ; b1];
         end 
@@ -2312,7 +2295,7 @@ if ~isempty(ntheta) % linear constraints
             end
             A1=-real(transpose(phiGq));
             h=size(A1);
-            b1=-realtol*ones(h(1),1);
+            b1=zeros(h(1),1);
             A = [A ; A1];
             b = [b ; b1];
         end 
