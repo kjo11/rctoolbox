@@ -524,10 +524,10 @@ end
                         if k==4, Wf{j}(:,4)=Wf{j}(:,4).*squeeze(Gf{j}); end
                     end
                 end                
-
+                if ~isTF
                 a{j}(:,1)=real(Ldf{j})+1;
                 a{j}(:,2)=imag(Ldf{j});
-
+                end
 
 
                 if isempty(gamma),
