@@ -1971,6 +1971,18 @@ for m=1:length(inG)
         if x==0
             warning('Ld appears to be closed-loop unstable.')
         end
+        
+        
+        % Make sure G and phi are both continuous/discrete
+        if isdt(phi)
+            if isdt(G) && phi.Ts~=-1
+                G = d2d(G,phi.Ts);
+            else
+                G = c2d(G,phi.Ts);
+            end
+        elseif isdt(G)
+            G = d2c(G);
+        end
 
 
         % get poles on stability boundary of Phi
@@ -1993,7 +2005,10 @@ for m=1:length(inG)
             if isdt(Ld)
                 Ld = d2d(Ld,G.Ts);
             else
-                Ld = c2d(Ld,G.Ts);
+                p=pole(Ld);
+                LdA = zpk([],p(real(p)==0),1); % containing poles on boundary
+                LdB = minreal(Ld/LdA); % no poles on boundary
+                Ld = c2d(LdA,G.Ts) * c2d(LdB,G.Ts); % split Ld to avoid numerical problems with poles on boundary
             end
         elseif isdt(Ld)
             Ld = d2c(Ld);
@@ -2003,10 +2018,10 @@ for m=1:length(inG)
 
         delta = 1e-6;
         if length(p_bd)~=length(pL_bd) || sum(abs(p_bd-pL_bd)>delta)~=0
-            warning('Ld does not appear to contain the poles of G*K on the stability boundary. This choice of Ld may generate an unstable controller.')
+            warning('Ld does not appear to contain the poles of G*K on the stability boundary. This choice of Ld may generate a destabilizing controller.')
         end
         if n_uns~=nL_uns
-            warning('Ld and G*K should have the same number of unstable poles, but it appears that Ld has %i and G{%i}*K has %i. This choice of Ld may generate an unstable controller.',nL_uns,m,n_uns)
+            warning('Ld and G*K should have the same number of unstable poles, but it appears that Ld has %i and G{%i}*K has %i. This choice of Ld may generate a destabilizing controller.',nL_uns,m,n_uns)
         end
     end
         
@@ -2019,7 +2034,7 @@ function [n_uns,p_bd] = getpoles(G)
 % Function to return the number of unstable poles of sys G and the location
 % of poles on the stability boundary. If model has internal delays, use
 % 10th order Pade approximation to check stability.
-delta = 1e-6;
+delta = eps; % numerical tolerance of MATLAB
 if isdt(G)
     p = pole(absorbDelay(G));
     n_uns = sum(abs(p)-1>delta);
