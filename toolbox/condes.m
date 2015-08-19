@@ -112,7 +112,7 @@ end
 
 %-----------------------Solver choice- ------------------------------------
 
-if (strcmp(options.yalmip,'on') || isempty(options.nq)|| (no > 2 && strcmp(options.Gbands,'on'))) && exist('yalmip')>1 % Use YALMIP interface
+if (strcmp(options.yalmip,'on') || isempty(options.nq)|| (no > 2 && strcmp(options.Gbands,'on')) || (sum(options.lambda)>1 && isTF)) && exist('yalmip')>1 % Use YALMIP interface
         
     if isTF
         rho = sdpvar(ntot+n-1,1);
@@ -2341,7 +2341,7 @@ end
 
 
 function [Mf,fsf,CovMf]=tf_Mf_fsf(w,M,fs)
-for j=1:length(w)
+for j=1:length(M)
     Mf{j} = squeeze(freqresp(M{j},w{j}));
     fsf{j} = squeeze(freqresp(fs,w{j}));
 
