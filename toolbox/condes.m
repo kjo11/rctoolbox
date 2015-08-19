@@ -146,6 +146,11 @@ else  % Use optimization toolbox
     YesYalmip=0;
     rho=zeros(ntot,1);
     
+    if isempty(options.ntheta)
+        warning('Yalmip not found. Setting ntheta to 8')
+        options.ntheta=8;
+    end
+    
     if isTF
         ops = optimset ('Largescale', 'on','MaxIter',100000,'TolFun',1e-8);
     else
