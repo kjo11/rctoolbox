@@ -1914,10 +1914,10 @@ for m=1:length(inG)
 
         delta = 1e-6;
         if length(p_bd)~=length(pL_bd) || sum(abs(p_bd-pL_bd)>delta)~=0
-            warning('Ld does not appear to contain the poles of G*K on the stability boundary. This choice of Ld may generate an unstable controller.')
+            warning('Ld does not appear to contain the poles of G*K on the stability boundary. This choice of Ld may generate a destabilizing controller.')
         end
         if n_uns~=nL_uns
-            warning('Ld and G*K should have the same number of unstable poles, but it appears that Ld has %i and G{%i}*K has %i. This choice of Ld may generate an unstable controller.',nL_uns,m,n_uns)
+            warning('Ld and G*K should have the same number of unstable poles, but it appears that Ld has %i and G{%i}*K has %i. This choice of Ld may generate a destabilizing controller.',nL_uns,m,n_uns)
         end
     end
         
