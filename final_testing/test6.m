@@ -54,11 +54,11 @@ for j=2:2
         fprintf('yalmip\n');
     else
         yalmipstr='off';
-        ntheta=5;
+        ntheta=15;
         fprintf('no yalmip\n')
     end
     
-    for k=1:size(lambda_mat,1)
+    for k=2:size(lambda_mat,1)
         lambda=lambda_mat(k,:);
         fprintf('lambda %i\n',k)
         

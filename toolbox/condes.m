@@ -2281,7 +2281,7 @@ if ~isempty(ntheta)
                     for q4=1:nth(4)
                         phiGq = phif.*(abs(1+Ldf) .* (lambda(1)*ex(q1)*Wf{1}.*Hf + lambda(2)*ex(q2)*Wf{2}.*Pf + lambda(3)*ex(q3)*Wf{3} + lambda(4)*ex(q4)*Wf{4}.*Pf.*Hf) - (1+conj(Ldf)).*(Hf+Pf));
                         A1 = real(phiGq);
-                        b1 = real(1+conj(Ldf(:,1)) - lambda(1)*ex(q1)*Wfgamma(:,1) - lambda(4)*ex(q4)*Wfgamma(:,4).*sum(Pf,2));
+                        b1 = real(1+conj(Ldf(:,1)) - abs(1+Ldf(:,1)) .* (lambda(1)*ex(q1)*Wfgamma(:,1) + lambda(4)*ex(q4)*Wfgamma(:,4).*sum(Pf,2)));
                         A = [A; A1];
                         b = [b; b1];
                     end
@@ -2295,7 +2295,7 @@ if ~isempty(ntheta)
         for q=1:ntheta
             phiGq = phif.*(abs(1+Ldf) .* (ex(q)*Wf{1}.*Hf) - (1+conj(Ldf)).*(Hf+Pf));
             A1 = real(phiGq);
-            b1 = real(1+conj(Ldf(:,1)) - ex(q)*Wfgamma(:,1));
+            b1 = real(1+conj(Ldf(:,1)) - abs(1+Ldf(:,1)) .*ex(q)*Wfgamma(:,1));
             A = [A; A1];
             b = [b; b1];
         end
@@ -2325,7 +2325,7 @@ if ~isempty(ntheta)
         for q=1:ntheta
             phiGq = phif.*(abs(1+Ldf) .* (ex(q)*Wf{4}.*Pf.*Hf) - (1+conj(Ldf)).*(Hf+Pf));
             A1 = real(phiGq);
-            b1 = real(1+conj(Ldf(:,1)) - ex(q)*Wfgamma(:,4).*sum(Pf,2));
+            b1 = real(1+conj(Ldf(:,1)) - abs(1+Ldf(:,1)) .*ex(q)*Wfgamma(:,4).*sum(Pf,2));
             A = [A; A1];
             b = [b; b1];
         end
