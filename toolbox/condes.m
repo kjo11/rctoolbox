@@ -1928,12 +1928,27 @@ end
 
 
 function K = reduced_order(rhox,phi,ConType)
-    if ~isempty(strfind(ConType,'Laguerre')) || ~isempty(strfind(ConType,'generalized'))
-        lcd = zpk([],phi.p(end),1,phi.Ts);
-        K = minreal(rhox' * minreal(phi/lcd)*lcd);
-    else
-        K = minreal(rhox' * phi);
+
+if ~isempty(strfind(ConType,'Laguerre')) || ~isempty(strfind(ConType,'generalized'))
+    lcd = zpk([],phi.p(end),1,phi.Ts);
+    K = minreal(rhox' * minreal(phi/lcd)*lcd);
+    
+    n = length(phi.p{end});
+    order = length(pole(K));
+    tol = eps;
+    k = 2;
+    while order > n
+        if tol > 1e-6
+            break;
+        end
+        tol = k*tol;
+        K = minreal(K,tol);
+        order = length(pole(K));       
     end
+else
+    K = minreal(rhox' * phi);
+end
+
 end
 
 
