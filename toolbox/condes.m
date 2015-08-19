@@ -378,14 +378,26 @@ end
                 Ku=per{1}.par(4);
                 wh=per{1}.par(5);
                 if isSP
-                    warning('Gain bound constraints for SP not fixed yet')
-                end
-                for j=1:m
+                    Wf = cell(1,m);
+                    for j=1:m
+                        Wf{j}=zeros(length(w{j}),4);
+                        Wf{j}(w{j}>=wh,3) = 1/Ku;
+                        if ~isempty(nq)
+                            [A1, b1]=sp_MIMO_HinfCons(PCov{j}{k},Hf{j},phifreq{j},Ldf{j},Wf{j},nq,ntot,lambda);
+                        else
+                            [A1, b1]=sp_MIMO_HinfCons(PCov{j}{k},Hf{j},phifreq{j},Ldf{j},Wf{j},8,ntot,lambda,rho);
+                        end
+                        A = [A ; A1];
+                        b = [b ; b1];
+                    end
+                else
+                    for j=1:m
 
-                    [A_b b_b] = Ab_for_bounded_K (phif{j}, w{j}, Ku, wh, theta_bar(j,:));
+                        [A_b, b_b] = Ab_for_bounded_K (phif{j}, w{j}, Ku, wh, theta_bar(j,:));
 
-                    A = [A ; A_b];
-                    b = [b ; b_b];
+                        A = [A ; A_b];
+                        b = [b ; b_b];
+                    end
                 end
             end
             
@@ -441,9 +453,6 @@ end
             Mm=zeros(1,m);
             a=cell(1,m); d=cell(1,m);        
             
-            if isSP
-                warning('Gain bound constraints for SP not fixed yet')
-            end
             
             for j=1:m
                 
@@ -464,11 +473,26 @@ end
                 
                 Ku=per{1}.par(2);
                 wh=per{1}.par(3);
-                for j=1:m
-                    [A_b b_b] = Ab_for_bounded_K (phif{j}, w{j}, Ku, wh, theta_bar(j,:));
-                    
-                    A = [A ; A_b];
-                    b = [b ; b_b];
+                if isSP
+                    Wf = cell(1,m);
+                    for j=1:m
+                        Wf{j}=zeros(length(w{j}),4);
+                        Wf{j}(w{j}>=wh,3) = 1/Ku;
+                        if ~isempty(nq)
+                            [A1, b1]=sp_MIMO_HinfCons(PCov{j}{k},Hf{j},phifreq{j},Ldf{j},Wf{j},nq,ntot,lambda);
+                        else
+                            [A1, b1]=sp_MIMO_HinfCons(PCov{j}{k},Hf{j},phifreq{j},Ldf{j},Wf{j},8,ntot,lambda,rho);
+                        end
+                        A = [A ; A1];
+                        b = [b ; b1];
+                    end
+                else
+                    for j=1:m
+                        [A_b, b_b] = Ab_for_bounded_K (phif{j}, w{j}, Ku, wh, theta_bar(j,:));
+
+                        A = [A ; A_b];
+                        b = [b ; b_b];
+                    end
                 end
             end
                        
@@ -889,14 +913,36 @@ else % if MIMO
                 Ku=per{1}{1}.par(4);
                 wh=per{1}{1}.par(5);
                 
-                if isSP
-                    warning('Gain bound constraints for SP not fixed yet')
-                end
+                if isSP % add bound on U sensitivity function
+                    Wf = cell(m,1);
+                    for j=1:m
+                        Wf{j}=zeros(length(w{j}),4);
+                        Wf{j}(w{j}>=wh,3)=1/Ku;
+                        for q=1:no
+                            if isSP
+                                dummy=phif{j}; dummy2=ones(size(Gf{j}));
+                                for k=1:size(dummy,1); for l=1:size(dummy,2); dummy{k,l}(:,:)=1; end; end
+                                Hf2= Gphif_construct_MIMO (Hf{j},dummy,w{j},w{j},q,n,theta_bar(j,:));
+                                Pf2= Gphif_construct_MIMO (Pf{j},dummy,w{j},w{j},q,n,theta_bar(j,:));
+                                phifreq= Gphif_construct_MIMO (dummy2,phif{j},w{j},w{j},q,n,theta_bar(j,:));
+                            end
+                            if ~isempty(nq)
+                                [A1, b1]=sp_MIMO_HinfCons(transpose(Pf2),transpose(Hf2),transpose(phifreq),Ldf_mat{j}(:,q),Wf{j},nq,ntot,lambda);
+                            else
+                                [A1, b1, HinfConstraint1]=sp_MIMO_HinfCons(transpose(Pf2),transpose(Hf2),transpose(phifreq),Ldf_mat{j}(:,q),Wf{j},nq,ntot,lambda,rho);
+                                StabCons = [StabCons, HinfConstraint1];
+                            end
+                            A = [A; A1];
+                            b = [b; b1];
+                        end
+                    end
+                else
                     
-                [A_b,b_b]=gain_bound_MIMO(phif,w,Ku,wh,theta_bar,Gdim,ntot);
-                                
-                A= [A ; A_b];
-                b= [b ; b_b];
+                    [A_b,b_b]=gain_bound_MIMO(phif,w,Ku,wh,theta_bar,Gdim,ntot);
+
+                    A= [A ; A_b];
+                    b= [b ; b_b];
+                end
             end           
                                     
             [x,optval,xflag]=solveopt(H,f,A,b,StabCons,YesYalmip,rho,ops);
@@ -930,17 +976,40 @@ else % if MIMO
             
             
             if length(per{1}{1}.par) > 1
-                if isSP
-                    warning('Gain bound constraints for SP not fixed yet')
-                end
                 Ku=per{1}{1}.par(2);
                 wh=per{1}{1}.par(3);
                 
-                [A_b,b_b]=gain_bound_MIMO(phif,w,Ku,wh,theta_bar,Gdim,ntot);
+                if isSP % add bound on U sensitivity function
+                    Wf = cell(m,1);
+                    for j=1:m
+                        Wf{j}=zeros(length(w{j}),4);
+                        Wf{j}(w{j}>=wh,3)=1/Ku;
+                        for q=1:no
+                            if isSP
+                                dummy=phif{j}; dummy2=ones(size(Gf{j}));
+                                for k=1:size(dummy,1); for l=1:size(dummy,2); dummy{k,l}(:,:)=1; end; end
+                                Hf2= Gphif_construct_MIMO (Hf{j},dummy,w{j},w{j},q,n,theta_bar(j,:));
+                                Pf2= Gphif_construct_MIMO (Pf{j},dummy,w{j},w{j},q,n,theta_bar(j,:));
+                                phifreq= Gphif_construct_MIMO (dummy2,phif{j},w{j},w{j},q,n,theta_bar(j,:));
+                            end
+                            if ~isempty(nq)
+                                [A1, b1]=sp_MIMO_HinfCons(transpose(Pf2),transpose(Hf2),transpose(phifreq),Ldf_mat{j}(:,q),Wf{j},nq,ntot,lambda);
+                            else
+                                [A1, b1, HinfConstraint1]=sp_MIMO_HinfCons(transpose(Pf2),transpose(Hf2),transpose(phifreq),Ldf_mat{j}(:,q),Wf{j},nq,ntot,lambda,rho);
+                                StabCons = [StabCons, HinfConstraint1];
+                            end
+                            A = [A; A1];
+                            b = [b; b1];
+                        end
+                    end
+                else
                 
-                
-                A= [A ; A_b];
-                b= [b ; b_b];                
+                    [A_b,b_b]=gain_bound_MIMO(phif,w,Ku,wh,theta_bar,Gdim,ntot);
+
+
+                    A= [A ; A_b];
+                    b= [b ; b_b];        
+                end
                 
             end
             

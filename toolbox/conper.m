@@ -24,6 +24,8 @@ function per = conper (PerType, Inpar, Ld)
 %       where Gm is a lower bound for gain margin, Phm a lower bound for
 %       phase margin and wc a lower bound for crossover frequency. Ku defines 
 %       an upper bound on the controller gain in high frequencies wh < w <wmax. 
+%       For controllers with a Smith predictor structure, Ku defines an
+%       upper bound on K*S, where S is the sensitivity function.
 %       If wc is not defined the distance between L and Ld is
 %       minimized. If Ld is not defined the controller gain at low frequencies 
 %       is maximized (for PID controller and Laguerre basis functions). 
