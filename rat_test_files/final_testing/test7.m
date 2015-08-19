@@ -1,7 +1,7 @@
 % Test 7
 % gain-scheduled -- multiple theta
 
-addpath('../../toolbox')
+addpath('../toolbox')
 addpath(genpath('../../../matlab_tools'))
 clear W G phi per w
 

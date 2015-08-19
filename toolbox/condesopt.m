@@ -55,19 +55,6 @@ function options = condesopt (varargin)
 %               The i-th row of 'gs' contains the values of n scheduling
 %               parameters that corresponds to the i-th model G{i}.
 %
-%   'ntheta':   This option is used for controllers with TF (transfer
-%               function) structure. It is an integer greater than 2 
-%               (default: 8) that determines the number of vertices used
-%               to approximate the circle that determines the performance
-%               constraints in the Nyquist diagram. If it is empty, the
-%               the circle will not be approximated and a convex constraint
-%               will be defined (YALMIP should therefore be used).
-%
-%   'TFtol':    This option is used for controllers with TF (transfer
-%               function) structure. It should be a small, positive number.
-%               The linear constraints are of the form Ax <= 0 and are 
-%               replaced by Ax <= TFtol. Default: 1e-7.
-%
 %   'Gbands':   This option is used only for MIMO controller design. It
 %               indicates whether the Gershgorin bands should be used for 
 %               MIMO stability guarantee or not. Using Gershgorin bands implies
@@ -109,8 +96,6 @@ if (nargin == 0) && (nargout == 0)
     fprintf('            lambda: [0 0 0 0]  ([1 1 0 0] means that the infinity norm of |W1S|+|W2T|  will be minimized in H infinity control) \n');
     fprintf('                np: []         (degree of polynomials describing the gain-scheduled controller parameters)\n');
     fprintf('                gs: []         (A vector (or matrix for more than one scheduling parameter) of the scheduling parameter values) \n');
-    fprintf('            ntheta: 8          (Number of vertices of a polygon that approximates the performance constraints for controllers with TF structure\n');
-    fprintf('             TFtol: 1e-7       (Tolerance for performance constraints for controllers with TF structure)\n');
 %    fprintf('              beta: []         (the angle of line d_2 with real axis in degrees) \n');
     fprintf('            Gbands: on         (MIMO stablity conditions using Gershgorin bands on or off) \n');
     fprintf('            yalmip: off        (a string to choose between optimization toolbox of matlab or YALMIP) \n');
@@ -127,8 +112,6 @@ options.gamma=[];
 options.lambda=[0 0 0 0];
 options.np=[];
 options.gs=[];
-options.ntheta = 8;
-options.TFtol = 1e-7;
 options.Gbands='on'; % means taking into account Gershgorin's stablity conditions for MIMO systems
 options.beta=[]; %degree
 options.yalmip='off';
@@ -137,7 +120,7 @@ options.solveroptions=[];
 
 
 
-allfields = {'w','Gbands','beta','np','gs','nq','ntheta','TFtol','gamma','lambda','yalmip','F'};
+allfields = {'w','Gbands','beta','np','gs','nq','gamma','lambda','yalmip','F'};
 
 if mod(nargin,2) ~= 0
     
