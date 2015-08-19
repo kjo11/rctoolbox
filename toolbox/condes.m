@@ -1882,6 +1882,18 @@ for m=1:length(inG)
         if x==0
             warning('Ld appears to be closed-loop unstable.')
         end
+        
+        
+        % Make sure G and phi are both continuous/discrete
+        if isdt(phi)
+            if isdt(G) && phi.Ts~=-1
+                G = d2d(G,phi.Ts);
+            else
+                G = c2d(G,phi.Ts);
+            end
+        elseif isdt(G)
+            G = d2c(G);
+        end
 
 
         % get poles on stability boundary of Phi
