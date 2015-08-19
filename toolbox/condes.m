@@ -1904,7 +1904,10 @@ for m=1:length(inG)
             if isdt(Ld)
                 Ld = d2d(Ld,G.Ts);
             else
-                Ld = c2d(Ld,G.Ts);
+                p=pole(Ld);
+                LdA = zpk([],p(real(p)==0),1); % containing poles on boundary
+                LdB = minreal(Ld/LdA); % no poles on boundary
+                Ld = c2d(LdA,G.Ts) * c2d(LdB,G.Ts); % split Ld to avoid numerical problems with poles on boundary
             end
         elseif isdt(Ld)
             Ld = d2c(Ld);
