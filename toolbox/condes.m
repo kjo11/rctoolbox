@@ -2149,25 +2149,42 @@ end
 
 nss = length(A);
 
+defaultC = [1, zeros(1,nss-1)];
+
 if isempty(B)
     if size(C,1)~=ni
-        if size(C,1)==1
-            C = repmat(C,ni,1); % repeat same rows for C
+        if size(C,1)==1 && sum(C~=defaultC)==0 % if C is default
+            C = zeros(ni,nss);
+            for i=1:min(nss,ni)
+                C(i,1:i) = 1; % make C matrix
+            end
+            
+            % Recompute phi
+            oldphi=inphi.phi;
+            inphi = cell(ni,1);
+            if isdt(oldphi)
+                var=tf('z',oldphi.Ts);
+            else
+                var=tf('s');
+            end
+            for i=1:size(C,1)
+                inphi{i,1}.phi = minreal(transpose(C(i,:)/(var*eye(nss)-A)));
+                inphi{i,1}.phi(end+1,1) = zpk([],[],1,oldphi.Ts);
+                
+                inphi{i,1}.ConStruc = 'ss';
+                inphi{i,1}.ConType = 'ss';
+            end
         else
             error('C must have the same number of rows as inputs in G')
         end
     end
-
+    
     if iscell(inphi)
         inphi = repmat(inphi,1,no); % repeat same phi for each output
     end
 else
     if size(B,2)~=no
-        if size(B,2)==1
-            B = repmat(B,1,no); % repeat same columns for B
-        else
-            error('B must have the same number of columns as outputs in G')
-        end
+        error('B must have the same number of columns as outputs in G')
     end
     
     if iscell(inphi)
