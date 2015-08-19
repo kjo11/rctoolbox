@@ -298,12 +298,12 @@ if isTF
     for j=1:m
         [GCov{j},nqq] = tf_covariance(CovGf{j},nqq,ntot,N(j),Gf{j});
         [MCov{j},nqm] = tf_covariance(CovMf{j},nqm,ntot,N(j),Mf{j});
-    end
     
-    if n==1
-        phifreq{j}=kron(theta_bar(j,:)',transpose(squeeze(phif{j})));
-    else
-        phifreq{j}=kron(theta_bar(j,:)',squeeze(phif{j}));
+        if n==1
+            phifreq{j}=kron(theta_bar(j,:)',transpose(squeeze(phif{j})));
+        else
+            phifreq{j}=kron(theta_bar(j,:)',squeeze(phif{j}));
+        end
     end
 else
     for j=1:m
