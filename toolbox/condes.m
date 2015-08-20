@@ -2175,7 +2175,16 @@ end
 
 P = inG;
 for i=1:length(inG)
-    inG{i} = P{i} + H;
+    if isa(P{i},'frd') && isa(H,'frd')
+        Hnew = frd(interp1(H.Frequency,H.ResponseData,P{i}.Frequency),P{i}.Frequency);
+        Hnew.ioDelay = H.ioDelay;
+        Hnew.InputDelay = H.InputDelay;
+        Hnew.OutputDelay = H.OutputDelay;
+        Hnew.Ts = H.Ts;
+        inG{i} = P{i} + Hnew;
+    else
+        inG{i} = P{i} + H;
+    end
 end
 
 end
