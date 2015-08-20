@@ -6,10 +6,10 @@ phitype = 2; % 0: pid, 1: pi, 2: laguerre (4), 3: generalized (5)
 ctype = 2; % 0: default, 1: given c, 2: given b
 pertype = 0; % 0: LS, 1: Hinf
 
-addpath('../toolbox')
+addpath('../../toolbox')
 clear G phi per W
 
-disp('MIMO (2x2), continuous')
+disp('MIMO (2x2), continuous, yalmip')
 
 s=tf('s');
 G=[5*exp(-3*s)/(4*s+1) 2.5*exp(-5*s)/(15*s+1); -4*exp(-6*s)/(20*s+1) exp(-4*s)/(5*s+1)];
@@ -19,8 +19,8 @@ Ld = 1/(30*s);
 W{1}=tf(0.5);
 W{2}=0.5*(2*s+1)/(s+1);
 
-options = condesopt ('lambda',[1 1 0 0],'gamma',[0.5,2,0.01]);
-
+options1 = condesopt ('lambda',[1 1 0 0],'gamma',[0.5,2,0.01],'yalmip','on','nq',[]);
+options2 = condesopt ('lambda',[1 1 0 0],'gamma',[0.5,2,0.01],'yalmip','off');
 
 for phitype=0:3
     for ctype=0:2
@@ -69,8 +69,8 @@ for phitype=0:3
             end
 
 
-            K_ss = condes(G,phi_ss,per);
-            K = condes(G,phi,per);
+            K_ss = condes(G,phi_ss,per,options1);
+            K = condes(G,phi_ss,per,options2);
 
             figure; bode(K_ss,K)
             title(['phi: ',num2str(phitype),', C: ',num2str(ctype),', per: ',num2str(pertype)])

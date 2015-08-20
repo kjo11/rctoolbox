@@ -1,26 +1,27 @@
-% Test 7
-% MIMO (2x2), continuous
+% Test 8
+% MIMO (3x3), continuous
 % State space should have slightly poorer performance
 
 phitype = 2; % 0: pid, 1: pi, 2: laguerre (4), 3: generalized (5)
 ctype = 2; % 0: default, 1: given c, 2: given b
 pertype = 0; % 0: LS, 1: Hinf
 
-addpath('../toolbox')
-clear G phi per W
+addpath('../../toolbox')
+addpath(genpath('../../../matlab_tools'))
+clear G phi per
 
-disp('MIMO (2x2), continuous')
+disp('MIMO (3x3), continuous, yalmip')
 
 s=tf('s');
-G=[5*exp(-3*s)/(4*s+1) 2.5*exp(-5*s)/(15*s+1); -4*exp(-6*s)/(20*s+1) exp(-4*s)/(5*s+1)];
+G=[5*exp(-3*s)/(4*s+1) 2.5*exp(-5*s)/(15*s+1) tf(0,1); -4*exp(-6*s)/(20*s+1) exp(-4*s)/(5*s+1) tf(0,1); tf(0,1) tf(0,1) 5/(s+1)];
 
 Ld = 1/(30*s);
 
 W{1}=tf(0.5);
 W{2}=0.5*(2*s+1)/(s+1);
 
-options = condesopt ('lambda',[1 1 0 0],'gamma',[0.5,2,0.01]);
-
+options1 = condesopt ('lambda',[1 1 0 0],'gamma',[0.5,1,0.01],'gbands','off','yalmip','on','nq',[]);
+options2 = condesopt ('lambda',[1 1 0 0],'gamma',[0.5,1,0.01],'gbands','off','yalmip','off');
 
 for phitype=0:3
     for ctype=0:2
@@ -30,9 +31,9 @@ for phitype=0:3
                 case 0
                     Ccell = @(x) {'c',[1,zeros(1,x-1)]};
                 case 1
-                    Ccell = @(x) {'c', [ones(1,x); 1, zeros(1,x-1)]};
+                    Ccell = @(x) {'c', [ones(1,x); 1, zeros(1,x-1); ones(1,x-1),0]};
                 case 2
-                    Ccell = @(x) {'b',[(1:x)',ones(x,1)]};
+                    Ccell = @(x) {'b',[(1:x)',ones(x,1),[1; zeros(x-1,1)]]};
             end
 
             switch phitype
@@ -61,19 +62,22 @@ for phitype=0:3
             switch pertype 
                 case 0
                     per = cell(2,1);
-                    per{1} = conper('LS',0.3,Ld);
-                    per{2} = conper('LS',0.3,Ld);
+                    per{1} = conper('LS',0.2,Ld);
+                    per{2} = conper('LS',0.2,Ld);
+                    per{3} = conper('LS',0.2,Ld);
                 case 1
                     W{1} = tf(0.01,1);
                     per = conper('Hinf',W,Ld);
             end
 
 
-            K_ss = condes(G,phi_ss,per);
-            K = condes(G,phi,per);
+            K_ss = condes(G,phi_ss,per,options1);
+            K = condes(G,phi_ss,per,options2);
 
-            figure; bode(K_ss,K)
+            figure(1); bode(feedback(G*K_ss,ones(size(G,1))),feedback(G*K,ones(size(G,1))))
             title(['phi: ',num2str(phitype),', C: ',num2str(ctype),', per: ',num2str(pertype)])
+            
+            
         end
     end
 end

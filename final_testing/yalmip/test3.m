@@ -7,21 +7,22 @@ phitype = 2; % 0: pid, 1: pi, 2: laguerre (4), 3: generalized (5)
 ctype = 2; % 0: default, 1: given c, 2: given b
 pertype = 0; % 0: LS, 1: Hinf, 2: GPhC, 3: GPh
 
-addpath('../toolbox')
+addpath('../../toolbox')
 clear G phi per W
 
-disp('SISO, discrete, stable')
+disp('SISO, discrete, stable, yalmip')
 
 Ts = 0.005;
 
 z=tf('z',Ts);
 G=absorbDelay(c2d(exp(-5*s)/((s+1)^3),Ts));
 
-opts = condesopt('gamma',[0.2 4 0.01]);
+opt = condesopt('gamma',[0.2 4 0.01],'yalmip','on','nq',[]);
+opt2 = condesopt('gamma',[0.2 4 0.01],'yalmip','off');
 
 Ld = 1/s;
 
-for phitype=0:3
+for phitype=2:3
     for ctype=0:2
         for pertype=0:2
 
@@ -68,8 +69,8 @@ for phitype=0:3
             end
 
 
-            K_ss = condes(G,phi_ss,per,opts);
-            K = condes(G,phi,per,opts);
+            K_ss = condes(G,phi_ss,per,opt);
+            K = condes(G,phi_ss,per,opt2);
 
             figure; bode(feedback(G*K_ss,1),feedback(G*K,1))
             title(['phi: ',num2str(phitype),', C: ',num2str(ctype),', per: ',num2str(pertype)])

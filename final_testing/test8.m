@@ -1,84 +1,83 @@
 % Test 8
-% Uncertainty in M
+% MIMO (3x3), continuous
+% State space should have slightly poorer performance
+
+phitype = 2; % 0: pid, 1: pi, 2: laguerre (4), 3: generalized (5)
+ctype = 2; % 0: default, 1: given c, 2: given b
+pertype = 0; % 0: LS, 1: Hinf
 
 addpath('../toolbox')
 addpath(genpath('../../matlab_tools'))
-clear W G phi per w
+clear G phi per
 
-%% Constants
-nq=20;
-realtol=10e-8;
-
-order=10;% order
-xi=2;% Pole
+disp('MIMO (3x3), continuous')
 
 s=tf('s');
+G=[5*exp(-3*s)/(4*s+1) 2.5*exp(-5*s)/(15*s+1) tf(0,1); -4*exp(-6*s)/(20*s+1) exp(-4*s)/(5*s+1) tf(0,1); tf(0,1) tf(0,1) 5/(s+1)];
 
-%% Model and data generation
-Gorig=(s+10)*(s+1)/((s+2)*(s+4)*(s-1));
-K=1+1/s;
-dt = 0.01;
+Ld = 1/(30*s);
 
-r = prbs(5,20);
-n = 0.1*rand(size(r));
-t = 0:dt:dt*(length(r)-1);
+W{1}=tf(0.5);
+W{2}=0.5*(2*s+1)/(s+1);
 
-y = lsim(feedback(K*Gorig,1),r,t) + n;
-u = lsim(feedback(K,Gorig),r,t);
-
-Ndata = iddata(y,r,dt);
-Mdata = iddata(u,r,dt);
-Gdata = iddata(y,u,dt);
-
-N = spa(Ndata);
-M = spa(Mdata);
-
-G{1}{1} = N;
-G{1}{2} = M;
-
-G2 = spa(Gdata);
+options = condesopt ('lambda',[1 1 0 0],'gamma',[0.5,1,0.01],'gbands','on');
 
 
-W{1}=2/(20*s+1)^2;
-W{2}=0.8*(1.1337*s^2+6.8857*s+9)/((s+1)*(s+10));
-W{3}=tf(0.05);
+for phitype=0:3
+    for ctype=0:2
+        for pertype=0:1
+
+            switch ctype
+                case 0
+                    Ccell = @(x) {'c',[1,zeros(1,x-1)]};
+                case 1
+                    Ccell = @(x) {'c', [ones(1,x); 1, zeros(1,x-1); ones(1,x-1),0]};
+                case 2
+                    Ccell = @(x) {'b',[(1:x)',ones(x,1),[1; zeros(x-1,1)]]};
+            end
+
+            switch phitype
+                case 0
+                    x = 2;
+                    phi_ss = conphi('pid',0.01,'s',[],'ss',Ccell(x));
+                    phi = conphi('pid',0.01,'s');
+                case 1
+                    x = 1;
+                    phi_ss = conphi('pi',[],'s',[],'ss',Ccell(x));
+                    phi = conphi('pi',[],'s');
+                case 2
+                    x = 5;
+                    phi_ss = conphi('lag',[2 x-1],'s',1/s,'ss',Ccell(x));
+%                     phi_ss.phi(end) = tf(0,1);
+                    phi = conphi('lag',[2 x-1],'s',1/s);
+                case 3
+                    n = [0.1 0.2 0.3 0.4];
+                    x = length(n)+1;
+
+                    phi_ss = conphi('gen',n,'s',1/s,'ss',Ccell(x));
+%                     phi_ss.phi(end) = tf(0,1);
+                    phi = conphi('gen',n,'s',1/s);
+            end
+            
+            switch pertype
+                case 0
+                    per = cell(2,1);
+                    per{1} = conper('LS',0.2,Ld);
+                    per{2} = conper('LS',0.2,Ld);
+                    per{3} = conper('LS',0.2,Ld);
+                case 1
+                    W{1} = tf(0.01,1);
+                    per = conper('Hinf',W,Ld);
+            end
 
 
-lambda_mat=[1 0 0 0];
+            K_ss = condes(G,phi_ss,per,options);
+            K = condes(G,phi,per,options);
 
-g_max=0.3; g_min=0.01; g_tol = 0.01;
-phi = conphi('lag',[dt 0 order],'z',[],'tf');
-
-ntheta = 5;
-lambda=lambda_mat;
-
-opts = condesopt('nq',nq,'ntheta',ntheta,'TFtol',realtol,'gamma',[g_min g_max g_tol],'lambda',lambda);
-per = conper('Hinf',W);
-
-[K,sol] = condes(G,phi,per,opts);
-[K2,sol2] = condes(G2,phi,per,opts);
-
-figure; bode(K,K2)
-%% Loop
-% for j=1:2
-%     if j==1
-%         yalmipstr='on';
-%         ntheta=[];
-%         fprintf('yalmip\n');
-%     else
-%         yalmipstr='off';
-%         ntheta=20;
-%         fprintf('no yalmip\n')
-%     end
-%     
-%     for k=1:size(lambda_mat,1)
-%         lambda=lambda_mat(k,:);
-%         fprintf('lambda %i\n',k)
-%         
-%         opts = condesopt('nq',nq,'ntheta',ntheta,'TFtol',realtol,'w',w,'gamma',[g_min g_max g_tol],'lambda',lambda);
-%         per = conper('Hinf',W);
-%         [K,sol] = condes(GG,phi,per,opts);
-%         
-%         plot_Hinfcons(GG,K,W,lambda,sol.gamma,w)
-%     end     
-% end
+            figure(1); bode(feedback(G*K_ss,ones(size(G,1))),feedback(G*K,ones(size(G,1))))
+            title(['phi: ',num2str(phitype),', C: ',num2str(ctype),', per: ',num2str(pertype)])
+            
+            
+        end
+    end
+end
