@@ -325,6 +325,18 @@ if strcmp(ConStruc,'ss') && ~strncmp(ConType,'p  ',3)
         end
     end
     
+    if isempty(C)
+        ctr=ctrb(A,B);
+        if rank(ctr)~=ns
+            warning('The state space controller appears to have uncontrollable states for this choice of B')
+        end
+    else
+        obs=obsv(A,C);
+        if rank(obs)~=ns
+            warning('The state space controller appears to have unobservable states for this choice of C')
+        end
+    end
+    
     
     if strcmp(CorD,'s')
         var = zpk('s');

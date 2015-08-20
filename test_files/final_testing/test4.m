@@ -25,7 +25,7 @@ W{3}=tf(0.05);
 
 opt=condesopt('gamma',[0.2 3 0.001],'lambda',[1 1 0 0],'nq',30);
 
-for phitype=2:3
+for phitype=0:3
     for ctype=0:2
         for pertype=0:1
 

@@ -16,7 +16,7 @@ s=tf('s');
 G=exp(-s)/((s+1)^3);
 Ld = 1/s;
 
-for phitype=2:3
+for phitype=0:3
     for ctype=0:2
         for pertype=0:3
 

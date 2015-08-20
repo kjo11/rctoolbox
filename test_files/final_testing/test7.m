@@ -28,11 +28,11 @@ for phitype=0:3
 
             switch ctype
                 case 0
-                    Ccell = @(x) {'c',[1,zeros(1,x-1); 1,zeros(1,x-1)]};
+                    Ccell = @(x) {'c',[1,zeros(1,x-1)]};
                 case 1
-                    Ccell = @(x) {'c', ones(2,x)};
+                    Ccell = @(x) {'c', [ones(1,x); 1, zeros(1,x-1)]};
                 case 2
-                    Ccell = @(x) {'b',ones(x,2)};
+                    Ccell = @(x) {'b',[(1:x)',ones(x,1)]};
             end
 
             switch phitype

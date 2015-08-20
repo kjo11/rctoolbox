@@ -21,7 +21,7 @@ opts = condesopt('gamma',[0.2 4 0.01]);
 
 Ld = 1/s;
 
-for phitype=2:3
+for phitype=0:3
     for ctype=0:2
         for pertype=0:2
 
