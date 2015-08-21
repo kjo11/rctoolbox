@@ -2171,7 +2171,7 @@ if isempty(B)
         if size(C,1)==1 && sum(C~=defaultC)==0 % if C is default
             C = zeros(ni,nss);
             for i=1:min(nss,ni)
-                C(i,1:i) = 1; % make C matrix
+                C(i,i) = 1; % make C matrix
             end
             
             % Recompute phi
