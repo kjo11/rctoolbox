@@ -171,7 +171,7 @@ else  % Use optimization toolbox
         options.nq=8;
     end
     
-    ops = [];
+    ops = optimset;
     if ~isempty (options.solveroptions)
         names = fieldnames(options.solveroptions);
         for k=1:length(names);
@@ -244,8 +244,17 @@ if ni==1 && no==1  % SISO model
 
 if isTF
     % no optimization 
-    f = zeros(ntot+n-1,1);
+    f = zeros(ntot+n,1);
     H = [];
+    
+    % set constraint offset based on linprog tolerance
+    if ~isempty(nq)
+        if isempty(ops.TolFun)
+            realtol = 1e-8;
+        else
+            realtol = ops.TolFun;
+        end
+    end
 else
     phiGfreq=cell(1,m);
     toto=cell(1,m);
@@ -621,12 +630,9 @@ end
                                 else
                                     for kk=1:nqm
                                         if ~isempty(nq)
-                                            [A1 b1 HinfConstraint1]=tf_Ab_HinfCons(GCov{j}{k},MCov{j}{kk},phifreq{j},fsf{j},Wfgamma{j},nq,ntot,n,lambda);
-                                            % force y to be monic
-                                            b1=b1-A1(:,1);
-                                            A1=A1(:,2:end);
+                                            [A1 b1 HinfConstraint1]=tf_Ab_HinfCons(GCov{j}{k},MCov{j}{kk},phifreq{j},fsf{j},Wfgamma{j},nq,ntot,n,realtol,lambda);
                                         else
-                                            [A1 b1 HinfConstraint1]=tf_Ab_HinfCons(GCov{j}{k},MCov{j}{kk},phifreq{j},fsf{j},Wfgamma{j},nq,ntot,n,lambda,rho);
+                                            [A1 b1 HinfConstraint1]=tf_Ab_HinfCons(GCov{j}{k},MCov{j}{kk},phifreq{j},fsf{j},Wfgamma{j},nq,ntot,n,realtol,lambda,rho);
                                         end
                                     end
                                 end
@@ -638,7 +644,6 @@ end
                         end
                         
                         
-
                         [x,optval,xflag] = solveopt(H,f,A,b,HinfConstraint,YesYalmip,rho,ops);
 
                         if xflag==1,
@@ -674,7 +679,7 @@ end
     
     
     if isTF
-        rhox=reshape([1;x],n,Ngs+1);
+        rhox=reshape(x,n,Ngs+1);
     else
         for k=1:n
             rhox(k,:)=x((k-1)*Ngs+1:k*Ngs);
@@ -2266,13 +2271,14 @@ end
 
 
 
-function [A, b, HinfConstraint]=tf_Ab_HinfCons(Nf,Mf,phif,fsf,Wfgamma,ntheta,ntot,n,lambda,rho)
+function [A, b, HinfConstraint]=tf_Ab_HinfCons(Nf,Mf,phif,fsf,Wfgamma,ntheta,ntot,n,realtol,lambda,rho)
 % Compute Hinf constraints for TF structure
 
 
 A = [];
 b = [];
 HinfConstraint = [];
+
 
 
 
@@ -2294,15 +2300,15 @@ if ~isempty(ntheta) % linear constraints
                         for j=1:n+ntot
                             if j<=n
                                 phi = transpose(phif(j,:));
-                                phiGq(j,:)= transpose(phi.*fsf.*Mf - exp(1i*2*pi*q1/ntheta)/cos(pi/ntheta)*(lambda(1)*Wfgamma(:,1).*phi.*fsf.*Mf) - exp(1i*2*pi*q4/ntheta)/cos(pi/ntheta)*(lambda(4)*Wfgamma(:,4).*phi.*fsf.*Nf));
+                                phiGq(:,j)= phi.*fsf.*Mf - exp(1i*2*pi*q1/ntheta)/cos(pi/ntheta)*(lambda(1)*Wfgamma(:,1).*phi.*fsf.*Mf) - exp(1i*2*pi*q4/ntheta)/cos(pi/ntheta)*(lambda(4)*Wfgamma(:,4).*phi.*fsf.*Nf);
                             else
                                 phi = transpose(phif(j-n,:));
-                                phiGq(j,:)= transpose(phi.*Nf - exp(1i*2*pi*q2/ntheta)/cos(pi/ntheta) * (lambda(2)*Wfgamma(:,2).*phi.*Nf) - exp(1i*2*pi*q3/ntheta)/cos(pi/ntheta)*(lambda(3)*Wfgamma(:,3).*phi.*Mf));
+                                phiGq(:,j)= phi.*Nf - exp(1i*2*pi*q2/ntheta)/cos(pi/ntheta) * (lambda(2)*Wfgamma(:,2).*phi.*Nf) - exp(1i*2*pi*q3/ntheta)/cos(pi/ntheta)*(lambda(3)*Wfgamma(:,3).*phi.*Mf);
                             end
                         end
-                        A1=-real(transpose(phiGq));
+                        A1=-real(phiGq);
                         h=size(A1);
-                        b1=zeros(h(1),1);
+                        b1=-realtol*ones(h(1),1);
                         A = [A ; A1];
                         b = [b ; b1];
                     end
@@ -2317,15 +2323,15 @@ if ~isempty(ntheta) % linear constraints
             for j=1:n+ntot
                 if j<=n
                     phi = transpose(phif(j,:));
-                    phiGq(j,:)= transpose(phi.*fsf.*Mf - exp(1i*2*pi*q/ntheta)/cos(pi/ntheta)*Wfgamma(:,1).*phi.*fsf.*Mf);
+                    phiGq(:,j)= (phi.*fsf.*Mf - exp(1i*2*pi*q/ntheta)/cos(pi/ntheta)*(Wfgamma(:,1)).*(phi.*fsf.*Mf));
                 else
                     phi = transpose(phif(j-n,:));
-                    phiGq(j,:)= transpose(phi.*Nf);
+                    phiGq(:,j)= (phi.*Nf);
                 end
             end
-            A1=-real(transpose(phiGq));
+            A1=-real(phiGq);
             h=size(A1);
-            b1=zeros(h(1),1);
+            b1=-realtol * ones(h(1),1);
             A = [A ; A1];
             b = [b ; b1];
         end 
@@ -2337,15 +2343,15 @@ if ~isempty(ntheta) % linear constraints
             for j=1:n+ntot
                 if j<=n
                     phi = transpose(phif(j,:));
-                    phiGq(j,:)= transpose(phi.*fsf.*Mf);
+                    phiGq(:,j)= ((phi.*fsf.*Mf));
                 else
                     phi = transpose(phif(j-n,:));
-                    phiGq(j,:)= transpose(phi.*Nf - exp(1i*2*pi*q/ntheta)/cos(pi/ntheta)*Wfgamma(:,2).*phi.*Nf);
+                    phiGq(:,j)= ((phi.*Nf) - exp(1i*2*pi*q/ntheta)/cos(pi/ntheta)*(Wfgamma(:,2)).*(phi.*Nf));
                 end
             end
-            A1=-real(transpose(phiGq));
+            A1=-real(phiGq);
             h=size(A1);
-            b1=zeros(h(1),1);
+            b1=-realtol * ones(h(1),1);
             A = [A ; A1];
             b = [b ; b1];
         end 
@@ -2357,15 +2363,15 @@ if ~isempty(ntheta) % linear constraints
             for j=1:n+ntot
                 if j<=n
                     phi = transpose(phif(j,:));
-                    phiGq(j,:)= transpose(phi.*fsf.*Mf);
+                    phiGq(:,j)= (phi.*fsf.*Mf);
                 else
                     phi = transpose(phif(j-n,:));
-                    phiGq(j,:)= transpose(phi.*Nf - exp(1i*2*pi*q/ntheta)/cos(pi/ntheta)*Wfgamma(:,3).*phi.*Mf);
+                    phiGq(:,j)= (phi.*Nf - exp(1i*2*pi*q/ntheta)/cos(pi/ntheta)*Wfgamma(:,3).*phi.*Mf);
                 end
             end
-            A1=-real(transpose(phiGq));
+            A1=-real(phiGq);
             h=size(A1);
-            b1=zeros(h(1),1);
+            b1=-realtol*ones(h(1),1);
             A = [A ; A1];
             b = [b ; b1];
         end 
@@ -2377,15 +2383,15 @@ if ~isempty(ntheta) % linear constraints
             for j=1:n+ntot
                 if j<=n
                     phi = transpose(phif(j,:));
-                    phiGq(j,:)= transpose(phi.*fsf.*Mf - exp(1i*2*pi*q/ntheta)/cos(pi/ntheta)*Wfgamma(:,4).*phi.*fsf.*Nf);
+                    phiGq(:,j)= (phi.*fsf.*Mf - exp(1i*2*pi*q/ntheta)/cos(pi/ntheta)*Wfgamma(:,4).*phi.*fsf.*Nf);
                 else
                     phi = transpose(phif(j-n,:));
-                    phiGq(j,:)= transpose(phi.*Nf);
+                    phiGq(:,j)= (phi.*Nf);
                 end
             end
-            A1=-real(transpose(phiGq));
+            A1=-real(phiGq);
             h=size(A1);
-            b1=zeros(h(1),1);
+            b1=-realtol*ones(h(1),1);
             A = [A ; A1];
             b = [b ; b1];
         end 

@@ -6,7 +6,7 @@ addpath(genpath('../../matlab_tools'))
 clear W G phi per w
 
 %% Constants
-nq=20;
+nq=5;
 realtol=10e-8;
 
 order=10;% order
@@ -36,7 +36,6 @@ M = spa(Mdata);
 G{1}{1} = N;
 G{1}{2} = M;
 
-G2 = spa(Gdata);
 
 
 W{1}=2/(20*s+1)^2;
@@ -49,16 +48,14 @@ lambda_mat=[1 0 0 0];
 g_max=0.3; g_min=0.01; g_tol = 0.01;
 phi = conphi('lag',[dt 0 order],'z',[],'tf');
 
-ntheta = 5;
 lambda=lambda_mat;
 
-opts = condesopt('nq',nq,'ntheta',ntheta,'TFtol',realtol,'gamma',[g_min g_max g_tol],'lambda',lambda);
+opts = condesopt('nq',nq,'gamma',[g_min g_max g_tol],'lambda',lambda);
 per = conper('Hinf',W);
 
 [K,sol] = condes(G,phi,per,opts);
-[K2,sol2] = condes(G2,phi,per,opts);
 
-figure; bode(K,K2)
+figure; bode(K)
 %% Loop
 % for j=1:2
 %     if j==1

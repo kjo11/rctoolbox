@@ -36,11 +36,11 @@ phi = conphi('lag',[Ts 0 n],'z',[],'tf');
 for j=1:2
     if j==1
         yalmipstr='on';
-        ntheta=[];
+        nq=[];
         fprintf('yalmip\n');
     else
         yalmipstr='off';
-        ntheta=20;
+        nq=20;
         fprintf('no yalmip\n')
     end
     
@@ -48,7 +48,7 @@ for j=1:2
         lambda=lambda_mat(k,:);
         fprintf('lambda %i\n',k)
         
-        opts = condesopt('nq',nq,'ntheta',ntheta,'TFtol',realtol,'w',w,'gamma',[g_min g_max g_tol],'lambda',lambda);
+        opts = condesopt('nq',nq,'w',w,'gamma',[g_min g_max g_tol],'lambda',lambda);
         per = conper('Hinf',W);
         [K,sol] = condes(G,phi,per,opts);
         

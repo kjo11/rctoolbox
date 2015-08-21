@@ -44,7 +44,7 @@ n=6; % number of basis functions
 fs=tf(1);
 
 w=[logspace(-2,3,200)]; %frequency points
-ntheta=25; % %number of griding point of theta
+nq=25; % %number of griding point of theta
 
 
 gamma_opt=0;
@@ -54,7 +54,7 @@ g_tol=1e-2;
 gamma=g_max;
 realtol=0.00001;
 
-opts = condesopt('ntheta',ntheta,'w',w,'gamma',[g_min,g_max,g_tol]);
+opts = condesopt('nq',nq,'w',w,'gamma',[g_min,g_max,g_tol]);
 phi = conphi('lag',[xi n],'s',[],'tf');
 per = conper('Hinf',W);
 [K,sol] = condes(inG,phi,per,opts);
