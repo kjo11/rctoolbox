@@ -125,7 +125,12 @@ else  % Use optimization toolbox
     YesYalmip=0;
     rho=zeros(ntot,1);
     
-    ops = [];
+    if isempty(options.nq)
+        warning('Yalmip not found. Setting nq to 8')
+        options.nq=8;
+    end
+    
+    ops = optimset;
     if ~isempty (options.solveroptions)
         names = fieldnames(options.solveroptions);
         for k=1:length(names);
