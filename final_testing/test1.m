@@ -2,7 +2,6 @@
 % SISO, continuous, stable
 
 phitype = 2; % 0: pid, 1: pi, 2: laguerre (4), 3: generalized (5)
-ctype = 2; % 0: default, 1: given c, 2: given b
 pertype = 0; % 0: LS, 1: Hinf, 2: GPhC, 3: GPh
 
 addpath('../toolbox')
@@ -45,7 +44,10 @@ for phitype=0:3
             case 0
                 per = conper('LS',0.3,Ld);
             case 1
-                W{1} = tf(0.5,1);
+                W{1} = tf(0.5);
+                W{2} = tf(0.01);
+                W{3} = tf(0.001);
+                W{4} = tf(0.001);
                 per = conper('Hinf',W,Ld);
             case 2
                 per = conper('GPhC',[1.2 30 0.5],Ld);
@@ -54,11 +56,11 @@ for phitype=0:3
         end
 
 
-        C_sp = condes(G,phi_sp,per);
+        C_sp = condes(P,phi_sp,per);
         K_sp = feedback(C_sp,H);
-        K = condes(G,phi,per);
+        K = condes(P,phi,per);
 
-        figure; bode(feedback(G*K_sp,1),feedback(G*K,1))
-        title(['phi: ',num2str(phitype),', C: ',num2str(ctype),', per: ',num2str(pertype)])
+        figure; bode(feedback(P*K_sp,1),feedback(P*K,1))
+        title(['phi: ',num2str(phitype),', per: ',num2str(pertype)])
     end
 end

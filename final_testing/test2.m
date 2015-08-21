@@ -1,80 +1,69 @@
 % Test 2
-% SISO, continuous, unstable
-% Bode plots should be identical for PID/PI
-% Performance should be improved for Lag/Gen ('D' term added)
-
-phitype = 2; % 0: pid, 1: pi, 2: laguerre (4), 3: generalized (5)
-ctype = 2; % 0: default, 1: given c, 2: given b
-pertype = 0; % 0: LS, 1: Hinf
+% gain-scheduled -- multiple theta
 
 addpath('../toolbox')
-clear G phi per
+addpath(genpath('../../matlab_tools'))
+clear W G phi per w
 
-disp('SISO, continuous, unstable')
 
+
+%% Constants
+
+n=4;% order
+xi=0;% Pole
 
 s=tf('s');
 
-G=(s+1)*(s+10)/((s+2)*(s+4)*(s-1));
+%% Model and options
+G{1}=(s+10)/((s+2)*(s+4));
+G{2}=(s+11)/((s+2)*(s+4));
+G{3}=(s+12)/((s+2.1)*(s+4));
 
-Ld=2*(s+1)/s/(s-1);
+for i=1:length(G)
+    P{i} = G{i}*exp(-s);
+end
+
+H = G{1} - P{1};
+
+gs = [1 1; 2 0; 2 2];
+np = [1 2];
+
+w=logspace(-3,3,10);
 
 W{1}=2/(20*s+1)^2;
 W{2}=0.8*(1.1337*s^2+6.8857*s+9)/((s+1)*(s+10));
 W{3}=tf(0.05);
 
-opt=condesopt('gamma',[0.2 1.8 0.001],'lambda',[1 1 0 0],'nq',30);
-
-for phitype=0:3
-    for ctype=0:2
-        for pertype=0:1
-
-            switch ctype
-                case 0
-                    Ccell = @(x) {'c',[1,zeros(1,x-1)]};
-                case 1
-                    Ccell = @(x) {'c', ones(1,x)};
-                case 2
-                    Ccell = @(x) {'b',(1:x)'};
-            end
-
-            switch phitype
-                case 0
-                    x = 2;
-                    phi_ss = conphi('pid',0.01,'s',[],'ss',Ccell(x));
-                    phi = conphi('pid',0.01,'s');
-                case 1
-                    x = 1;
-                    phi_ss = conphi('pi',[],'s',[],'ss',Ccell(x));
-                    phi = conphi('pi',[],'s');
-                case 2
-                    x = 8;
-                    phi_ss = conphi('lag',[2 x-1],'s',1/s,'ss',Ccell(x));
-%                     phi_ss.phi(end) = tf(0,1);
-                    phi = conphi('lag',[2 x-1],'s',1/s);
-                case 3
-                    n = [2 2 2 2 3 4];
-                    x = length(n)+1;
-
-                    phi_ss = conphi('gen',n,'s',1/s,'ss',Ccell(x));
-%                     phi_ss.phi(end) = tf(0,1);
-                    phi = conphi('gen',n,'s',1/s);
-            end
-
-            switch pertype 
-                case 0
-                    per = conper('LS',0.3,Ld);
-                case 1
-                    W{1} = 1/s;
-                    per = conper('Hinf',W,Ld);
-            end
+Ld = 1/s;
 
 
-            K_ss = condes(G,phi_ss,per);
-            K = condes(G,phi,per);
+lambda_mat = [1 1 1 0; 1 0 0 0; 0 1 0 0];
+g_max=1; g_min=0.5; g_tol = 0.01;
+phi = conphi('lag',[2 n],'s',1/s,'sp',H);
 
-            figure; bode(feedback(G*K_ss,1),feedback(G*K,1))
-            title(['phi: ',num2str(phitype),', C: ',num2str(ctype),', per: ',num2str(pertype)])
-        end
+
+%% Loop
+for j=1:2
+    if j==1
+        yalmipstr='on';
+        nq=[];
+        fprintf('yalmip\n');
+    else
+        yalmipstr='off';
+        nq=5;
+        fprintf('no yalmip\n')
     end
+    
+    for k=1:size(lambda_mat,1)
+        lambda=lambda_mat(k,:);
+        fprintf('lambda %i\n',k)
+        
+        opts = condesopt('nq',nq,'w',w,'gamma',[g_min g_max g_tol],'lambda',lambda,'np',np,'gs',gs);
+        per = conper('Hinf',W,Ld);
+        [C,sol] = condes(P,phi,per,opts);
+        
+        
+        eval_Hinfcons(P,C,W,lambda,sol.gamma,w,gs,np,H)
+    end     
 end
+
