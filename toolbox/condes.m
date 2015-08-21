@@ -146,16 +146,7 @@ else  % Use optimization toolbox
     YesYalmip=0;
     rho=zeros(ntot,1);
     
-    if isempty(options.nq)
-        warning('Yalmip not found. Setting nq to 8')
-        options.nq=8;
-    end
-    
-    if isTF
-        ops = optimset ('Largescale', 'on','MaxIter',100000,'TolFun',1e-8);
-    else
-        ops = optimset ('Largescale', 'off');
-    end
+    ops = [];
     if ~isempty (options.solveroptions)
         names = fieldnames(options.solveroptions);
         for k=1:length(names);
