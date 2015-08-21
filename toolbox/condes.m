@@ -224,7 +224,7 @@ if ni==1 && no==1  % SISO model
 
 if isTF
     % no optimization 
-    f = zeros(ntot+n-1,1);
+    f = zeros(ntot+n,1);
     H = [];
     
     % set constraint offset based on linprog tolerance
@@ -610,9 +610,6 @@ end
                                     for kk=1:nqm
                                         if ~isempty(nq)
                                             [A1 b1 HinfConstraint1]=tf_Ab_HinfCons(GCov{j}{k},MCov{j}{kk},phifreq{j},fsf{j},Wfgamma{j},nq,ntot,n,realtol,lambda);
-                                            % force y to be monic
-                                            b1=b1-A1(:,1);
-                                            A1=A1(:,2:end);
                                         else
                                             [A1 b1 HinfConstraint1]=tf_Ab_HinfCons(GCov{j}{k},MCov{j}{kk},phifreq{j},fsf{j},Wfgamma{j},nq,ntot,n,realtol,lambda,rho);
                                         end
@@ -661,7 +658,7 @@ end
     
     
     if isTF
-        rhox=reshape([1;x],n,Ngs+1);
+        rhox=reshape(x,n,Ngs+1);
     else
         for k=1:n
             rhox(k,:)=x((k-1)*Ngs+1:k*Ngs);
