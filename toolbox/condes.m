@@ -125,7 +125,7 @@ else  % Use optimization toolbox
     YesYalmip=0;
     rho=zeros(ntot,1);
     
-    ops = optimset ('Largescale', 'off');
+    ops = [];
     if ~isempty (options.solveroptions)
         names = fieldnames(options.solveroptions);
         for k=1:length(names);
