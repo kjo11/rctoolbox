@@ -151,7 +151,7 @@ else  % Use optimization toolbox
         rho_ss = zeros(nss*Ngs*no+Ngs*no*ni,1);
     end
     
-    ops = optimset ('Largescale', 'off');
+    ops = [];
     if ~isempty (options.solveroptions)
         names = fieldnames(options.solveroptions);
         for k=1:length(names);
