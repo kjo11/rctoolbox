@@ -2215,13 +2215,13 @@ if ~isempty(ntheta) % linear constraints
                         for j=1:n+ntot
                             if j<=n
                                 phi = transpose(phif(j,:));
-                                phiGq(j,:)= transpose(phi.*fsf.*Mf - exp(1i*2*pi*q1/ntheta)/cos(pi/ntheta)*(lambda(1)*Wfgamma(:,1).*phi.*fsf.*Mf) - exp(1i*2*pi*q4/ntheta)/cos(pi/ntheta)*(lambda(4)*Wfgamma(:,4).*phi.*fsf.*Nf));
+                                phiGq(:,j)= phi.*fsf.*Mf - exp(1i*2*pi*q1/ntheta)/cos(pi/ntheta)*(lambda(1)*Wfgamma(:,1).*phi.*fsf.*Mf) - exp(1i*2*pi*q4/ntheta)/cos(pi/ntheta)*(lambda(4)*Wfgamma(:,4).*phi.*fsf.*Nf);
                             else
                                 phi = transpose(phif(j-n,:));
-                                phiGq(j,:)= transpose(phi.*Nf - exp(1i*2*pi*q2/ntheta)/cos(pi/ntheta) * (lambda(2)*Wfgamma(:,2).*phi.*Nf) - exp(1i*2*pi*q3/ntheta)/cos(pi/ntheta)*(lambda(3)*Wfgamma(:,3).*phi.*Mf));
+                                phiGq(:,j)= phi.*Nf - exp(1i*2*pi*q2/ntheta)/cos(pi/ntheta) * (lambda(2)*Wfgamma(:,2).*phi.*Nf) - exp(1i*2*pi*q3/ntheta)/cos(pi/ntheta)*(lambda(3)*Wfgamma(:,3).*phi.*Mf);
                             end
                         end
-                        A1=-real(transpose(phiGq));
+                        A1=-real(phiGq);
                         h=size(A1);
                         b1=zeros(h(1),1);
                         A = [A ; A1];
@@ -2238,13 +2238,13 @@ if ~isempty(ntheta) % linear constraints
             for j=1:n+ntot
                 if j<=n
                     phi = transpose(phif(j,:));
-                    phiGq(j,:)= transpose(phi.*fsf.*Mf - exp(1i*2*pi*q/ntheta)/cos(pi/ntheta)*Wfgamma(:,1).*phi.*fsf.*Mf);
+                    phiGq(:,j)= (phi.*fsf.*Mf - exp(1i*2*pi*q/ntheta)/cos(pi/ntheta)*(Wfgamma(:,1)).*(phi.*fsf.*Mf));
                 else
                     phi = transpose(phif(j-n,:));
-                    phiGq(j,:)= transpose(phi.*Nf);
+                    phiGq(:,j)= (phi.*Nf);
                 end
             end
-            A1=-real(transpose(phiGq));
+            A1=-real(phiGq);
             h=size(A1);
             b1=zeros(h(1),1);
             A = [A ; A1];
@@ -2258,13 +2258,13 @@ if ~isempty(ntheta) % linear constraints
             for j=1:n+ntot
                 if j<=n
                     phi = transpose(phif(j,:));
-                    phiGq(j,:)= transpose(phi.*fsf.*Mf);
+                    phiGq(:,j)= ((phi.*fsf.*Mf));
                 else
                     phi = transpose(phif(j-n,:));
-                    phiGq(j,:)= transpose(phi.*Nf - exp(1i*2*pi*q/ntheta)/cos(pi/ntheta)*Wfgamma(:,2).*phi.*Nf);
+                    phiGq(:,j)= ((phi.*Nf) - exp(1i*2*pi*q/ntheta)/cos(pi/ntheta)*(Wfgamma(:,2)).*(phi.*Nf));
                 end
             end
-            A1=-real(transpose(phiGq));
+            A1=-real(phiGq);
             h=size(A1);
             b1=zeros(h(1),1);
             A = [A ; A1];
@@ -2278,13 +2278,13 @@ if ~isempty(ntheta) % linear constraints
             for j=1:n+ntot
                 if j<=n
                     phi = transpose(phif(j,:));
-                    phiGq(j,:)= transpose(phi.*fsf.*Mf);
+                    phiGq(:,j)= (phi.*fsf.*Mf);
                 else
                     phi = transpose(phif(j-n,:));
-                    phiGq(j,:)= transpose(phi.*Nf - exp(1i*2*pi*q/ntheta)/cos(pi/ntheta)*Wfgamma(:,3).*phi.*Mf);
+                    phiGq(:,j)= (phi.*Nf - exp(1i*2*pi*q/ntheta)/cos(pi/ntheta)*Wfgamma(:,3).*phi.*Mf);
                 end
             end
-            A1=-real(transpose(phiGq));
+            A1=-real(phiGq);
             h=size(A1);
             b1=zeros(h(1),1);
             A = [A ; A1];
@@ -2298,13 +2298,13 @@ if ~isempty(ntheta) % linear constraints
             for j=1:n+ntot
                 if j<=n
                     phi = transpose(phif(j,:));
-                    phiGq(j,:)= transpose(phi.*fsf.*Mf - exp(1i*2*pi*q/ntheta)/cos(pi/ntheta)*Wfgamma(:,4).*phi.*fsf.*Nf);
+                    phiGq(:,j)= (phi.*fsf.*Mf - exp(1i*2*pi*q/ntheta)/cos(pi/ntheta)*Wfgamma(:,4).*phi.*fsf.*Nf);
                 else
                     phi = transpose(phif(j-n,:));
-                    phiGq(j,:)= transpose(phi.*Nf);
+                    phiGq(:,j)= (phi.*Nf);
                 end
             end
-            A1=-real(transpose(phiGq));
+            A1=-real(phiGq);
             h=size(A1);
             b1=zeros(h(1),1);
             A = [A ; A1];
