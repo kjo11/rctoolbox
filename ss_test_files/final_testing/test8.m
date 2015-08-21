@@ -6,8 +6,8 @@ phitype = 2; % 0: pid, 1: pi, 2: laguerre (4), 3: generalized (5)
 ctype = 2; % 0: default, 1: given c, 2: given b
 pertype = 0; % 0: LS, 1: Hinf
 
-addpath('../../toolbox')
-addpath(genpath('../../../matlab_tools'))
+addpath('../toolbox')
+addpath(genpath('../../matlab_tools'))
 clear G phi per
 
 disp('MIMO (3x3), continuous')
@@ -31,9 +31,9 @@ for phitype=0:3
                 case 0
                     Ccell = @(x) {'c',[1,zeros(1,x-1)]};
                 case 1
-                    Ccell = @(x) {'c', ones(3,x)};
+                    Ccell = @(x) {'c', [ones(1,x); 1, zeros(1,x-1); ones(1,x-1),0]};
                 case 2
-                    Ccell = @(x) {'b',repmat((1:x)',1,3)};
+                    Ccell = @(x) {'b',[(1:x)',ones(x,1),[1; zeros(x-1,1)]]};
             end
 
             switch phitype

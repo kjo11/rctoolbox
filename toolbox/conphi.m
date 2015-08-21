@@ -30,8 +30,8 @@ function phi = conphi(ConType,ConPar,CorD,F,ConStruc,ConOpt)
 %
 %       For user defined structure, ConPar is a column vector of stable
 %       transfer functions. For state space, ConPar can also be a vector
-%       Aeigs giving the eigenvalues of the A matrix. For discrete time,
-%       ConPar is [Ts Aeigs].
+%       Aeigs giving the eigenvalues of the A matrix (in discrete time:
+%       [Ts Aeigs]).
 %
 % CorD : is a string that can be 's' or 'z' to define continuous-time or
 %       discrete-time controller. If it is not assigned a continuous-time 
@@ -343,6 +343,18 @@ if strcmp(ConStruc,'ss') && ~strncmp(ConType,'p  ',3)
         A = full(spdiags(ones(ns,1),1,[zeros(ns-1,ns); -flipud(a(:))']));
         if ~isempty(B) % if B matrix given, use observable canonical
             A = A';
+        end
+    end
+    
+    if isempty(C)
+        ctr=ctrb(A,B);
+        if rank(ctr)~=ns
+            warning('The state space controller appears to have uncontrollable states for this choice of B')
+        end
+    else
+        obs=obsv(A,C);
+        if rank(obs)~=ns
+            warning('The state space controller appears to have unobservable states for this choice of C')
         end
     end
     

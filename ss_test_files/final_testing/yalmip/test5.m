@@ -33,7 +33,7 @@ for phitype=0:3
                 case 1
                     Ccell = @(x) {'c', ones(1,x)};
                 case 2
-                    Ccell = @(x) {'b',ones(x,2)};
+                    Ccell = @(x) {'b',[(0:x-1)',ones(x,1)]};
             end
 
             switch phitype

@@ -7,7 +7,7 @@ phitype = 2; % 0: pid, 1: pi, 2: laguerre (4), 3: generalized (5)
 ctype = 2; % 0: default, 1: given c, 2: given b
 pertype = 0; % 0: LS, 1: Hinf, 2: GPhC, 3: GPh
 
-addpath('../../toolbox')
+addpath('../toolbox')
 clear G phi per W
 
 disp('SISO, discrete, stable')
@@ -21,7 +21,7 @@ opts = condesopt('gamma',[0.2 4 0.01]);
 
 Ld = 1/s;
 
-for phitype=2:3
+for phitype=0:3
     for ctype=0:2
         for pertype=0:2
 

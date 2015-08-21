@@ -7,7 +7,7 @@ phitype = 2; % 0: pid, 1: pi, 2: laguerre (4), 3: generalized (5)
 ctype = 2; % 0: default, 1: given c, 2: given b
 pertype = 0; % 0: LS, 1: Hinf
 
-addpath('../../toolbox')
+addpath('../toolbox')
 clear G phi per W
 
 disp('MIMO (2x1), continuous')
@@ -33,7 +33,7 @@ for phitype=0:3
                 case 1
                     Ccell = @(x) {'c', ones(1,x)};
                 case 2
-                    Ccell = @(x) {'b',ones(x,2)};
+                    Ccell = @(x) {'b',[(0:x-1)',ones(x,1)]};
             end
 
             switch phitype
@@ -59,8 +59,8 @@ for phitype=0:3
 %                     phi_ss.phi(end) = tf(0,1);
                     phi = conphi('gen',n,'s',1/s);
             end
-
-            switch pertype 
+            
+            switch pertype
                 case 0
                     per=cell(2,1);
                     per{1} = conper('LS',0.1,Ld);
@@ -74,8 +74,8 @@ for phitype=0:3
             K_ss = condes(G,phi_ss,per,options);
             K = condes(G,phi,per,options);
 
-%             figure; bode(feedback(G*K_ss,ones(size(G,1))),feedback(G*K,ones(size(G,1))))
-            figure; bode(K_ss,K)
+            figure; bode(feedback(G*K_ss,ones(size(G,1))),feedback(G*K,ones(size(G,1))))
+%             figure; bode(K_ss,K)
             title(['phi: ',num2str(phitype),', C: ',num2str(ctype),', per: ',num2str(pertype)])
         end
     end
