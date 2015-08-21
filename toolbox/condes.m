@@ -151,7 +151,7 @@ else  % Use optimization toolbox
         options.nq=8;
     end
     
-    ops = [];
+    ops = optimset;
     if ~isempty (options.solveroptions)
         names = fieldnames(options.solveroptions);
         for k=1:length(names);
@@ -226,6 +226,15 @@ if isTF
     % no optimization 
     f = zeros(ntot+n-1,1);
     H = [];
+    
+    % set constraint offset based on linprog tolerance
+    if ~isempty(nq)
+        if isempty(ops.TolFun)
+            realtol = 1e-8;
+        else
+            realtol = ops.TolFun;
+        end
+    end
 else
     phiGfreq=cell(1,m);
     toto=cell(1,m);
@@ -600,12 +609,12 @@ end
                                 else
                                     for kk=1:nqm
                                         if ~isempty(nq)
-                                            [A1 b1 HinfConstraint1]=tf_Ab_HinfCons(GCov{j}{k},MCov{j}{kk},phifreq{j},fsf{j},Wfgamma{j},nq,ntot,n,lambda);
+                                            [A1 b1 HinfConstraint1]=tf_Ab_HinfCons(GCov{j}{k},MCov{j}{kk},phifreq{j},fsf{j},Wfgamma{j},nq,ntot,n,realtol,lambda);
                                             % force y to be monic
                                             b1=b1-A1(:,1);
                                             A1=A1(:,2:end);
                                         else
-                                            [A1 b1 HinfConstraint1]=tf_Ab_HinfCons(GCov{j}{k},MCov{j}{kk},phifreq{j},fsf{j},Wfgamma{j},nq,ntot,n,lambda,rho);
+                                            [A1 b1 HinfConstraint1]=tf_Ab_HinfCons(GCov{j}{k},MCov{j}{kk},phifreq{j},fsf{j},Wfgamma{j},nq,ntot,n,realtol,lambda,rho);
                                         end
                                     end
                                 end
@@ -617,7 +626,6 @@ end
                         end
                         
                         
-
                         [x,optval,xflag] = solveopt(H,f,A,b,HinfConstraint,YesYalmip,rho,ops);
 
                         if xflag==1,
@@ -2187,13 +2195,14 @@ end
 
 
 
-function [A, b, HinfConstraint]=tf_Ab_HinfCons(Nf,Mf,phif,fsf,Wfgamma,ntheta,ntot,n,lambda,rho)
+function [A, b, HinfConstraint]=tf_Ab_HinfCons(Nf,Mf,phif,fsf,Wfgamma,ntheta,ntot,n,realtol,lambda,rho)
 % Compute Hinf constraints for TF structure
 
 
 A = [];
 b = [];
 HinfConstraint = [];
+
 
 
 
@@ -2223,7 +2232,7 @@ if ~isempty(ntheta) % linear constraints
                         end
                         A1=-real(phiGq);
                         h=size(A1);
-                        b1=zeros(h(1),1);
+                        b1=-realtol*ones(h(1),1);
                         A = [A ; A1];
                         b = [b ; b1];
                     end
@@ -2246,7 +2255,7 @@ if ~isempty(ntheta) % linear constraints
             end
             A1=-real(phiGq);
             h=size(A1);
-            b1=zeros(h(1),1);
+            b1=-realtol * ones(h(1),1);
             A = [A ; A1];
             b = [b ; b1];
         end 
@@ -2266,7 +2275,7 @@ if ~isempty(ntheta) % linear constraints
             end
             A1=-real(phiGq);
             h=size(A1);
-            b1=zeros(h(1),1);
+            b1=-realtol * ones(h(1),1);
             A = [A ; A1];
             b = [b ; b1];
         end 
@@ -2286,7 +2295,7 @@ if ~isempty(ntheta) % linear constraints
             end
             A1=-real(phiGq);
             h=size(A1);
-            b1=zeros(h(1),1);
+            b1=-realtol*ones(h(1),1);
             A = [A ; A1];
             b = [b ; b1];
         end 
@@ -2306,7 +2315,7 @@ if ~isempty(ntheta) % linear constraints
             end
             A1=-real(phiGq);
             h=size(A1);
-            b1=zeros(h(1),1);
+            b1=-realtol*ones(h(1),1);
             A = [A ; A1];
             b = [b ; b1];
         end 
