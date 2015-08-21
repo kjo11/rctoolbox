@@ -171,11 +171,7 @@ else  % Use optimization toolbox
         options.nq=8;
     end
     
-    if isTF
-        ops = optimset ('Largescale', 'on','MaxIter',100000,'TolFun',1e-8);
-    else
-        ops = optimset ('Largescale', 'off');
-    end
+    ops = [];
     if ~isempty (options.solveroptions)
         names = fieldnames(options.solveroptions);
         for k=1:length(names);
