@@ -273,29 +273,29 @@ if isSP
         end
     end
 end
-if ~isSP || ~strcmpi(per,'Hinf')
-    for j=1:m
 
-        if ~isempty(CovGf{j})
-            for q=1:nqq
-                    x0=real(2.4474 * exp(i*2*pi*q/nqq)/cos(pi/nqq));
-                    y0=imag(2.4474 * exp(i*2*pi*q/nqq)/cos(pi/nqq));
-                for p=1:ntot
-                     for k=1:N(j)
-                        Sigma(k,:,:)=sqrtm((squeeze(CovGf{j}(1,1,k,:,:))));
-                        Pxy{j}(k)=[1 i]*squeeze(Sigma(k,:,:))*[x0;y0];
-                    end
-                    phiCov{j}{q}(p,:)=phiGfreq{j}(p,:).*(1+Pxy{j}./squeeze(Gf{j})');
+for j=1:m
+
+    if ~isempty(CovGf{j})
+        for q=1:nqq
+                x0=real(2.4474 * exp(i*2*pi*q/nqq)/cos(pi/nqq));
+                y0=imag(2.4474 * exp(i*2*pi*q/nqq)/cos(pi/nqq));
+            for p=1:ntot
+                 for k=1:N(j)
+                    Sigma(k,:,:)=sqrtm((squeeze(CovGf{j}(1,1,k,:,:))));
+                    Pxy{j}(k)=[1 i]*squeeze(Sigma(k,:,:))*[x0;y0];
                 end
-
+                phiCov{j}{q}(p,:)=phiGfreq{j}(p,:).*(1+Pxy{j}./squeeze(Gf{j})');
             end
 
-        else
-            phiCov{j}{1}=phiGfreq{j};
-            nqq=1;
         end
+
+    else
+        phiCov{j}{1}=phiGfreq{j};
+        nqq=1;
     end
 end
+
 
  
 %--------------------------------------------------------------------------
