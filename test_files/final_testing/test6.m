@@ -58,6 +58,6 @@ for j=1:2
         per = conper('Hinf',W);
         [K,sol] = condes(G,phi,per,opts);
         
-        plot_Hinfcons(G,K,W,lambda,sol.gamma,w,gs)
+        plot_Hinfcons(G,K,W,lambda,sol.gamma,w,gs,1)
     end     
 end

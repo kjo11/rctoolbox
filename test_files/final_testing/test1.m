@@ -1,6 +1,6 @@
 % Test 1: Errors with TF
 
-addpath('../../toolbox')
+addpath('../toolbox')
 s = tf('s');
 
 %% rational with loopshaping -- error
@@ -22,10 +22,10 @@ G = 1/(s+2);
 
 K = condes(G,phi,per)
 
-%% rational with Hinf -- no error
+%% rational with Hinf, no gamma -- error
 phi = conphi('gener',[0.2 6],'s',1/s,'tf');
 
-per = conper('Hinf',[2 45 2]);
+per = conper('Hinf',tf(0.04));
 
 G = 1/(s+2);
 
@@ -34,7 +34,7 @@ K = condes(G,phi,per)
 %% rational with MIMO -- error
 phi = conphi('gener',[0.2 6],'s',1/s,'tf');
 
-per = conper('Hinf',[2 45 2],4/s);
+per = conper('Hinf',tf(0.03),4/s);
 
 G = [1/(s+2); 1];
 

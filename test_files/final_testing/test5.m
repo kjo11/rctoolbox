@@ -11,6 +11,7 @@ clear W G phi per w
 
 n=4;% order
 xi=0;% Pole
+Ts = 0.04;
 
 s=tf('s');
 
