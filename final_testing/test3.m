@@ -55,6 +55,7 @@ for phitype=0:3
         C_sp = condes(P,phi_sp,per,opts);
         K_sp = feedback(C_sp,H);
         K = condes(P,phi,per,opts);
+        warning on
 
         figure; bode(feedback(P*K_sp,1),feedback(P*K,1))
         title(['phi: ',num2str(phitype),', per: ',num2str(pertype)])

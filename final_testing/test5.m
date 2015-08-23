@@ -10,14 +10,15 @@ clear G phi per W
 disp('MIMO (2x1), continuous')
 
 s=tf('s');
-G=[5*exp(-3*s)/(4*s+1); -4*exp(-6*s)/(20*s+1)];
+G=[5/(4*s+1); -4/(20*s+1)];
+P=[5*exp(-3*s)/(4*s+1); -4*exp(-6*s)/(20*s+1)];
+H = G - P;
 
 Ld = 1/(30*s);
 
 W{1}=tf(0.5);
 W{2}=0.5*(2*s+1)/(s+1);
-W{3} = tf(0.001);
-W{4} = tf(0.001);
+
 
 options = condesopt ('lambda',[1 1 0 0],'gamma',[1,4,0.1],'gbands','off');
 

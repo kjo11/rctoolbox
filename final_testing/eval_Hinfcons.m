@@ -43,20 +43,20 @@ for i=1:length(G)
             if sum(W{k}.num{1}~=0)
                 x = freqresp(W{k}*Sfns{k},w{i});
                 if max(max(max(abs(x)))) > gamma
-                    error('Constraints violated: k=%i, lambda=0',k)
+                    warning('Constraints violated: k=%i, lambda=0',k); pause
                 end
             end
         end
     else
         x = freqresp(lambda(1)*W{1}*S + lambda(2)*W{2}*T + lambda(3)*W{3}*U + lambda(4)*W{4}*V,w{i});
         if max(max(max(abs(x)))) > gamma
-            error('Constraints violated: sum')
+            warning('Constraints violated: sum'); pause
         end
         for k=1:4
             if lambda(k)==0 && sum(W{k}.num{1}~=0)
                 x = freqresp(W{k}*Sfns{k},w{i});
                 if max(max(max(abs(x)))) > 1
-                    error('Constraints violated: k=%i, lambda=0',k)
+                    warning('Constraints violated: k=%i, lambda=0',k); pause
                 end
             end
         end

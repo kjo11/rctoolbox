@@ -3,7 +3,7 @@
 
 addpath('../toolbox')
 addpath(genpath('../../matlab_tools'))
-clear W G phi per w
+clear W G phi per w P
 
 
 
@@ -61,7 +61,7 @@ for j=1:2
         opts = condesopt('nq',nq,'w',w,'gamma',[g_min g_max g_tol],'lambda',lambda,'np',np,'gs',gs);
         per = conper('Hinf',W,Ld);
         [C,sol] = condes(P,phi,per,opts);
-        
+        warning on
         
         eval_Hinfcons(P,C,W,lambda,sol.gamma,w,gs,np,H)
     end     

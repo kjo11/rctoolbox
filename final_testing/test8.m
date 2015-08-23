@@ -28,8 +28,7 @@ for phitype=0:3
         switch phitype
             case 0
                 phi_sp = conphi('pid',0.01,'s',[],'sp',H);
-                phi{1,1} = conphi('pid',0.01,'s');
-                phi{1,2} = phi{1,1};
+                phi = conphi('pid',0.01,'s');
             case 1
                 phi_sp = conphi('pi',[],'s',[],'sp',H);
                 phi = conphi('pi',[],'s');

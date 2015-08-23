@@ -6,7 +6,7 @@ ctype = 2; % 0: default, 1: given c, 2: given b
 pertype = 0; % 0: LS, 1: Hinf
 
 addpath('../toolbox')
-clear G phi per W
+clear G phi per W P phi_sp w H
 
 disp('MIMO (1x2), continuous')
 
@@ -29,8 +29,7 @@ for phitype=0:3
         switch phitype
             case 0
                 phi_sp = conphi('pid',0.01,'s',[],'sp',H);
-                phi{1,1} = conphi('pid',0.01,'s');
-                phi{1,2} = phi{1,1};
+                phi = conphi('pid',0.01,'s');
             case 1
                 phi_sp = conphi('pi',[],'s',[],'sp',H);
                 phi = conphi('pi',[],'s');
