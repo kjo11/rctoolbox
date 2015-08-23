@@ -115,7 +115,7 @@ end
 if (strcmp(options.yalmip,'on') || isempty(options.nq)|| (no > 2 && strcmp(options.Gbands,'on')) || (sum(options.lambda)>1 && isTF)) && exist('yalmip')>1 % Use YALMIP interface
         
     if isTF
-        rho = sdpvar(ntot+n-1,1);
+        rho = sdpvar(ntot+n,1);
     else
         rho=sdpvar(ntot,1);
     end
@@ -2319,8 +2319,8 @@ if ~isempty(ntheta) % linear constraints
     end
     
 else
-    rhox = rho(n:end,1);
-    rhoy = [1; rho(1:n-1,1)];
+    rhox = rho(n+1:end,1);
+    rhoy = rho(1:n,1);
     phix = transpose(phif);
     phiy = phix(:,1:n);
     
