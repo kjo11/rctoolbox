@@ -110,9 +110,15 @@ for p=1:ni
 end
 
 
+% Use convex constraints for rational controllers with 2+ nonzero lambda elements
+if sum(options.lambda)>1 && isTF && exist('yalmip')>1
+    options.nq=[];
+end
+
+
 %-----------------------Solver choice- ------------------------------------
 
-if (strcmp(options.yalmip,'on') || isempty(options.nq)|| (no > 2 && strcmp(options.Gbands,'on')) || (sum(options.lambda)>1 && isTF)) && exist('yalmip')>1 % Use YALMIP interface
+if (strcmp(options.yalmip,'on') || isempty(options.nq)|| (no > 2 && strcmp(options.Gbands,'on')) ) && exist('yalmip')>1 % Use YALMIP interface
         
     if isTF
         rho = sdpvar(ntot+n,1);
