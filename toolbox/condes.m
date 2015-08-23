@@ -229,7 +229,7 @@ if isTF
     
     % set constraint offset based on linprog tolerance
     if ~isempty(nq)
-        if isempty(ops.TolFun)
+        if ~isfield(ops,'TolFun') || isempty(ops.TolFun)
             realtol = 1e-8;
         else
             realtol = ops.TolFun;
@@ -611,7 +611,7 @@ end
                                         if ~isempty(nq)
                                             [A1 b1 HinfConstraint1]=tf_Ab_HinfCons(GCov{j}{k},MCov{j}{kk},phifreq{j},fsf{j},Wfgamma{j},nq,ntot,n,realtol,lambda);
                                         else
-                                            [A1 b1 HinfConstraint1]=tf_Ab_HinfCons(GCov{j}{k},MCov{j}{kk},phifreq{j},fsf{j},Wfgamma{j},nq,ntot,n,realtol,lambda,rho);
+                                            [A1 b1 HinfConstraint1]=tf_Ab_HinfCons(GCov{j}{k},MCov{j}{kk},phifreq{j},fsf{j},Wfgamma{j},nq,ntot,n,0,lambda,rho);
                                         end
                                     end
                                 end
