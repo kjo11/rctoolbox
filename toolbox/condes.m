@@ -272,7 +272,8 @@ if isSP
             phifreq{j}(:,(u-1)*Ngs+1:u*Ngs)=kron(theta_bar(j,:),squeeze(phif{j}(u,1,:)));
         end
     end
-else
+end
+if ~isSP || ~strcmpi(per,'Hinf')
     for j=1:m
 
         if ~isempty(CovGf{j})
