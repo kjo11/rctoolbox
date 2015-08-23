@@ -62,8 +62,8 @@ if isSP
     Hf=cell(1,m);
     Pf=cell(1,m);
     for j=1:length(Gf)
-        Hf{j} = squeeze(freqresp(H_SP,w{j}));
-        Pf{j} = squeeze(freqresp(P{j},w{j}));
+        Hf{j} = freqresp(H_SP,w{j});
+        Pf{j} = freqresp(P{j},w{j});
         if strncmp(class(P{j}),'id',2) % compute covariance of G since it is lost when we took G = G + H
             [~,~,CovGf{j}] = freqresp(P{j},w{j});
         end
@@ -270,6 +270,8 @@ if isSP
     PCov=cell(1,m);
     phifreq=cell(1,m);
     for j=1:m
+        Hf{j}=squeeze(Hf{j});
+        Pf{j}=squeeze(Pf{j});
         [PCov{j},nqq] = sp_covariance(CovGf{j},nqq,ntot,N(j),Pf{j});
         
         for u=1:n
