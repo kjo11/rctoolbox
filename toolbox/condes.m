@@ -1042,8 +1042,10 @@ else % if MIMO
                             Wf{j}(:,k)=interp1(w1,x1(:),w{j},[],'extrap');
                         else
                             Wf{j}(:,k)=freqresp(W{j}{k},w{j});
-                            if k==3, Wf{j}(:,3)=Wf{j}(:,3)./squeeze(Gf{j}(q,q,:)); end
-                            if k==4, Wf{j}(:,4)=Wf{j}(:,4).*squeeze(Gf{j}(q,q,:)); end
+                            if ~isSP
+                                if k==3, Wf{j}(:,3)=Wf{j}(:,3)./squeeze(Gf{j}(q,q,:)); end
+                                if k==4, Wf{j}(:,4)=Wf{j}(:,4).*squeeze(Gf{j}(q,q,:)); end
+                            end
                         end
                     end
                     
