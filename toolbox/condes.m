@@ -72,7 +72,11 @@ end
 
 
 if no==1 && ni==1 % check stability of SISO systems
-    check_Ld_stability(per,inG,phi);
+    if isSP
+        check_Ld_stability(per,P,phi);
+    else
+        check_Ld_stability(per,inG,phi);
+    end
 end
 
 
