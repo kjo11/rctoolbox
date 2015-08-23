@@ -920,13 +920,11 @@ else % if MIMO
                         Wf{j}=zeros(length(w{j}),4);
                         Wf{j}(w{j}>=wh,3)=1/Ku;
                         for q=1:no
-                            if isSP
-                                dummy=phif{j}; dummy2=ones(size(Gf{j}));
-                                for k=1:size(dummy,1); for l=1:size(dummy,2); dummy{k,l}(:,:)=1; end; end
-                                Hf2= Gphif_construct_MIMO (Hf{j},dummy,w{j},w{j},q,n,theta_bar(j,:));
-                                Pf2= Gphif_construct_MIMO (Pf{j},dummy,w{j},w{j},q,n,theta_bar(j,:));
-                                phifreq= Gphif_construct_MIMO (dummy2,phif{j},w{j},w{j},q,n,theta_bar(j,:));
-                            end
+                            dummy=phif{j}; dummy2=ones(size(Gf{j}));
+                            for k=1:size(dummy,1); for l=1:size(dummy,2); dummy{k,l}(:,:)=1; end; end
+                            Hf2= Gphif_construct_MIMO (Hf{j},dummy,w{j},w{j},q,n,theta_bar(j,:));
+                            Pf2= Gphif_construct_MIMO (Pf{j},dummy,w{j},w{j},q,n,theta_bar(j,:));
+                            phifreq= Gphif_construct_MIMO (dummy2,phif{j},w{j},w{j},q,n,theta_bar(j,:));
                             if ~isempty(nq)
                                 [A1, b1]=sp_HinfCons(transpose(Pf2),transpose(Hf2),transpose(phifreq),Ldf_mat{j}(:,q),Wf{j},nq,lambda);
                             else
@@ -986,13 +984,11 @@ else % if MIMO
                         Wf{j}=zeros(length(w{j}),4);
                         Wf{j}(w{j}>=wh,3)=1/Ku;
                         for q=1:no
-                            if isSP
-                                dummy=phif{j}; dummy2=ones(size(Gf{j}));
-                                for k=1:size(dummy,1); for l=1:size(dummy,2); dummy{k,l}(:,:)=1; end; end
-                                Hf2= Gphif_construct_MIMO (Hf{j},dummy,w{j},w{j},q,n,theta_bar(j,:));
-                                Pf2= Gphif_construct_MIMO (Pf{j},dummy,w{j},w{j},q,n,theta_bar(j,:));
-                                phifreq= Gphif_construct_MIMO (dummy2,phif{j},w{j},w{j},q,n,theta_bar(j,:));
-                            end
+                            dummy=phif{j}; dummy2=ones(size(Gf{j}));
+                            for k=1:size(dummy,1); for l=1:size(dummy,2); dummy{k,l}(:,:)=1; end; end
+                            Hf2= Gphif_construct_MIMO (Hf{j},dummy,w{j},w{j},q,n,theta_bar(j,:));
+                            Pf2= Gphif_construct_MIMO (Pf{j},dummy,w{j},w{j},q,n,theta_bar(j,:));
+                            phifreq= Gphif_construct_MIMO (dummy2,phif{j},w{j},w{j},q,n,theta_bar(j,:));
                             if ~isempty(nq)
                                 [A1, b1]=sp_HinfCons(transpose(Pf2),transpose(Hf2),transpose(phifreq),Ldf_mat{j}(:,q),Wf{j},nq,lambda);
                             else
