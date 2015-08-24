@@ -77,6 +77,8 @@ A linearly parameterized controller has the following form:
 \end{equation}
 where $\rho_1$, $\rho_2$, $\ldots$, $\rho_n$ are controller parameters and $\phi_1(s)$, $\phi_2(s)$, $\ldots$, $\phi_n(s)$ are basis transfer functions. These transfer functions must be stable, i.e. with no right half plane poles.
 
+
+
 \subsubsection{PID, PI, PD:}
 
 The proportional-integral-derivative (PID) controller is a familiar case of these types of controllers with 3 parameters $[\rho_1 \:\, \rho_2 \:\, \rho_3]=[k_p \:\, k_i \:\, k_d]$ and the vector of basis transfer functions:
@@ -269,7 +271,7 @@ and if we let $W_1=0$, the robust stability condition:
 where $W_3$ and $W_4$ are corresponding weighting filters.
 
 
-As for a loop shaping controller, $L_d$ should be defined such that it satisfies the Nyquist criterion and contains the poles of $L_i(s)$ on the imaginary axis. The toolbox will give a warning if $L_d$ does not contain the same number of unstable poles or the poles on the imaginary axis of $L_i(s)$, though the calculation is susceptible to rounding errors and should be verified manually.
+As for a loop shaping controller, $L_d$ should be defined such that it satisfies the Nyquist criterion and contains the poles of $L_i(s)$ on the imaginary axis. The toolbox will give a warning if $L_d$ does not contain the same number of unstable poles or the poles on the imaginary axis of $L_i(s)$, though the calculation is susceptible to rounding errors and should be verified manually. For controllers with a rational structure, $L_d$ is not used.
 
 As a result, two different optimization problems are considered in $H_\infty$ controller design method:
 \begin{enumerate} 
@@ -283,7 +285,9 @@ $$
  \|W_2T\|_\infty<1 \, , \quad
  \|W_3KS\|_\infty<1  \, , \quad
  \|W_4GS\|_\infty<1 
-$$
+ $$
+
+ This optimization problem cannot be used with a rational controller structure as the optimization criterion would be non-convex.
 
 \item Solving the following optimization problem:
 \begin{equation}
