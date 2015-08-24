@@ -210,7 +210,7 @@ subject to:
 & f(\rho^T \phi(j\omega_{ik})G_i(j\omega_{ik}),d(M_m,L_d(j\omega_{ik})))<0 \\
 & \mbox{for} \quad  k=1,\ldots,N_i \:\: \mbox{and} \:\: i=1,\ldots,m. \nonumber
 \end{align}
-This approach can be applied to unstable systems if $L_d$ contains the same number of unstable poles as well as the poles  on the imaginary axis of $L_i(s)$ (see \cite{KG10} for details).
+This approach can be applied to unstable systems if $L_d$ contains the same number of unstable poles as well as the poles  on the imaginary axis of $L_i(s)$ (see \cite{KG10} for details). The toolbox will give a warning if $L_d$ does not contain the same number of unstable poles or the poles on the imaginary axis of $L_i(s)$, though the calculation is susceptible to rounding errors and should be verified manually.
 
 \begin{figure}
 			\psfrag{A}{\scriptsize $\vert W_1(j\omega_k)\vert$}
@@ -255,6 +255,9 @@ and if we let $W_1=0$, the robust stability condition:
 \|W_3KS\|_\infty<1 \quad \mbox{and} \quad \|W_4GS\|_\infty<1 
 \end{equation}
 where $W_3$ and $W_4$ are corresponding weighting filters.
+
+
+As for a loop shaping controller, $L_d$ should be defined such that it satisfies the Nyquist criterion and contains the poles of $L_i(s)$ on the imaginary axis. The toolbox will give a warning if $L_d$ does not contain the same number of unstable poles or the poles on the imaginary axis of $L_i(s)$, though the calculation is susceptible to rounding errors and should be verified manually.
 
 As a result, two different optimization problems are considered in $H_\infty$ controller design method:
 \begin{enumerate} 
