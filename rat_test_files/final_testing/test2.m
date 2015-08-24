@@ -1,9 +1,11 @@
 % Test 3
 % Reproduce results from IFAC2014_Ex3
 
-clear all
-
+addpath('../toolbox')
 s=tf('s');
+
+clear p G W w phi per
+
 G(1,1)=2/(s-2);%nominal system
 Pnom=G;
 p(1) = Pnom*tf(1,[.06 1]);              % extra lag
@@ -47,18 +49,20 @@ w=[logspace(-2,3,200)]; %frequency points
 nq=25; % %number of griding point of theta
 
 
-gamma_opt=0;
 g_max=2;
 g_min=.7;
 g_tol=1e-2;
-gamma=g_max;
-realtol=0.00001;
 
 opts = condesopt('nq',nq,'w',w,'gamma',[g_min,g_max,g_tol]);
 phi = conphi('lag',[xi n],'s',[],'tf');
 per = conper('Hinf',W);
+tic
 [K,sol] = condes(inG,phi,per,opts);
+<<<<<<< HEAD:rat_test_files/final_testing/test2.m
 %%
 plot_Hinfcons(G,K,W,[0 0 0 0],sol.gamma,w)
 Ktb=K; soltb=sol;
 save('test2.mat','Ktb','soltb')
+=======
+toc
+>>>>>>> rational:test_files/final_testing/test2.m

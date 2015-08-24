@@ -57,7 +57,6 @@ for j=1:2
         
         
         plot_Hinfcons(G,K,W,lambda,sol.gamma,w,gs,np)
-        pause
     end     
 end
 

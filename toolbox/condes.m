@@ -119,12 +119,18 @@ for p=1:ni
 end
 
 
+% Use convex constraints for rational controllers with 2+ nonzero lambda elements
+if sum(options.lambda)>1 && isTF && exist('yalmip')>1
+    options.nq=[];
+end
+
+
 %-----------------------Solver choice- ------------------------------------
 
-if (strcmp(options.yalmip,'on') || isempty(options.nq)|| (no > 2 && strcmp(options.Gbands,'on')) || (sum(options.lambda)>1 && isTF)) && exist('yalmip')>1 % Use YALMIP interface
+if (strcmp(options.yalmip,'on') || isempty(options.nq)|| (no > 2 && strcmp(options.Gbands,'on')) ) && exist('yalmip')>1 % Use YALMIP interface
         
     if isTF
-        rho = sdpvar(ntot+n-1,1);
+        rho = sdpvar(ntot+n,1);
     elseif isStateSpace
         if isempty(B_ss)
             rho_ss = sdpvar(nss*Ngs*no+Ngs*no*ni,1);
@@ -249,7 +255,7 @@ if isTF
     
     % set constraint offset based on linprog tolerance
     if ~isempty(nq)
-        if isempty(ops.TolFun)
+        if ~isfield(ops,'TolFun') || isempty(ops.TolFun)
             realtol = 1e-8;
         else
             realtol = ops.TolFun;
@@ -632,7 +638,7 @@ end
                                         if ~isempty(nq)
                                             [A1 b1 HinfConstraint1]=tf_Ab_HinfCons(GCov{j}{k},MCov{j}{kk},phifreq{j},fsf{j},Wfgamma{j},nq,ntot,n,realtol,lambda);
                                         else
-                                            [A1 b1 HinfConstraint1]=tf_Ab_HinfCons(GCov{j}{k},MCov{j}{kk},phifreq{j},fsf{j},Wfgamma{j},nq,ntot,n,realtol,lambda,rho);
+                                            [A1 b1 HinfConstraint1]=tf_Ab_HinfCons(GCov{j}{k},MCov{j}{kk},phifreq{j},fsf{j},Wfgamma{j},nq,ntot,n,0,lambda,rho);
                                         end
                                     end
                                 end
@@ -2398,8 +2404,8 @@ if ~isempty(ntheta) % linear constraints
     end
     
 else
-    rhox = rho(n:end,1);
-    rhoy = [1; rho(1:n-1,1)];
+    rhox = rho(n+1:end,1);
+    rhoy = rho(1:n,1);
     phix = transpose(phif);
     phiy = phix(:,1:n);
     

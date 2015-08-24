@@ -32,7 +32,7 @@ lambda_mat=[1 1 1 0;
             0 1 0 0;
             0 0 1 0;
             0 0 0 0];
-g_max=1; g_min=0.5; g_tol = 0.01;
+g_max=1; g_min=0.5; g_tol = 0.1;
 phi = conphi('lag',[2 n],'s',1/s,'tf');
 
 

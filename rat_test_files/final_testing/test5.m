@@ -13,6 +13,7 @@ realtol=10e-8;
 Ts=0.04;
 n=4;% order
 xi=0;% Pole
+Ts = 0.04;
 
 s=tf('s');
 
