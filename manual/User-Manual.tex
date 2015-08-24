@@ -115,6 +115,16 @@ where $\xi_1, \ldots, \xi_n$ are complex numbers, $R_e$ denotes the real part of
 As stated earlier, one can define one's own vector of basis functions, $\phi$, of any desired order as well as the above listed types.
 
 \subsection{Smith Predictor Controllers}
+A Smith Predictor controller has the form shown in Fig. \ref{fig:SP_layout}, where $P_i(s)$ is the plant model, $P_n(s)$ is the nominal plant model, $G_n(s)$ is the nominal, delay-free plant model and $C(s)$ is the controller. The open-loop transfer function $L_i(s) = \left[ P_i(s) + H(s) \right] C(s)$, where $H(s)=G_n(s)-P_n(s)$. $C(s)$ is a linearly parameterized controller, as described above.
+
+\begin{figure}
+    \centering
+    \includegraphics[width=\textwidth]{images/smith_mimo.pdf}
+    \caption{Smith Predictor structure}
+    \label{fig:SP_layout}
+\end{figure}
+
+The Smith Predictor structure can be used for stable SISO and MIMO systems with time delays. For unstable SISO systems, $H(s)$ should be modified such that it is stable in order to compute a stabilizing controller.
 
 
 
@@ -351,7 +361,7 @@ The procedure of design comprises three steps. First the type (or structure) of 
 \section{Determining controller structure}
 The first step of design is determining the desired controller type. By defining the controller type in fact the vector of basis transfer functions $\phi$ is specified. In the following command the controller type and subsequently the vector $\phi$ are specified by the user.
 \begin{lstlisting}
-phi = conphi (ConType , ConPar , CorD , F) 
+phi = conphi (ConType , ConPar , CorD , F, ConStruc, ConOpt) 
 \end{lstlisting}
 %\begin{table}
 %\centering
@@ -407,7 +417,11 @@ For continuous-time  Laguerre basis function, {\tt ConPar} is $[\xi \quad n]$ wh
 
 \item[\texttt{CorD}] is either \texttt{`s'} or \texttt{`z'} showing, respectively, that the controller is in continuous- or discrete-time. If not mentioned, the continuous-time case will be considered. 
 
-\item[\texttt{F}] is a transfer function by which the vector $\phi$ is multiplied. For example one can multiply a factor of integral $\frac{1}{s}$ to PID basis functions to get: $\phi=\frac{1}{s} \times [1\:\: \frac{1}{s} \:\: \frac{s}{1+\tau s}]^T$. 
+\item[\texttt{F}] is a transfer function by which the vector $\phi$ is multiplied. For example one can multiply a factor of integral $\frac{1}{s}$ to PID basis functions to get: $\phi=\frac{1}{s} \times [1\:\: \frac{1}{s} \:\: \frac{s}{1+\tau s}]^T$.
+
+\item[\texttt{ConStruc}] is either \texttt{'LP'} for a linearly parameterized controller (default) or \texttt{'SP'} for a Smith Predictor controller.
+
+\item[\texttt{ConOpt}] for a Smith Predictor controller gives $H(s)=G_n(s)-P_n(s)$.
 
 \end{description}
 
@@ -515,8 +529,22 @@ Transfer function from input to output...
       s^2 + 2 s + 1
 \end{lstlisting}
 
-After defining our desired controller structure, we shall proceed to the next step: specifying performance characteristics.
 
+
+
+\subsection{Example 6} A Smith Predictor, PID controller structure
+
+\begin{lstlisting}
+s = tf('s');
+G = 1/((5*s+1)*(10*s+1));
+P{1} = G*exp(-5*s);
+
+H = G - P{1};
+
+phi = conphi('PID',0.01,'s',[],'SP',H);
+\end{lstlisting}
+
+After defining our desired controller structure, we shall proceed to the next step: specifying performance characteristics.
 
 
 \section{Determining control performance}
@@ -944,6 +972,51 @@ Zero/pole/gain:
 \end{lstlisting}
 
 The obtained results are better and have less conservatism but the computation time is much larger.
+
+\subsubsection{Smith Predictor controller design with $H_\infty$ performance}
+Consider the family of plants:
+
+$$
+P_i(s)=\frac{e^{-\tau_i s}}{(5 s + 1)(10 s + 1)}
+$$
+
+where $\tau_i$ belongs to the set $\{ 4.5, 5, 5.5 \}$.
+
+Design a PID controller  to optimize  the robust performance
+$$ \| |W_1 S| +  |W_2 T| \|_\infty < \gamma $$
+with
+$$W_1(s) = \frac{2}{(30 s + 1)^2}$$
+and
+$$W_2(s) = \frac{-s^2-2s}{s^2+2s+1}$$
+
+We choose the following $L_d(s)$ that contains the unstable pole of the plant model and meets the Nyquist stability criterion.
+$$L_d(s)=\frac{0.1}{s}$$.
+
+\begin{lstlisting}
+s = tf('s');
+G = 1/((5*s+1)*(10*s+1));
+P{1} = G*exp(-5*s);
+P{2} = G*exp(-4.5*s);
+P{3} = G*exp(-5.5*s);
+
+H = G - P{1};
+
+phi = conphi('PID',0.01,'s',[],'SP',H);
+
+W{1} = 2/(30*s+1)^2;
+W{2} = (-s^2-2*s)/(s^2+2*s+1);
+Ld = 0.1/s;
+
+per = conper('Hinf',W,Ld);
+
+w = linspace(-3,3,100);
+gamma = [0.2 0.5 0.01];
+
+opts = condesopt('w',w,'gamma',gamma,'lambda',[1 1 0 0],'yalmip','on');
+
+C = condes(P,phi,per,opts);
+\end{lstlisting}
+
 
 \subsubsection{Gain-scheduled controller design for a domestic condensing boiler}
 $G_1(s)$ to $G_6(s)$ are six first order identified models concerning a domestic condensing boiler in
