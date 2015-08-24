@@ -85,7 +85,7 @@ For SISO systems, a rational controller with the following form can be defined:
     K(j\omega) = \frac{X(j\omega)}{Y(j\omega)} = \frac{\rho_x^T \phi (s)}{f(s) \ \rho_y^T \phi (s)}
 \end{equation}
 
-$\phi$ is a vector of Laguerre or generalized basis functions, described below, and $f(s)$ is a fixed part of the controller. $\rho_x$ and $\rho_y$ are vectors of controller parameters.
+$\phi$ is a vector of Laguerre or generalized basis functions, described below, and $f(s)$ is a fixed part of the controller. $\rho_x$ and $\rho_y$ are vectors of controller parameters. This type of controller can only be used with $H_\infty$ performance.
 
 \subsubsection{PID, PI, PD:}
 
@@ -251,7 +251,7 @@ and if we let $W_1=0$, the robust stability condition:
 where $W_3$ and $W_4$ are corresponding weighting filters.
 
 
-As for a loop shaping controller, $L_d$ should be defined such that it satisfies the Nyquist criterion and contains the poles of $L_i(s)$ on the imaginary axis. The toolbox will give a warning if $L_d$ does not contain the same number of unstable poles or the poles on the imaginary axis of $L_i(s)$, though the calculation is susceptible to rounding errors and should be verified manually.
+As for a loop shaping controller, $L_d$ should be defined such that it satisfies the Nyquist criterion and contains the poles of $L_i(s)$ on the imaginary axis. The toolbox will give a warning if $L_d$ does not contain the same number of unstable poles or the poles on the imaginary axis of $L_i(s)$, though the calculation is susceptible to rounding errors and should be verified manually. For controllers with a rational structure, $L_d$ is not used.
 
 As a result, two different optimization problems are considered in $H_\infty$ controller design method:
 \begin{enumerate} 
@@ -265,7 +265,9 @@ $$
  \|W_2T\|_\infty<1 \, , \quad
  \|W_3KS\|_\infty<1  \, , \quad
  \|W_4GS\|_\infty<1 
-$$
+ $$
+
+ This optimization problem cannot be used with a rational controller structure as the optimization criterion would be non-convex.
 
 \item Solving the following optimization problem:
 \begin{equation}
