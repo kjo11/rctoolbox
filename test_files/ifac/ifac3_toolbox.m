@@ -51,7 +51,8 @@ phi = conphi('Lag',[xi n],'s',[],'tf');
 w=logspace(-2,3,200); %frequency points
 gamma = [1.4, 1.5, 1e-2];
 nq = 25;
-opts = condesopt('gamma',gamma,'nq',nq,'w',w);
+lambda = [0 0 0 0];
+opts = condesopt('gamma',gamma,'nq',nq,'w',w,'lambda',lambda);
 
 %% condes
 [K,sol] = condes(G,phi,per,opts);
