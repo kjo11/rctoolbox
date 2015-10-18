@@ -32,7 +32,9 @@ end
 N(2)=N(2)*exp(-0.04*s);% p2 has time delay
 
 desBW=4.5;
-W(1,1)=tf(makeweight(500,desBW,0.33));
+% W(1,1)=tf(makeweight(500,desBW,0.33));
+W(1,1) = (0.33*s + 4.95)/(s+0.01);
+
 NF=(10*desBW)/20;
 DF=(10*desBW)*50;
 W(2,1)=tf([1/NF^2 2*0.707/NF 1], [1/DF^2 2*0.707/DF 1]);
